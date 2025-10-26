@@ -37,16 +37,16 @@ class Emulator extends QuickstartApp
     private Camera $camera;
 
     /** @inheritDoc */
-    public function ready() : void
+    public function ready(): void
     {
         parent::ready();
 
         $this->initializeEngine();
 
-        // You can bind actions to keys in VISU 
+        // You can bind actions to keys in VISU
         // this way you can decouple your game logic from the actual key bindings
         // and provides a comfortable way to access input state
-        $actions = new InputActionMap;
+        $actions = new InputActionMap();
         $actions->bindButton('bounce', Key::SPACE);
         $actions->bindButton('pushRight', Key::D);
         $actions->bindButton('pushLeft', Key::A);
@@ -117,7 +117,7 @@ class Emulator extends QuickstartApp
     }
 
     /** @inheritDoc */
-    public function update() : void
+    public function update(): void
     {
         parent::update();
     }
