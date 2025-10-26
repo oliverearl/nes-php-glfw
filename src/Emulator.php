@@ -16,7 +16,14 @@ use VISU\Quickstart\QuickstartApp;
 
 class Emulator extends QuickstartApp
 {
+    /**
+     * NES display dimensions in pixels. (Width)
+     */
     public const int NES_MAX_X = 256;
+
+    /**
+     * NES display dimensions in pixels. (Height)
+     */
     public const int NES_MAX_Y = 224;
 
     /**
