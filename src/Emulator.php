@@ -4,7 +4,18 @@ declare(strict_types=1);
 
 namespace App;
 
+use App\Bus\CpuBus;
+use App\Bus\Gamepad;
+use App\Bus\PpuBus;
+use App\Bus\Ram;
+use App\Bus\Rom;
+use App\Cartridge\Cartridge;
+use App\Cartridge\Loader;
+use App\Cpu\Cpu;
+use App\Cpu\Dma;
+use App\Cpu\Interrupts;
 use App\Graphics\Objects\RenderingData;
+use App\Graphics\Ppu;
 use GL\Buffer\UByteBuffer;
 use GL\Texture\Texture2D;
 use GL\VectorGraphics\VGImage;
@@ -12,7 +23,6 @@ use RuntimeException;
 use VISU\Geo\Transform;
 use VISU\Graphics\{Camera, CameraProjectionMode, RenderTarget};
 use VISU\Graphics\Rendering\RenderContext;
-use VISU\OS\{InputActionMap, Key};
 use VISU\Quickstart\QuickstartApp;
 
 class Emulator extends QuickstartApp
@@ -44,26 +54,70 @@ class Emulator extends QuickstartApp
     public bool $isEmulatorRunning = false;
 
     /**
+     * The ROM file selected for loading.
+     */
+    public ?string $selectedRom = null;
+
+    /**
      * Camera used for rendering the scene.
      */
     private Camera $camera;
 
-    /** @inheritDoc */
+    /**
+     * The loaded cartridge.
+     */
+    private Cartridge $cartridge;
+
+    /**
+     * Input. Currently limited to a single default-style gamepad.
+     */
+    private Gamepad $gamepad;
+
+    /**
+     * The cartridge loader.
+     */
+    private Loader $cartridgeLoader;
+
+    /**
+     * The primary RAM of the NES system.
+     */
+    private Ram $ram;
+
+    /**
+     * The character RAM of the NES system.
+     */
+    private Ram $characterRam;
+
+    /**
+     * The program ROM of the NES system.
+     */
+    private Rom $programRom;
+
+    private PpuBus $ppuBus;
+
+    private Interrupts $interrupts;
+
+    private Ppu $ppu;
+
+    private Dma $dma;
+
+    private CpuBus $cpuBus;
+
+    private Cpu $cpu;
+
+    /**
+     * @inheritDoc
+     *
+     * @throws \RuntimeException
+     * @throws \VISU\OS\Exception\InputMappingException
+     */
     public function ready(): void
     {
         parent::ready();
 
         $this->initializeEngine();
-
-        // You can bind actions to keys in VISU
-        // this way you can decouple your game logic from the actual key bindings
-        // and provides a comfortable way to access input state
-        $actions = new InputActionMap();
-        $actions->bindButton('bounce', Key::SPACE);
-        $actions->bindButton('pushRight', Key::D);
-        $actions->bindButton('pushLeft', Key::A);
-
-        $this->inputContext->registerAndActivate('main', $actions);
+        $this->checkForInitialRom();
+        $this->load();
     }
 
     /**
@@ -72,13 +126,10 @@ class Emulator extends QuickstartApp
      */
     public function draw(RenderContext $context, RenderTarget $renderTarget): void
     {
-        // If the emulator is not running, show a placeholder animation.
+        // If the emulator is not running, show a placeholder animation. Or skip if we're running but not yet ready.
         if (! $this->isEmulatorRunning) {
             $rawBuffer = $this->generateWaitingAnimation($this->frameIndex);
-        }
-
-        // If we're not ready to render yet, skip.
-        if (! $this->isReadyToRender()) {
+        } elseif (! $this->isReadyToRender()) {
             return;
         }
 
@@ -142,17 +193,67 @@ class Emulator extends QuickstartApp
             return;
         }
 
-//        if ($this->dma->isDmaProcessing()) {
-//            $this->dma->runDma();
-//            static::$cycle = 514;
-//        }
-//
-//        static::$cycle += $this->cpu->run();
-//        static::$renderingData = $this->ppu->run(static::$cycle * 3);
-//
-//        if ($this->isReadyToRender()) {
-//            $this->cpu->bus->keypad->fetch();
-//        }
+        if ($this->dma->isDmaProcessing()) {
+            $this->dma->runDma();
+            static::$cycle = 514;
+        }
+
+        static::$cycle += $this->cpu->run();
+        static::$renderingData = $this->ppu->run(static::$cycle * 3);
+
+        $this->gamepad->fetch();
+    }
+
+    /**
+     * Fire up the emulator.
+     *
+     * @throws \RuntimeException
+     * @throws \VISU\OS\Exception\InputMappingException
+     */
+    protected function load(): void
+    {
+        if ($this->selectedRom === null) {
+            return;
+        }
+
+        $this->isEmulatorRunning = false;
+        $this->cartridgeLoader = new Loader($this->selectedRom);
+        $this->cartridge = $this->cartridgeLoader->load();
+
+        $this->reset();
+    }
+
+
+    /**
+     * Reset the emulator state.
+     *
+     * @throws \VISU\OS\Exception\InputMappingException
+     */
+    protected function reset(): void
+    {
+        $this->isEmulatorRunning = false;
+
+        $this->gamepad = new Gamepad($this->inputContext);
+        $this->ram = new Ram();
+        $this->characterRam = new Ram(0x4000);
+
+        for ($i = 0, $iMax = $this->cartridge->getCharacterRomSize(); $i < $iMax; $i++) {
+            $this->characterRam->write($i, $this->cartridge->characterRom[$i]);
+        }
+
+        $this->programRom = new Rom($this->cartridge->programRom);
+        $this->ppuBus = new PpuBus($this->characterRam);
+        $this->interrupts = new Interrupts();
+        // TODO: Needs implementing.
+        $this->ppu = new Ppu($this->ppuBus, $this->interrupts, $this->cartridge->isHorizontalMirror);
+        $this->dma = new Dma($this->ram, $this->ppu);
+        // TODO: Needs implementing
+        $this->cpuBus = new CpuBus($this->ram, $this->programRom, $this->ppu, $this->gamepad, $this->dma);
+        // TODO: Needs implementing
+        $this->cpu = new Cpu($this->cpuBus, $this->interrupts);
+        $this->cpu->reset();
+
+        $this->isEmulatorRunning = true;
     }
 
     /**
@@ -169,6 +270,18 @@ class Emulator extends QuickstartApp
 
         if ($this->vg->createFont('inconsolata', $fontPath) === -1) {
             throw new RuntimeException('Inconsolata font could not be loaded.');
+        }
+    }
+
+    /**
+     * Check if a ROM was passed via argument.
+     */
+    private function checkForInitialRom(): void
+    {
+        $args = $this->container->getParameter('argv');
+
+        if ($rom = $args[0] ?? false) {
+            $this->selectedRom = realpath($rom);
         }
     }
 
