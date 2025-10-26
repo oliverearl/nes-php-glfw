@@ -23,7 +23,9 @@ use RuntimeException;
 use VISU\Geo\Transform;
 use VISU\Graphics\{Camera, CameraProjectionMode, RenderTarget};
 use VISU\Graphics\Rendering\RenderContext;
+use VISU\OS\Input;
 use VISU\Quickstart\QuickstartApp;
+use VISU\Signals\Input\DropSignal;
 
 class Emulator extends QuickstartApp
 {
@@ -271,6 +273,11 @@ class Emulator extends QuickstartApp
         if ($this->vg->createFont('inconsolata', $fontPath) === -1) {
             throw new RuntimeException('Inconsolata font could not be loaded.');
         }
+
+        $this->dispatcher->register(Input::EVENT_DROP, function (DropSignal $signal): void {
+            $this->selectedRom = $signal->paths[0] ?? null;
+            $this->load();
+        });
     }
 
     /**
