@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App;
 
 use App\Bus\CpuBus;
-use App\Bus\Gamepad;
 use App\Bus\PpuBus;
 use App\Bus\Ram;
 use App\Bus\Rom;
@@ -16,6 +15,7 @@ use App\Cpu\Dma;
 use App\Cpu\Interrupts;
 use App\Graphics\Objects\RenderingData;
 use App\Graphics\Ppu;
+use App\Input\Gamepad;
 use GL\Buffer\UByteBuffer;
 use GL\Texture\Texture2D;
 use GL\VectorGraphics\VGImage;

@@ -6,6 +6,7 @@ namespace App\Bus;
 
 use App\Cpu\Dma;
 use App\Graphics\Ppu;
+use App\Input\Gamepad;
 
 readonly class CpuBus
 {

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Bus;
+namespace App\Input;
 
 use VISU\OS\InputActionMap;
 use VISU\OS\InputContextMap;
