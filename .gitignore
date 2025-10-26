@@ -1,0 +1,3 @@
+/var/cache/*
+/vendor/
+.idea
