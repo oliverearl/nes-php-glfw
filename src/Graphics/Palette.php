@@ -15,6 +15,7 @@ class Palette
         $this->paletteRam = new Ram(0x20);
     }
 
+    /** @return list<int> */
     public function read(): array
     {
         $return = [];
