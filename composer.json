@@ -6,6 +6,8 @@
         }
     },
     "require": {
+        "php": "^8.4",
+        "ext-glfw": "*",
         "phpgl/visu": "@dev"
     },
     "require-dev": {
