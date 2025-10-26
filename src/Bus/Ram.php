@@ -44,4 +44,14 @@ class Ram
     {
         $this->ram[$addr] = $val;
     }
+
+    /**
+     * Gets the entire RAM array.
+     *
+     * @return list<int>
+     */
+    public function getRam(): array
+    {
+        return $this->ram;
+    }
 }
