@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace App;
 
+use App\Graphics\Objects\RenderingData;
 use GL\Buffer\UByteBuffer;
 use GL\Texture\Texture2D;
 use GL\VectorGraphics\VGImage;
-use VISU\Graphics\{RenderTarget, Camera, CameraProjectionMode};
 use RuntimeException;
-use VISU\Graphics\Rendering\RenderContext;
 use VISU\Geo\Transform;
+use VISU\Graphics\{Camera, CameraProjectionMode, RenderTarget};
+use VISU\Graphics\Rendering\RenderContext;
 use VISU\OS\{InputActionMap, Key};
 use VISU\Quickstart\QuickstartApp;
 
@@ -25,6 +26,17 @@ class Emulator extends QuickstartApp
      * NES display dimensions in pixels. (Height)
      */
     public const int NES_MAX_Y = 224;
+
+    /**
+     * Internal tracker of CPU cycle.
+     */
+    private static int $cycle = 0;
+
+    /**
+     * The rendering data produced by the PPU for the current frame.
+     * False if not ready to render.
+     */
+    private static false|RenderingData $renderingData = false;
 
     /**
      * Indicates whether the NES emulator is currently running.
@@ -60,6 +72,16 @@ class Emulator extends QuickstartApp
      */
     public function draw(RenderContext $context, RenderTarget $renderTarget): void
     {
+        // If the emulator is not running, show a placeholder animation.
+        if (! $this->isEmulatorRunning) {
+            $rawBuffer = $this->generateWaitingAnimation($this->frameIndex);
+        }
+
+        // If we're not ready to render yet, skip.
+        if (! $this->isReadyToRender()) {
+            return;
+        }
+
         // TODO: Make this a configuration value.
         $preserveAspect = false;
 
@@ -69,13 +91,8 @@ class Emulator extends QuickstartApp
         $this->camera->transformVGSpace($viewport, $this->vg);
 
         // 2. Perform PPU rendering.
-        if ($this->isEmulatorRunning) {
-            // TODO: Replace with actual NES PPU frame buffer.
-            $rawBuffer = $this->generateTestCanvasBuffer($this->frameIndex);
-        } else {
-            // If the emulator is not running, show a placeholder animation.
-            $rawBuffer = $this->generateWaitingAnimation($this->frameIndex);
-        }
+        // TODO: Replace with actual NES PPU frame buffer.
+        $rawBuffer ??= $this->generateWaitingAnimation($this->frameIndex);
 
         // 3. Upload to texture.
         $buffer = new UByteBuffer($rawBuffer);
@@ -120,6 +137,22 @@ class Emulator extends QuickstartApp
     public function update(): void
     {
         parent::update();
+
+        if (! $this->isEmulatorRunning) {
+            return;
+        }
+
+//        if ($this->dma->isDmaProcessing()) {
+//            $this->dma->runDma();
+//            static::$cycle = 514;
+//        }
+//
+//        static::$cycle += $this->cpu->run();
+//        static::$renderingData = $this->ppu->run(static::$cycle * 3);
+//
+//        if ($this->isReadyToRender()) {
+//            $this->cpu->bus->keypad->fetch();
+//        }
     }
 
     /**
@@ -154,7 +187,7 @@ class Emulator extends QuickstartApp
 
         for ($y = 0; $y < self::NES_MAX_Y; $y++) {
             for ($x = 0; $x < self::NES_MAX_X; $x++) {
-                // Create a moving gradient
+                // Create a moving gradient.
                 $r = ($x + $shift) % 256;
                 $g = ($y + $shift) % 256;
                 $b = (128 + $shift) % 256;
@@ -167,5 +200,13 @@ class Emulator extends QuickstartApp
         }
 
         return $buffer;
+    }
+
+    /**
+     * Check whether the emulator is ready to render a frame.
+     */
+    private function isReadyToRender(): bool
+    {
+        return static::$renderingData !== false;
     }
 }
