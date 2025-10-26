@@ -1,15 +1,17 @@
 <?php
 
+/** @noinspection PhpUnhandledExceptionInspection */
+
+declare(strict_types=1);
+
+use App\Emulator;
 use VISU\Quickstart;
 use VISU\Quickstart\QuickstartOptions;
 
-$container = require __DIR__ . '/../bootstrap.php';
+$container = require __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'bootstrap.php';
 
-$quickstart = new Quickstart(function(QuickstartOptions $options) use ($container)
-{
-    $options->appClass = \App\Emulator::class;
+new Quickstart(function (QuickstartOptions $options) use ($container): void {
+    $options->appClass = Emulator::class;
     $options->container = $container;
-    $options->windowTitle = $container->getParameter('project.name'); // defined in: /app.ctn 
-});
-
-$quickstart->run();
+    $options->windowTitle = $container->getParameter('project.name');
+})->run();
