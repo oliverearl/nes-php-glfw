@@ -14,7 +14,7 @@ use VISU\Geo\Transform;
 use VISU\OS\{InputActionMap, Key};
 use VISU\Quickstart\QuickstartApp;
 
-class Application extends QuickstartApp
+class Emulator extends QuickstartApp
 {
     public const int NES_MAX_X = 256;
     public const int NES_MAX_Y = 224;
