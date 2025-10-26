@@ -11,7 +11,8 @@
         "phpgl/visu": "@dev"
     },
     "require-dev": {
-        "phpgl/ide-stubs": "dev-main"
+        "phpgl/ide-stubs": "dev-main",
+        "laravel/pint": "^1.25"
     },
     "scripts": {
         "post-root-package-install": [
