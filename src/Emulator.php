@@ -246,10 +246,8 @@ class Emulator extends QuickstartApp
         $this->programRom = new Rom($this->cartridge->programRom);
         $this->ppuBus = new PpuBus($this->characterRam);
         $this->interrupts = new Interrupts();
-        // TODO: Needs implementing.
         $this->ppu = new Ppu($this->ppuBus, $this->interrupts, $this->cartridge->isHorizontalMirror);
         $this->dma = new Dma($this->ram, $this->ppu);
-        // TODO: Needs implementing
         $this->cpuBus = new CpuBus($this->ram, $this->programRom, $this->ppu, $this->gamepad, $this->dma);
         // TODO: Needs implementing
         $this->cpu = new Cpu($this->cpuBus, $this->interrupts);
