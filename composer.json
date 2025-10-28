@@ -12,8 +12,9 @@
         "larapack/dd": "^1.1"
     },
     "require-dev": {
-        "phpgl/ide-stubs": "dev-main",
-        "laravel/pint": "^1.25"
+      "laravel/pint": "^1.25",
+      "phpgl/ide-stubs": "dev-main",
+      "roave/security-advisories": "dev-latest"
     },
     "scripts": {
         "post-root-package-install": [
