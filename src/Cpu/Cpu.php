@@ -97,7 +97,7 @@ class Cpu
     {
         $this->registers->sp++;
 
-        return $this->read(0x100 | ($this->registers->sp & 0xFF), self::READ_BYTE);
+        return $this->read(0x100 | ($this->registers->sp & 0xFF));
     }
 
     private function branch(int $address): void
