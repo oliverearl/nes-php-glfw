@@ -20,13 +20,16 @@
       "laravel/pint": "^1.25",
       "phpgl/ide-stubs": "dev-main",
       "roave/security-advisories": "dev-latest",
-      "phpunit/phpunit": "^11.0"
+      "phpunit/phpunit": "^11.0",
+      "phpstan/phpstan": "^2.1"
     },
     "scripts": {
         "test": "phpunit",
         "test:unit": "phpunit --testsuite=Unit",
         "test:integration": "phpunit --testsuite=Integration",
         "test:coverage": "phpunit --coverage-html=coverage",
+        "phpstan": "php -d memory_limit=512M vendor/bin/phpstan analyse",
+        "phpstan:baseline": "php -d memory_limit=512M vendor/bin/phpstan analyse --generate-baseline",
         "post-root-package-install": [
             "php ./bin/install.php",
             "mkdir var/ && mkdir var/cache/ && chmod -R 777 var/"

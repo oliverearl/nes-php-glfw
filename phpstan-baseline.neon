@@ -1,0 +1,109 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Unreachable statement \- code above always terminates\.$#'
+			identifier: deadCode.unreachable
+			count: 1
+			path: src/Cpu/Cpu.php
+
+		-
+			message: '#^If condition is always false\.$#'
+			identifier: if.alwaysFalse
+			count: 1
+			path: src/Emulator.php
+
+		-
+			message: '#^Static property App\\Emulator\:\:\$cycle is never read, only written\.$#'
+			identifier: property.onlyWritten
+			count: 1
+			path: src/Emulator.php
+
+		-
+			message: '#^Unsafe access to private property App\\Emulator\:\:\$renderingData through static\:\:\.$#'
+			identifier: staticClassAccess.privateProperty
+			count: 3
+			path: src/Emulator.php
+
+		-
+			message: '#^Parameter \#2 \$background of class App\\Graphics\\Objects\\RenderingData constructor expects list\<App\\Graphics\\Objects\\Tile\>\|null, list\<int\>\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Graphics/Ppu.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between App\\Graphics\\Objects\\Sprite and null will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 1
+			path: src/Graphics/Renderer.php
+
+		-
+			message: '#^Negated boolean expression is always true\.$#'
+			identifier: booleanNot.alwaysTrue
+			count: 1
+			path: src/Input/Gamepad.php
+
+		-
+			message: '#^Call to static method PHPUnit\\Framework\\Assert\:\:assertIsBool\(\) with bool will always evaluate to true\.$#'
+			identifier: staticMethod.alreadyNarrowedType
+			count: 1
+			path: tests/Integration/CartridgeLoadingTest.php
+
+		-
+			message: '#^Call to static method PHPUnit\\Framework\\Assert\:\:assertIsInt\(\) with int will always evaluate to true\.$#'
+			identifier: staticMethod.alreadyNarrowedType
+			count: 1
+			path: tests/Integration/CpuBusIntegrationTest.php
+
+		-
+			message: '#^Call to static method PHPUnit\\Framework\\Assert\:\:assertTrue\(\) with true will always evaluate to true\.$#'
+			identifier: staticMethod.alreadyNarrowedType
+			count: 3
+			path: tests/Integration/CpuBusIntegrationTest.php
+
+		-
+			message: '#^Call to static method PHPUnit\\Framework\\Assert\:\:assertTrue\(\) with true will always evaluate to true\.$#'
+			identifier: staticMethod.alreadyNarrowedType
+			count: 1
+			path: tests/Integration/DmaIntegrationTest.php
+
+		-
+			message: '#^Call to static method PHPUnit\\Framework\\Assert\:\:assertIsInt\(\) with int will always evaluate to true\.$#'
+			identifier: staticMethod.alreadyNarrowedType
+			count: 3
+			path: tests/Integration/InterruptIntegrationTest.php
+
+		-
+			message: '#^Call to static method PHPUnit\\Framework\\Assert\:\:assertTrue\(\) with true will always evaluate to true\.$#'
+			identifier: staticMethod.alreadyNarrowedType
+			count: 1
+			path: tests/Integration/InterruptIntegrationTest.php
+
+		-
+			message: '#^Call to static method PHPUnit\\Framework\\Assert\:\:assertIsArray\(\) with list\<int\> will always evaluate to true\.$#'
+			identifier: staticMethod.alreadyNarrowedType
+			count: 2
+			path: tests/Integration/SystemIntegrationTest.php
+
+		-
+			message: '#^Call to static method PHPUnit\\Framework\\Assert\:\:assertIsInt\(\) with int will always evaluate to true\.$#'
+			identifier: staticMethod.alreadyNarrowedType
+			count: 1
+			path: tests/Integration/SystemIntegrationTest.php
+
+		-
+			message: '#^Call to static method PHPUnit\\Framework\\Assert\:\:assertTrue\(\) with true will always evaluate to true\.$#'
+			identifier: staticMethod.alreadyNarrowedType
+			count: 4
+			path: tests/Integration/SystemIntegrationTest.php
+
+		-
+			message: '#^Call to static method PHPUnit\\Framework\\Assert\:\:assertIsArray\(\) with list\<int\> will always evaluate to true\.$#'
+			identifier: staticMethod.alreadyNarrowedType
+			count: 1
+			path: tests/Unit/Bus/RamTest.php
+
+		-
+			message: '#^Call to static method PHPUnit\\Framework\\Assert\:\:assertIsArray\(\) with list\<int\> will always evaluate to true\.$#'
+			identifier: staticMethod.alreadyNarrowedType
+			count: 2
+			path: tests/Unit/Graphics/RendererTest.php
