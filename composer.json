@@ -14,9 +14,13 @@
     "require-dev": {
       "laravel/pint": "^1.25",
       "phpgl/ide-stubs": "dev-main",
-      "roave/security-advisories": "dev-latest"
+      "roave/security-advisories": "dev-latest",
+        "phpunit/phpunit": "^11.0"
     },
     "scripts": {
+        "test": "phpunit",
+        "test:unit": "phpunit --testsuite=Unit",
+        "test:coverage": "phpunit --coverage-html=coverage",
         "post-root-package-install": [
             "php ./bin/install.php",
             "mkdir var/ && mkdir var/cache/ && chmod -R 777 var/"
