@@ -40,8 +40,9 @@ return RectorConfig::configure()
         ReadOnlyPropertyRector::class,
         NullToStrictStringFuncCallArgRector::class,
     ])
-    ->withImportNames()
+    ->withImportNames(
+        importDocBlockNames: false,
+        removeUnusedImports: true,
+    )
     ->withParallel()
     ->withCache(__DIR__ . '/var/cache/rector');
-
-
