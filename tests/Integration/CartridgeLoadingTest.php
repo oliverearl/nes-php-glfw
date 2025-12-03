@@ -13,12 +13,7 @@ final class CartridgeLoadingTest extends IntegrationTestCase
     #[Test]
     public function it_loads_test_rom_file(): void
     {
-        $testRomPath = $this->getTestRomPath('HelloWorld.nes');
-
-        if (!file_exists($testRomPath)) {
-            $this->markTestSkipped('Test ROM file not found at: ' . $testRomPath);
-        }
-
+        $testRomPath = $this->requireTestRom();
         $loader = new Loader($testRomPath);
 
         // Capture output (loader prints debug info)
@@ -39,11 +34,7 @@ final class CartridgeLoadingTest extends IntegrationTestCase
     #[Test]
     public function it_validates_nes_file_format(): void
     {
-        $testRomPath = $this->getTestRomPath('HelloWorld.nes');
-
-        if (!file_exists($testRomPath)) {
-            $this->markTestSkipped('Test ROM file not found');
-        }
+        $testRomPath = $this->requireTestRom('HelloWorld.nes');
 
         // Verify file starts with "NES\x1A"
         $handle = fopen($testRomPath, 'rb');
@@ -57,11 +48,7 @@ final class CartridgeLoadingTest extends IntegrationTestCase
     #[Test]
     public function it_extracts_program_rom_from_file(): void
     {
-        $testRomPath = $this->getTestRomPath('HelloWorld.nes');
-
-        if (!file_exists($testRomPath)) {
-            $this->markTestSkipped('Test ROM file not found');
-        }
+        $testRomPath = $this->requireTestRom('HelloWorld.nes');
 
         $loader = new Loader($testRomPath);
         ob_start();
@@ -86,11 +73,7 @@ final class CartridgeLoadingTest extends IntegrationTestCase
     #[Test]
     public function it_extracts_character_rom_from_file(): void
     {
-        $testRomPath = $this->getTestRomPath('HelloWorld.nes');
-
-        if (!file_exists($testRomPath)) {
-            $this->markTestSkipped('Test ROM file not found');
-        }
+        $testRomPath = $this->requireTestRom('HelloWorld.nes');
 
         $loader = new Loader($testRomPath);
         ob_start();
@@ -104,11 +87,7 @@ final class CartridgeLoadingTest extends IntegrationTestCase
     #[Test]
     public function it_determines_mirroring_mode(): void
     {
-        $testRomPath = $this->getTestRomPath('HelloWorld.nes');
-
-        if (!file_exists($testRomPath)) {
-            $this->markTestSkipped('Test ROM file not found');
-        }
+        $testRomPath = $this->requireTestRom('HelloWorld.nes');
 
         $loader = new Loader($testRomPath);
         ob_start();
@@ -150,11 +129,7 @@ final class CartridgeLoadingTest extends IntegrationTestCase
     #[Test]
     public function it_handles_different_rom_sizes(): void
     {
-        $testRomPath = $this->getTestRomPath('HelloWorld.nes');
-
-        if (!file_exists($testRomPath)) {
-            $this->markTestSkipped('Test ROM file not found');
-        }
+        $testRomPath = $this->requireTestRom('HelloWorld.nes');
 
         $loader = new Loader($testRomPath);
         ob_start();

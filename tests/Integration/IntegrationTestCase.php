@@ -18,9 +18,24 @@ use PHPUnit\Framework\TestCase as BaseTestCase;
 abstract class IntegrationTestCase extends BaseTestCase
 {
     /**
-     * Get the path to a test ROM file.
+     * Get the path to a test ROM file and skip the test if it doesn't exist.
      */
-    protected function getTestRomPath(string $filename = 'HelloWorld.nes'): string
+    protected function requireTestRom(string $filename = 'HelloWorld.nes'): string
+    {
+        $path = __DIR__ . '/../TestRoms/' . $filename;
+
+        if (!file_exists($path)) {
+            $this::markTestSkipped("Test ROM file not found at: {$path}");
+        }
+
+        return $path;
+    }
+
+    /**
+     * Get the path to a test ROM file without checking existence.
+     * Use this when you need the path but don't want to skip the test.
+     */
+    protected function getTestRomPath(string $filename): string
     {
         return __DIR__ . '/../TestRoms/' . $filename;
     }
@@ -28,6 +43,7 @@ abstract class IntegrationTestCase extends BaseTestCase
     /**
      * Create a complete test system with all components initialized.
      *
+     * @throws \PHPUnit\Framework\MockObject\Exception
      * @return array{0: Cpu, 1: CpuBus, 2: Ram, 3: Rom, 4: Ppu, 5: Interrupts, 6: Dma, 7: Gamepad}
      */
     protected function createTestSystem(
