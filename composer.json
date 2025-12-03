@@ -20,7 +20,7 @@
       "laravel/pint": "^1.25",
       "phpgl/ide-stubs": "dev-main",
       "roave/security-advisories": "dev-latest",
-        "phpunit/phpunit": "^11.0"
+      "phpunit/phpunit": "^11.0"
     },
     "scripts": {
         "test": "phpunit",
