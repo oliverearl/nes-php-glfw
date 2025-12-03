@@ -34,10 +34,9 @@ final class SystemIntegrationTest extends IntegrationTestCase
         $renderer = new Renderer();
 
         // System is ready - verify all components exist
-        $this->assertInstanceOf(Cpu::class, $cpu);
-        $this->assertInstanceOf(Ppu::class, $ppu);
-        $this->assertInstanceOf(CpuBus::class, $cpuBus);
-        $this->assertInstanceOf(Renderer::class, $renderer);
+        $this::assertInstanceOf(Cpu::class, $cpu);
+        $this::assertInstanceOf(Ppu::class, $ppu);
+        $this::assertInstanceOf(CpuBus::class, $cpuBus);
     }
 
     #[Test]
@@ -54,11 +53,11 @@ final class SystemIntegrationTest extends IntegrationTestCase
             // PPU runs at 3x CPU speed
             $ppu->run($cpuCycles * 3);
 
-            $this->assertGreaterThan(0, $cpuCycles);
+            $this::assertGreaterThan(0, $cpuCycles);
         }
 
         // System should still be running
-        $this->assertTrue(true);
+        $this::assertTrue(true);
     }
 
     #[Test]
@@ -81,13 +80,13 @@ final class SystemIntegrationTest extends IntegrationTestCase
         }
 
         // Should have completed a frame
-        $this->assertNotFalse($renderingData);
+        $this::assertNotFalse($renderingData);
 
         // Should be able to render it
         $frameBuffer = $renderer->render($renderingData);
 
-        $this->assertIsArray($frameBuffer);
-        $this->assertCount(256 * 256 * 4, $frameBuffer);
+        $this::assertIsArray($frameBuffer);
+        $this::assertCount(256 * 256 * 4, $frameBuffer);
     }
 
     #[Test]
@@ -114,7 +113,7 @@ final class SystemIntegrationTest extends IntegrationTestCase
             $ppu->run($cpuCycles * 3);
         }
 
-        $this->assertTrue(true);
+        $this::assertTrue(true);
     }
 
     #[Test]
@@ -132,7 +131,7 @@ final class SystemIntegrationTest extends IntegrationTestCase
         // Read PPU status
         $status = $cpuBus->readByCpu(0x2002);
 
-        $this->assertIsInt($status);
+        $this::assertIsInt($status);
 
         // Run some instructions
         for ($i = 0; $i < 10; $i++) {
@@ -140,7 +139,7 @@ final class SystemIntegrationTest extends IntegrationTestCase
             $ppu->run($cpuCycles * 3);
         }
 
-        $this->assertTrue(true);
+        $this::assertTrue(true);
     }
 
     #[Test]
@@ -166,7 +165,7 @@ final class SystemIntegrationTest extends IntegrationTestCase
             }
 
             // RAM should maintain state
-            $this->assertSame(0x42, $ram->read(0x0100));
+            $this::assertSame(0x42, $ram->read(0x0100));
         }
     }
 
@@ -200,9 +199,9 @@ final class SystemIntegrationTest extends IntegrationTestCase
 
         if ($renderingData !== false) {
             $frameBuffer = $renderer->render($renderingData);
-            $this->assertIsArray($frameBuffer);
+            $this::assertIsArray($frameBuffer);
         }
 
-        $this->assertTrue(true);
+        $this::assertTrue(true);
     }
 }

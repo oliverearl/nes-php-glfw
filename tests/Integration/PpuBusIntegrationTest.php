@@ -20,13 +20,13 @@ final class PpuBusIntegrationTest extends IntegrationTestCase
 
         // PPU should be able to read it through the bus
         $data = $ppuBus->readByPpu(0x0000);
-        $this->assertSame(0x00, $data);
+        $this::assertSame(0x00, $data);
 
         $data = $ppuBus->readByPpu(0x0001);
-        $this->assertSame(0x10, $data);
+        $this::assertSame(0x10, $data);
 
         $data = $ppuBus->readByPpu(0x000F);
-        $this->assertSame(0xF0, $data);
+        $this::assertSame(0xF0, $data);
     }
 
     #[Test]
@@ -41,8 +41,8 @@ final class PpuBusIntegrationTest extends IntegrationTestCase
         $characterRom->write(0x1000, 0xBB);
 
         // Read from both tables
-        $this->assertSame(0xAA, $ppuBus->readByPpu(0x0000));
-        $this->assertSame(0xBB, $ppuBus->readByPpu(0x1000));
+        $this::assertSame(0xAA, $ppuBus->readByPpu(0x0000));
+        $this::assertSame(0xBB, $ppuBus->readByPpu(0x1000));
     }
 
     #[Test]
@@ -54,7 +54,7 @@ final class PpuBusIntegrationTest extends IntegrationTestCase
         $ppuBus->writeByPpu(0x0100, 0x55);
 
         // Should be able to read it back
-        $this->assertSame(0x55, $ppuBus->readByPpu(0x0100));
+        $this::assertSame(0x55, $ppuBus->readByPpu(0x0100));
     }
 
     #[Test]
@@ -65,7 +65,7 @@ final class PpuBusIntegrationTest extends IntegrationTestCase
         // Write to end of character memory
         $characterRom->write(0x1FFF, 0xFF);
 
-        $this->assertSame(0xFF, $ppuBus->readByPpu(0x1FFF));
+        $this::assertSame(0xFF, $ppuBus->readByPpu(0x1FFF));
     }
 
     #[Test]
@@ -81,7 +81,7 @@ final class PpuBusIntegrationTest extends IntegrationTestCase
 
         // Read the pattern data
         for ($i = 0; $i < 16; $i++) {
-            $this->assertSame($i, $ppuBus->readByPpu($i));
+            $this::assertSame($i, $ppuBus->readByPpu($i));
         }
     }
 
@@ -98,7 +98,7 @@ final class PpuBusIntegrationTest extends IntegrationTestCase
 
         // Read back
         for ($i = 0; $i < 16; $i++) {
-            $this->assertSame(0xFF - $i, $ppuBus->readByPpu($baseAddr + $i));
+            $this::assertSame(0xFF - $i, $ppuBus->readByPpu($baseAddr + $i));
         }
     }
 
@@ -114,7 +114,7 @@ final class PpuBusIntegrationTest extends IntegrationTestCase
 
         // Read sequentially
         for ($i = 0; $i < 256; $i++) {
-            $this->assertSame($i, $ppuBus->readByPpu($i));
+            $this::assertSame($i, $ppuBus->readByPpu($i));
         }
     }
 
@@ -142,7 +142,7 @@ final class PpuBusIntegrationTest extends IntegrationTestCase
 
         // Read it back
         foreach ($tileData as $i => $byte) {
-            $this->assertSame($byte, $ppuBus->readByPpu($i));
+            $this::assertSame($byte, $ppuBus->readByPpu($i));
         }
     }
 }

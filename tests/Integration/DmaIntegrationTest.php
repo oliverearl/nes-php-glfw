@@ -23,17 +23,17 @@ final class DmaIntegrationTest extends IntegrationTestCase
         $cpuBus->writeByCpu(0x4014, 0x02);
 
         // Verify DMA is processing
-        $this->assertTrue($dma->isDmaProcessing());
+        $this::assertTrue($dma->isDmaProcessing());
 
         // Run DMA
         $dma->runDma();
 
         // Verify DMA completed
-        $this->assertFalse($dma->isDmaProcessing());
+        $this::assertFalse($dma->isDmaProcessing());
 
         // Note: We can't easily verify the PPU sprite RAM contents without exposing internals
         // But we can verify the DMA completed without errors
-        $this->assertTrue(true);
+        $this::assertTrue(true);
     }
 
     #[Test]
@@ -46,18 +46,18 @@ final class DmaIntegrationTest extends IntegrationTestCase
             $ram->write($i, 0xAA);
         }
         $cpuBus->writeByCpu(0x4014, 0x00);
-        $this->assertTrue($dma->isDmaProcessing());
+        $this::assertTrue($dma->isDmaProcessing());
         $dma->runDma();
-        $this->assertFalse($dma->isDmaProcessing());
+        $this::assertFalse($dma->isDmaProcessing());
 
         // Test page 0x03
         for ($i = 0; $i < 256; $i++) {
             $ram->write(0x0300 + $i, 0xBB);
         }
         $cpuBus->writeByCpu(0x4014, 0x03);
-        $this->assertTrue($dma->isDmaProcessing());
+        $this::assertTrue($dma->isDmaProcessing());
         $dma->runDma();
-        $this->assertFalse($dma->isDmaProcessing());
+        $this::assertFalse($dma->isDmaProcessing());
     }
 
     #[Test]
@@ -66,13 +66,13 @@ final class DmaIntegrationTest extends IntegrationTestCase
         [, $cpuBus, , , , , $dma] = $this->createTestSystem();
 
         // Verify DMA is not processing initially
-        $this->assertFalse($dma->isDmaProcessing());
+        $this::assertFalse($dma->isDmaProcessing());
 
         // CPU writes to DMA register through bus
         $cpuBus->writeByCpu(0x4014, 0x02);
 
         // DMA should now be processing
-        $this->assertTrue($dma->isDmaProcessing());
+        $this::assertTrue($dma->isDmaProcessing());
     }
 
     #[Test]
@@ -82,21 +82,21 @@ final class DmaIntegrationTest extends IntegrationTestCase
 
         // First DMA
         $cpuBus->writeByCpu(0x4014, 0x02);
-        $this->assertTrue($dma->isDmaProcessing());
+        $this::assertTrue($dma->isDmaProcessing());
         $dma->runDma();
-        $this->assertFalse($dma->isDmaProcessing());
+        $this::assertFalse($dma->isDmaProcessing());
 
         // Second DMA
         $cpuBus->writeByCpu(0x4014, 0x03);
-        $this->assertTrue($dma->isDmaProcessing());
+        $this::assertTrue($dma->isDmaProcessing());
         $dma->runDma();
-        $this->assertFalse($dma->isDmaProcessing());
+        $this::assertFalse($dma->isDmaProcessing());
 
         // Third DMA
         $cpuBus->writeByCpu(0x4014, 0x04);
-        $this->assertTrue($dma->isDmaProcessing());
+        $this::assertTrue($dma->isDmaProcessing());
         $dma->runDma();
-        $this->assertFalse($dma->isDmaProcessing());
+        $this::assertFalse($dma->isDmaProcessing());
     }
 
     #[Test]
@@ -118,7 +118,7 @@ final class DmaIntegrationTest extends IntegrationTestCase
         $cpuBus->writeByCpu(0x4014, 0x02);
         $dma->runDma();
 
-        $this->assertFalse($dma->isDmaProcessing());
+        $this::assertFalse($dma->isDmaProcessing());
     }
 
     #[Test]
@@ -133,9 +133,9 @@ final class DmaIntegrationTest extends IntegrationTestCase
 
         // DMA from page 0x00
         $cpuBus->writeByCpu(0x4014, 0x00);
-        $this->assertTrue($dma->isDmaProcessing());
+        $this::assertTrue($dma->isDmaProcessing());
 
         $dma->runDma();
-        $this->assertFalse($dma->isDmaProcessing());
+        $this::assertFalse($dma->isDmaProcessing());
     }
 }

@@ -17,7 +17,7 @@ final class InterruptIntegrationTest extends IntegrationTestCase
         $ppu->write(0x00, 0x80);
 
         // Initially no NMI
-        $this->assertFalse($interrupts->isNmiAsserted());
+        $this::assertFalse($interrupts->isNmiAsserted());
 
         // Run PPU through cycles - it will process scanlines internally
         // PPU runs until it completes operations, checking for VBlank
@@ -32,7 +32,7 @@ final class InterruptIntegrationTest extends IntegrationTestCase
 
         // After running, NMI may or may not be asserted depending on timing
         // This test verifies the integration works without crashing
-        $this->assertTrue(true);
+        $this::assertTrue(true);
     }
 
     #[Test]
@@ -49,7 +49,7 @@ final class InterruptIntegrationTest extends IntegrationTestCase
         }
 
         // NMI should not be asserted when disabled
-        $this->assertFalse($interrupts->isNmiAsserted());
+        $this::assertFalse($interrupts->isNmiAsserted());
     }
 
     #[Test]
@@ -62,11 +62,11 @@ final class InterruptIntegrationTest extends IntegrationTestCase
 
         // Manually assert NMI to test clearing
         $interrupts->assertNmi();
-        $this->assertTrue($interrupts->isNmiAsserted());
+        $this::assertTrue($interrupts->isNmiAsserted());
 
         // PPU should clear it at appropriate time
         $interrupts->deassertNmi();
-        $this->assertFalse($interrupts->isNmiAsserted());
+        $this::assertFalse($interrupts->isNmiAsserted());
     }
 
     #[Test]
@@ -79,13 +79,13 @@ final class InterruptIntegrationTest extends IntegrationTestCase
 
         // Test that NMI can be asserted multiple times
         $interrupts->assertNmi();
-        $this->assertTrue($interrupts->isNmiAsserted());
+        $this::assertTrue($interrupts->isNmiAsserted());
 
         $interrupts->deassertNmi();
-        $this->assertFalse($interrupts->isNmiAsserted());
+        $this::assertFalse($interrupts->isNmiAsserted());
 
         $interrupts->assertNmi();
-        $this->assertTrue($interrupts->isNmiAsserted());
+        $this::assertTrue($interrupts->isNmiAsserted());
     }
 
     #[Test]
@@ -95,9 +95,9 @@ final class InterruptIntegrationTest extends IntegrationTestCase
 
         // Reading status register should work
         $status = $ppu->read(0x02);
-        $this->assertIsInt($status);
-        $this->assertGreaterThanOrEqual(0, $status);
-        $this->assertLessThanOrEqual(255, $status);
+        $this::assertIsInt($status);
+        $this::assertGreaterThanOrEqual(0, $status);
+        $this::assertLessThanOrEqual(255, $status);
     }
 
     #[Test]
@@ -109,8 +109,8 @@ final class InterruptIntegrationTest extends IntegrationTestCase
         $status1 = $ppu->read(0x02);
         $status2 = $ppu->read(0x02);
 
-        $this->assertIsInt($status1);
-        $this->assertIsInt($status2);
+        $this::assertIsInt($status1);
+        $this::assertIsInt($status2);
     }
 
     #[Test]
@@ -120,12 +120,12 @@ final class InterruptIntegrationTest extends IntegrationTestCase
         [$ppu, , , $interrupts] = $this->createPpuSystem();
 
         // Test interrupt controller works
-        $this->assertFalse($interrupts->isNmiAsserted());
+        $this::assertFalse($interrupts->isNmiAsserted());
 
         $interrupts->assertNmi();
-        $this->assertTrue($interrupts->isNmiAsserted());
+        $this::assertTrue($interrupts->isNmiAsserted());
 
         $interrupts->deassertNmi();
-        $this->assertFalse($interrupts->isNmiAsserted());
+        $this::assertFalse($interrupts->isNmiAsserted());
     }
 }

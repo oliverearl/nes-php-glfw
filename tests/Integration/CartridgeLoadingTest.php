@@ -22,13 +22,13 @@ final class CartridgeLoadingTest extends IntegrationTestCase
         ob_get_clean();
 
         // Verify cartridge loaded
-        $this->assertInstanceOf(Cartridge::class, $cartridge);
+        $this::assertInstanceOf(Cartridge::class, $cartridge);
 
         // HelloWorld has program ROM
-        $this->assertGreaterThan(0, $cartridge->getProgramRomSize());
+        $this::assertGreaterThan(0, $cartridge->getProgramRomSize());
 
         // Should have character ROM or RAM
-        $this->assertGreaterThanOrEqual(0, $cartridge->getCharacterRomSize());
+        $this::assertGreaterThanOrEqual(0, $cartridge->getCharacterRomSize());
     }
 
     #[Test]
@@ -41,8 +41,8 @@ final class CartridgeLoadingTest extends IntegrationTestCase
         $header = fread($handle, 4);
         fclose($handle);
 
-        $this->assertSame('NES', substr($header, 0, 3));
-        $this->assertSame("\x1A", substr($header, 3, 1));
+        $this::assertSame('NES', substr($header, 0, 3));
+        $this::assertSame("\x1A", substr($header, 3, 1));
     }
 
     #[Test]
@@ -56,7 +56,7 @@ final class CartridgeLoadingTest extends IntegrationTestCase
         ob_end_clean();
 
         // Program ROM should contain 6502 code
-        $this->assertNotEmpty($cartridge->programRom);
+        $this::assertNotEmpty($cartridge->programRom);
 
         // Verify it's actual data, not all zeros
         $hasNonZero = false;
@@ -67,7 +67,7 @@ final class CartridgeLoadingTest extends IntegrationTestCase
             }
         }
 
-        $this->assertTrue($hasNonZero, 'Program ROM should contain non-zero data');
+        $this::assertTrue($hasNonZero, 'Program ROM should contain non-zero data');
     }
 
     #[Test]
@@ -81,7 +81,7 @@ final class CartridgeLoadingTest extends IntegrationTestCase
         ob_end_clean();
 
         // Character ROM should exist (may be empty for CHR-RAM games)
-        $this->assertGreaterThanOrEqual(0, $cartridge->getCharacterRomSize());
+        $this::assertGreaterThanOrEqual(0, $cartridge->getCharacterRomSize());
     }
 
     #[Test]
@@ -95,7 +95,7 @@ final class CartridgeLoadingTest extends IntegrationTestCase
         ob_end_clean();
 
         // Mirroring mode should be set (either true or false)
-        $this->assertIsBool($cartridge->isHorizontalMirror);
+        $this::assertIsBool($cartridge->isHorizontalMirror);
     }
 
     #[Test]
@@ -144,11 +144,11 @@ final class CartridgeLoadingTest extends IntegrationTestCase
         // Character ROM pages are 8KB (0x2000)
 
         if ($programSize > 0) {
-            $this->assertSame(0, $programSize % 0x4000, 'Program ROM should be multiple of 16KB');
+            $this::assertSame(0, $programSize % 0x4000, 'Program ROM should be multiple of 16KB');
         }
 
         if ($characterSize > 0) {
-            $this->assertSame(0, $characterSize % 0x2000, 'Character ROM should be multiple of 8KB');
+            $this::assertSame(0, $characterSize % 0x2000, 'Character ROM should be multiple of 8KB');
         }
     }
 }
