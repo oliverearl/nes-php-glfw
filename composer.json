@@ -5,6 +5,11 @@
             "App\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
     "require": {
         "php": "^8.4",
         "ext-glfw": "*",
@@ -20,6 +25,7 @@
     "scripts": {
         "test": "phpunit",
         "test:unit": "phpunit --testsuite=Unit",
+        "test:integration": "phpunit --testsuite=Integration",
         "test:coverage": "phpunit --coverage-html=coverage",
         "post-root-package-install": [
             "php ./bin/install.php",
