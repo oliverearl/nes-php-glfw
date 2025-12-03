@@ -148,10 +148,13 @@ final class SystemIntegrationTest extends IntegrationTestCase
     #[Test]
     public function it_maintains_system_state_across_frames(): void
     {
-        [$cpu, $cpuBus, $ram, , $ppu] = $this->createTestSystem();
+        [$cpu, $cpuBus, $ram, , $ppu] = $this->createTestSystem(setupResetVector: true);
 
         // Write data to RAM
         $ram->write(0x0100, 0x42);
+
+        // Reset CPU to start from proper reset vector
+        $cpu->reset();
 
         // Run several frames
         for ($frame = 0; $frame < 3; $frame++) {
@@ -172,8 +175,11 @@ final class SystemIntegrationTest extends IntegrationTestCase
     #[Test]
     public function it_handles_palette_writes_and_rendering(): void
     {
-        [$cpu, $cpuBus, $ram, , $ppu] = $this->createTestSystem();
+        [$cpu, $cpuBus, $ram, , $ppu] = $this->createTestSystem(setupResetVector: true);
         $renderer = new Renderer();
+
+        // Reset CPU to start from proper reset vector
+        $cpu->reset();
 
         // Write to PPU address register to set palette address
         $cpuBus->writeByCpu(0x2006, 0x3F);

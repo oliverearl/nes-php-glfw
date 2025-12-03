@@ -34,10 +34,28 @@ abstract class IntegrationTestCase extends BaseTestCase
         ?int $ramSize = 0x800,
         ?int $romSize = 0x8000,
         ?int $characterRomSize = 0x2000,
-        bool $horizontalMirror = true
+        bool $horizontalMirror = true,
+        bool $setupResetVector = false
     ): array {
         $ram = new Ram($ramSize);
-        $programRom = new Rom(array_fill(0, $romSize, 0xEA)); // Fill with NOPs
+
+        // Create ROM data
+        $romData = array_fill(0, $romSize, 0xEA); // Fill with NOPs
+
+        if ($setupResetVector) {
+            // Set up reset vector to point to 0x8000 (start of ROM)
+            // Reset vector is at 0xFFFC-0xFFFD (last 4 bytes of address space)
+            // In ROM space, that's offset 0x7FFC-0x7FFD (for 32KB ROM starting at 0x8000)
+            $romData[0x7FFC] = 0x00; // Low byte of 0x8000
+            $romData[0x7FFD] = 0x80; // High byte of 0x8000
+
+            // Put an infinite loop at 0x8000: JMP $8000 (0x4C 0x00 0x80)
+            $romData[0x0000] = 0x4C; // JMP absolute
+            $romData[0x0001] = 0x00; // Low byte of target address
+            $romData[0x0002] = 0x80; // High byte of target address
+        }
+
+        $programRom = new Rom($romData);
         $interrupts = new Interrupts();
         $characterRom = new Ram($characterRomSize);
         $ppuBus = new PpuBus($characterRom);
