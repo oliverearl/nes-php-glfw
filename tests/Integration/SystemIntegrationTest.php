@@ -64,8 +64,6 @@ final class SystemIntegrationTest extends IntegrationTestCase
     #[Test]
     public function it_completes_full_frame_rendering_cycle(): void
     {
-        $this->markTestSkipped('This test requires too many iterations and times out. Run manually for verification.');
-
         [$cpu, $cpuBus, $ram, $programRom, $ppu] = $this->createTestSystem();
         $renderer = new Renderer();
 
