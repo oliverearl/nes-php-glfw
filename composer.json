@@ -1,5 +1,5 @@
 {
-    "name": "phpgl/visu-quickstart",
+    "name": "oliverearl/nes-emulator",
     "autoload": {
         "psr-4": {
             "App\\": "src/"
@@ -21,7 +21,8 @@
       "phpgl/ide-stubs": "dev-main",
       "roave/security-advisories": "dev-latest",
       "phpunit/phpunit": "^11.0",
-      "phpstan/phpstan": "^2.1"
+      "phpstan/phpstan": "^2.1",
+      "rector/rector": "^2.2"
     },
     "scripts": {
         "test": "phpunit",
@@ -30,6 +31,12 @@
         "test:coverage": "phpunit --coverage-html=coverage",
         "phpstan": "php -d memory_limit=512M vendor/bin/phpstan analyse",
         "phpstan:baseline": "php -d memory_limit=512M vendor/bin/phpstan analyse --generate-baseline",
+        "rector": "rector process --dry-run",
+        "rector:fix": "rector process",
+        "quality:check": [
+            "@phpstan",
+            "@rector"
+        ],
         "post-root-package-install": [
             "php ./bin/install.php",
             "mkdir var/ && mkdir var/cache/ && chmod -R 777 var/"
