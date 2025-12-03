@@ -15,6 +15,7 @@ use App\Cpu\Dma;
 use App\Cpu\Interrupts;
 use App\Graphics\Objects\RenderingData;
 use App\Graphics\Ppu;
+use App\Graphics\Renderer;
 use App\Input\Gamepad;
 use GL\Buffer\UByteBuffer;
 use GL\Texture\Texture2D;
@@ -64,6 +65,11 @@ class Emulator extends QuickstartApp
      * Camera used for rendering the scene.
      */
     private Camera $camera;
+
+    /**
+     * The renderer for converting PPU data to framebuffer.
+     */
+    private Renderer $renderer;
 
     /**
      * The loaded cartridge.
@@ -128,11 +134,15 @@ class Emulator extends QuickstartApp
      */
     public function draw(RenderContext $context, RenderTarget $renderTarget): void
     {
-        // If the emulator is not running, show a placeholder animation. Or skip if we're running but not yet ready.
+        // If the emulator is not running, show a placeholder animation.
         if (! $this->isEmulatorRunning) {
             $rawBuffer = $this->generateWaitingAnimation($this->frameIndex);
         } elseif (! $this->isReadyToRender()) {
+            // Skip if we're running but not yet ready.
             return;
+        } else {
+            // Convert RenderingData to framebuffer using the renderer
+            $rawBuffer = $this->renderer->render(static::$renderingData);
         }
 
         // TODO: Make this a configuration value.
@@ -143,16 +153,12 @@ class Emulator extends QuickstartApp
         $viewport = $this->camera->getViewport($renderTarget);
         $this->camera->transformVGSpace($viewport, $this->vg);
 
-        // 2. Perform PPU rendering.
-        // TODO: Replace with actual NES PPU frame buffer.
-        $rawBuffer ??= $this->generateWaitingAnimation($this->frameIndex);
-
-        // 3. Upload to texture.
+        // 2. Upload framebuffer to texture.
         $buffer = new UByteBuffer($rawBuffer);
         $texture = Texture2D::fromBuffer(self::NES_MAX_X, self::NES_MAX_Y, $buffer);
         $image = $this->vg->imageFromTexture($texture, VGImage::REPEAT_NONE, VGImage::FILTER_NEAREST);
 
-        // 4. Compute scaling factors.
+        // 3. Compute scaling factors.
         $scaleX = $viewport->width / self::NES_MAX_X;
         $scaleY = $viewport->height / self::NES_MAX_Y;
 
@@ -167,7 +173,7 @@ class Emulator extends QuickstartApp
         $offsetY = ($viewport->height - (self::NES_MAX_Y * $scaleY)) / 2;
         $topLeft = $viewport->getTopLeft();
 
-        // 5. Begin VG draw
+        // 4. Begin VG draw
         $this->vg->save();
 
         // Translate and scale VG space so NES image fills or fits viewport.
@@ -195,15 +201,24 @@ class Emulator extends QuickstartApp
             return;
         }
 
-        if ($this->dma->isDmaProcessing()) {
-            $this->dma->runDma();
-            static::$cycle = 514;
+        // Run the emulator until a complete frame is rendered
+        while (true) {
+            $cycle = 0;
+
+            if ($this->dma->isDmaProcessing()) {
+                $this->dma->runDma();
+                $cycle = 514;
+            }
+
+            $cycle += $this->cpu->run();
+            $renderingData = $this->ppu->run($cycle * 3);
+
+            if ($renderingData !== false) {
+                static::$renderingData = $renderingData;
+                $this->gamepad->fetch();
+                break;
+            }
         }
-
-        static::$cycle += $this->cpu->run();
-        static::$renderingData = $this->ppu->run(static::$cycle * 3);
-
-        $this->gamepad->fetch();
     }
 
     /**
@@ -249,7 +264,6 @@ class Emulator extends QuickstartApp
         $this->ppu = new Ppu($this->ppuBus, $this->interrupts, $this->cartridge->isHorizontalMirror);
         $this->dma = new Dma($this->ram, $this->ppu);
         $this->cpuBus = new CpuBus($this->ram, $this->programRom, $this->ppu, $this->gamepad, $this->dma);
-        // TODO: Needs implementing
         $this->cpu = new Cpu($this->cpuBus, $this->interrupts);
         $this->cpu->reset();
 
@@ -265,6 +279,7 @@ class Emulator extends QuickstartApp
     {
         $this->camera = new Camera(CameraProjectionMode::orthographicStaticWorld, new Transform());
         $this->camera->flipViewportY = true;
+        $this->renderer = new Renderer();
 
         $fontPath = VISU_PATH_FRAMEWORK_RESOURCES_FONT . '/inconsolata/Inconsolata-Regular.ttf';
 

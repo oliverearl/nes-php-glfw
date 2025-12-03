@@ -54,6 +54,7 @@ class Ppu
      */
     public function __construct(private PpuBus $bus, private Interrupts $interrupts, private bool $isHorizontalMirror)
     {
+        $this->registers = array_fill(0, 8, 0);
         $this->vram = new Ram(0x2000);
         $this->spriteRam = new Ram(0x100);
         $this->palette = new Palette();
@@ -229,7 +230,7 @@ class Ppu
                 $ram = $this->readCharacterRam($address);
 
                 if ($ram & (0x80 >> $j)) {
-                    $sprite[$i % 8][$j] += 0x01 << floor($i / 8);
+                    $sprite[$i % 8][$j] += 0x01 << (int) floor($i / 8);
                 }
             }
         }
@@ -262,12 +263,12 @@ class Ppu
     private function buildBackground(): void
     {
         $clampedTileY = $this->tileY() % 30;
-        $tableIdOffset = (floor($this->tileY() / 30) % 2) ? 2 : 0;
+        $tableIdOffset = ((int) floor($this->tileY() / 30) % 2) ? 2 : 0;
 
         for ($x = 0; $x < 32 + 1; $x = ($x + 1) | 0) {
             $tileX = ($x + $this->scrollTileX());
             $clampedTileX = $tileX % 32;
-            $nameTableId = (floor($tileX / 32) % 2) + $tableIdOffset;
+            $nameTableId = ((int) floor($tileX / 32) % 2) + $tableIdOffset;
             $offsetAddrByNameTable = $nameTableId * 0x400;
 
             $tile = $this->buildTile($clampedTileX, $clampedTileY, $offsetAddrByNameTable);
@@ -283,7 +284,7 @@ class Ppu
 
     private function scrollTileY(): int
     {
-        return (int) floor(($this->scrollY + (floor($this->nameTableId() / 2) * 240)) / 8);
+        return (int) floor(($this->scrollY + ((int) floor($this->nameTableId() / 2) * 240)) / 8);
     }
 
     private function nameTableId(): int
@@ -309,7 +310,7 @@ class Ppu
 
     private function getBlockId(int $tileX, int $tileY): int
     {
-        return (int) floor(($tileX % 4) / 2) + (floor(($tileY % 4) / 2)) * 2;
+        return (int) floor(($tileX % 4) / 2) + ((int) floor(($tileY % 4) / 2)) * 2;
     }
 
     private function getSpriteId(int $tileX, int $tileY, int $offset): int
@@ -335,9 +336,9 @@ class Ppu
 
     private function getAttribute(int $tileX, int $tileY, int $offset): int
     {
-        $address = floor($tileX / 4) + (floor($tileY / 4) * 8) + 0x03C0 + $offset;
+        $address = (int) floor($tileX / 4) + ((int) floor($tileY / 4) * 8) + 0x03C0 + $offset;
 
-        return $this->vram->read($this->mirrorDownSpriteAddress((int) $address));
+        return $this->vram->read($this->mirrorDownSpriteAddress($address));
     }
 
     private function backgroundTableOffset(): int

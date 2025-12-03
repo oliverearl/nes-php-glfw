@@ -55,7 +55,8 @@ readonly class CpuBus
             return $this->programRom->read($address - 0x8000);
         }
 
-        throw new RuntimeException(sprintf('Invalid CPU read address: 0x%04X', $address));
+        // For unmapped addresses (APU, etc.), return 0
+        return 0;
     }
 
     /**
@@ -75,8 +76,8 @@ readonly class CpuBus
             } elseif ($address === 0x4016) {
                 $this->gamepad->write($data);
             }
-        } else {
-            throw new RuntimeException(sprintf('Invalid CPU write address: 0x%04X', $address));
+            // APU and other unmapped I/O registers - ignore writes
         }
+        // Ignore writes to other unmapped addresses
     }
 }

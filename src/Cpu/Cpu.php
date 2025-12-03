@@ -57,7 +57,10 @@ class Cpu
         $opcodes = $this->getOpcodes();
 
         foreach ($opcodes as $key => $opcode) {
-            $this->opcodeList[hexdec($key)] = $opcode;
+            // Convert key to string and ensure it's a proper hex string with leading zero if needed.
+            $keyStr = (string) $key;
+            $hexKey = strlen($keyStr) === 1 ? '0' . $keyStr : $keyStr;
+            $this->opcodeList[hexdec($hexKey)] = $opcode;
         }
     }
 
@@ -276,7 +279,7 @@ class Cpu
     {
         $this->hasBranched = false;
 
-        switch ($$name) {
+        switch ($name) {
             case 'LDA':
                 $this->registers->a = ($mode === Addressing::Immediate) ? $payload : $this->read($payload);
                 $this->registers->p->negative = (bool) ($this->registers->a & 0x80);
