@@ -80,6 +80,14 @@ class Cpu
         }
 
         $opcode = $this->fetch($this->registers->pc);
+
+        // Check if opcode is defined
+        if (!isset($this->opcodeList[$opcode])) {
+            // Unknown/illegal opcode - treat as 2-cycle NOP for compatibility
+            // Many games use unofficial opcodes, so we need to handle them gracefully
+            return 2;
+        }
+
         $ocp = $this->opcodeList[$opcode];
         $data = $this->getPayloadWithAdditionalCycle($ocp->mode);
         $this->execInstruction($ocp->baseName, $data->payload, $ocp->mode);
