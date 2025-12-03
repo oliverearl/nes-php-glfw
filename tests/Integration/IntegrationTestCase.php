@@ -51,7 +51,7 @@ abstract class IntegrationTestCase extends BaseTestCase
         ?int $romSize = 0x8000,
         ?int $characterRomSize = 0x2000,
         bool $horizontalMirror = true,
-        bool $setupResetVector = false
+        bool $setupResetVector = false,
     ): array {
         $ram = new Ram($ramSize);
 
@@ -91,7 +91,7 @@ abstract class IntegrationTestCase extends BaseTestCase
      */
     protected function createPpuSystem(
         ?int $characterRomSize = 0x2000,
-        bool $horizontalMirror = true
+        bool $horizontalMirror = true,
     ): array {
         $characterRom = new Ram($characterRomSize);
         $ppuBus = new PpuBus($characterRom);
@@ -121,7 +121,7 @@ abstract class IntegrationTestCase extends BaseTestCase
         array $romData,
         ?int $ramSize = 0x800,
         ?int $characterRomSize = 0x2000,
-        bool $horizontalMirror = true
+        bool $horizontalMirror = true,
     ): array {
         $ram = new Ram($ramSize);
         $programRom = new Rom($romData);
@@ -137,4 +137,3 @@ abstract class IntegrationTestCase extends BaseTestCase
         return [$cpu, $cpuBus, $ram, $programRom, $ppu, $interrupts, $dma, $gamepad];
     }
 }
-

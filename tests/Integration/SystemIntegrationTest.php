@@ -23,12 +23,12 @@ final class SystemIntegrationTest extends IntegrationTestCase
         $cartridge = new Cartridge(
             isHorizontalMirror: true,
             programRom: $programRom,
-            characterRom: $characterRom
+            characterRom: $characterRom,
         );
 
         [$cpu, $cpuBus, $ram, $programRomObj, $ppu, $interrupts, $dma, $gamepad] = $this->createTestSystemWithRom(
             romData: $cartridge->programRom,
-            horizontalMirror: $cartridge->isHorizontalMirror
+            horizontalMirror: $cartridge->isHorizontalMirror,
         );
 
         $renderer = new Renderer();
@@ -206,5 +206,3 @@ final class SystemIntegrationTest extends IntegrationTestCase
         $this->assertTrue(true);
     }
 }
-
-

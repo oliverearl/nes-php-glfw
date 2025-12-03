@@ -12,7 +12,7 @@ class Registers
         public int $y,
         public Status $p,
         public int $sp,
-        public int $pc
+        public int $pc,
     ) {}
 
     /**

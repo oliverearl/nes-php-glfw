@@ -20,16 +20,16 @@ final class RenderingDataTest extends TestCase
     {
         $palette = array_fill(0, 32, 0);
         $background = [
-            new Tile(array_fill(0, 8, array_fill(0, 8, 0)), 0, 0, 0)
+            new Tile(array_fill(0, 8, array_fill(0, 8, 0)), 0, 0, 0),
         ];
         $sprites = [
-            new Sprite(array_fill(0, 8, array_fill(0, 8, 0)), new Vec2(0, 0), 0, 0)
+            new Sprite(array_fill(0, 8, array_fill(0, 8, 0)), new Vec2(0, 0), 0, 0),
         ];
 
         $renderingData = new RenderingData(
             palette: $palette,
             background: $background,
-            sprites: $sprites
+            sprites: $sprites,
         );
 
         $this::assertSame($palette, $renderingData->palette);
@@ -43,7 +43,7 @@ final class RenderingDataTest extends TestCase
         $renderingData = new RenderingData(
             palette: array_fill(0, 32, 0),
             background: null,
-            sprites: null
+            sprites: null,
         );
 
         $reflection = new \ReflectionClass($renderingData);
@@ -56,7 +56,7 @@ final class RenderingDataTest extends TestCase
         $renderingData = new RenderingData(
             palette: array_fill(0, 32, 0),
             background: null,
-            sprites: null
+            sprites: null,
         );
 
         $this::assertNull($renderingData->background);
@@ -68,7 +68,7 @@ final class RenderingDataTest extends TestCase
         $renderingData = new RenderingData(
             palette: array_fill(0, 32, 0),
             background: null,
-            sprites: null
+            sprites: null,
         );
 
         $this::assertNull($renderingData->sprites);
@@ -80,7 +80,7 @@ final class RenderingDataTest extends TestCase
         $renderingData = new RenderingData(
             palette: array_fill(0, 32, 0),
             background: [],
-            sprites: null
+            sprites: null,
         );
 
         $this::assertIsArray($renderingData->background);
@@ -93,7 +93,7 @@ final class RenderingDataTest extends TestCase
         $renderingData = new RenderingData(
             palette: array_fill(0, 32, 0),
             background: null,
-            sprites: []
+            sprites: [],
         );
 
         $this::assertIsArray($renderingData->sprites);
@@ -108,7 +108,7 @@ final class RenderingDataTest extends TestCase
         $renderingData = new RenderingData(
             palette: $palette,
             background: null,
-            sprites: null
+            sprites: null,
         );
 
         $this::assertCount(32, $renderingData->palette);
@@ -124,14 +124,14 @@ final class RenderingDataTest extends TestCase
                 array_fill(0, 8, array_fill(0, 8, 0)),
                 0,
                 0,
-                0
+                0,
             );
         }
 
         $renderingData = new RenderingData(
             palette: array_fill(0, 32, 0),
             background: $tiles,
-            sprites: null
+            sprites: null,
         );
 
         $this::assertCount(33 * 30, $renderingData->background);
@@ -146,14 +146,14 @@ final class RenderingDataTest extends TestCase
                 array_fill(0, 8, array_fill(0, 8, 0)),
                 new Vec2($i * 4, $i * 4),
                 0,
-                $i
+                $i,
             );
         }
 
         $renderingData = new RenderingData(
             palette: array_fill(0, 32, 0),
             background: null,
-            sprites: $sprites
+            sprites: $sprites,
         );
 
         $this::assertCount(64, $renderingData->sprites);
@@ -163,16 +163,16 @@ final class RenderingDataTest extends TestCase
     public function it_can_have_both_background_and_sprites(): void
     {
         $background = [
-            new Tile(array_fill(0, 8, array_fill(0, 8, 0)), 0, 0, 0)
+            new Tile(array_fill(0, 8, array_fill(0, 8, 0)), 0, 0, 0),
         ];
         $sprites = [
-            new Sprite(array_fill(0, 8, array_fill(0, 8, 0)), new Vec2(0, 0), 0, 0)
+            new Sprite(array_fill(0, 8, array_fill(0, 8, 0)), new Vec2(0, 0), 0, 0),
         ];
 
         $renderingData = new RenderingData(
             palette: array_fill(0, 32, 0),
             background: $background,
-            sprites: $sprites
+            sprites: $sprites,
         );
 
         $this::assertIsArray($renderingData->background);
@@ -189,8 +189,8 @@ final class RenderingDataTest extends TestCase
             palette: array_fill(0, 32, 0),
             background: null,
             sprites: [
-                new Sprite(array_fill(0, 8, array_fill(0, 8, 0)), new Vec2(0, 0), 0, 0)
-            ]
+                new Sprite(array_fill(0, 8, array_fill(0, 8, 0)), new Vec2(0, 0), 0, 0),
+            ],
         );
 
         $this::assertNull($renderingData->background);
@@ -204,13 +204,12 @@ final class RenderingDataTest extends TestCase
         $renderingData = new RenderingData(
             palette: array_fill(0, 32, 0),
             background: [
-                new Tile(array_fill(0, 8, array_fill(0, 8, 0)), 0, 0, 0)
+                new Tile(array_fill(0, 8, array_fill(0, 8, 0)), 0, 0, 0),
             ],
-            sprites: null
+            sprites: null,
         );
 
         $this::assertNotNull($renderingData->background);
         $this::assertNull($renderingData->sprites);
     }
 }
-

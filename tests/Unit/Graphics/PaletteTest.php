@@ -196,4 +196,3 @@ final class PaletteTest extends TestCase
         }
     }
 }
-

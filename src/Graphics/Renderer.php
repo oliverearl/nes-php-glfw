@@ -186,4 +186,3 @@ class Renderer
         return !(($sprite[$y % 8][$x % 8] % 4) === 0);
     }
 }
-

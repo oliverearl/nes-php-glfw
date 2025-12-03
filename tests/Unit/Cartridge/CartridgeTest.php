@@ -21,7 +21,7 @@ final class CartridgeTest extends TestCase
         $cartridge = new Cartridge(
             isHorizontalMirror: true,
             programRom: $programRom,
-            characterRom: $characterRom
+            characterRom: $characterRom,
         );
 
         $this::assertTrue($cartridge->isHorizontalMirror);
@@ -35,7 +35,7 @@ final class CartridgeTest extends TestCase
         $cartridge = new Cartridge(
             isHorizontalMirror: true,
             programRom: [0x00],
-            characterRom: [0x00]
+            characterRom: [0x00],
         );
 
         $this::assertTrue($cartridge->isHorizontalMirror);
@@ -47,7 +47,7 @@ final class CartridgeTest extends TestCase
         $cartridge = new Cartridge(
             isHorizontalMirror: false,
             programRom: [0x00],
-            characterRom: [0x00]
+            characterRom: [0x00],
         );
 
         $this::assertFalse($cartridge->isHorizontalMirror);
@@ -61,7 +61,7 @@ final class CartridgeTest extends TestCase
         $cartridge = new Cartridge(
             isHorizontalMirror: true,
             programRom: $programRom,
-            characterRom: [0x00]
+            characterRom: [0x00],
         );
 
         $this::assertSame(32768, $cartridge->getProgramRomSize());
@@ -75,7 +75,7 @@ final class CartridgeTest extends TestCase
         $cartridge = new Cartridge(
             isHorizontalMirror: true,
             programRom: [0x00],
-            characterRom: $characterRom
+            characterRom: $characterRom,
         );
 
         $this::assertSame(8192, $cartridge->getCharacterRomSize());
@@ -87,7 +87,7 @@ final class CartridgeTest extends TestCase
         $cartridge = new Cartridge(
             isHorizontalMirror: true,
             programRom: [],
-            characterRom: []
+            characterRom: [],
         );
 
         $this::assertSame(0, $cartridge->getProgramRomSize());
@@ -103,7 +103,7 @@ final class CartridgeTest extends TestCase
         $cartridge = new Cartridge(
             isHorizontalMirror: true,
             programRom: $programRom,
-            characterRom: $characterRom
+            characterRom: $characterRom,
         );
 
         $this::assertSame([0x4C, 0x00, 0x80], $cartridge->programRom);
@@ -117,7 +117,7 @@ final class CartridgeTest extends TestCase
         $cartridge = new Cartridge(
             isHorizontalMirror: true,
             programRom: array_fill(0, 16384, 0),
-            characterRom: array_fill(0, 8192, 0)
+            characterRom: array_fill(0, 8192, 0),
         );
 
         $this::assertSame(16384, $cartridge->getProgramRomSize());
@@ -131,11 +131,10 @@ final class CartridgeTest extends TestCase
         $cartridge = new Cartridge(
             isHorizontalMirror: false,
             programRom: array_fill(0, 32768, 0),
-            characterRom: array_fill(0, 16384, 0)
+            characterRom: array_fill(0, 16384, 0),
         );
 
         $this::assertSame(32768, $cartridge->getProgramRomSize());
         $this::assertSame(16384, $cartridge->getCharacterRomSize());
     }
 }
-

@@ -103,4 +103,3 @@ final class RomTest extends TestCase
         $this::assertSame(0xFF, $rom->read(2));
     }
 }
-

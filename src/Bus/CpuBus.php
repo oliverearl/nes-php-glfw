@@ -7,7 +7,6 @@ namespace App\Bus;
 use App\Cpu\Dma;
 use App\Graphics\Ppu;
 use App\Input\Gamepad;
-use RuntimeException;
 
 readonly class CpuBus
 {

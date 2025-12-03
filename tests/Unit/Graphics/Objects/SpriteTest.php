@@ -23,7 +23,7 @@ final class SpriteTest extends TestCase
             sprite: $pattern,
             coordinates: $coordinates,
             attribute: 0x42,
-            id: 5
+            id: 5,
         );
 
         $this::assertSame($pattern, $sprite->sprite);
@@ -39,7 +39,7 @@ final class SpriteTest extends TestCase
             sprite: array_fill(0, 8, array_fill(0, 8, 0)),
             coordinates: new Vec2(0, 0),
             attribute: 0,
-            id: 0
+            id: 0,
         );
 
         $reflection = new \ReflectionClass($sprite);
@@ -55,7 +55,7 @@ final class SpriteTest extends TestCase
             sprite: array_fill(0, 8, array_fill(0, 8, 0)),
             coordinates: $coords,
             attribute: 0,
-            id: 0
+            id: 0,
         );
 
         // Use delta for floating point comparison
@@ -79,7 +79,7 @@ final class SpriteTest extends TestCase
                 sprite: array_fill(0, 8, array_fill(0, 8, 0)),
                 coordinates: new Vec2(0, 0),
                 attribute: $attribute,
-                id: 0
+                id: 0,
             );
 
             $this::assertSame($attribute, $sprite->attribute);
@@ -94,7 +94,7 @@ final class SpriteTest extends TestCase
                 sprite: array_fill(0, 8, array_fill(0, 8, 0)),
                 coordinates: new Vec2(0, 0),
                 attribute: 0,
-                id: $id
+                id: $id,
             );
 
             $this::assertSame($id, $sprite->id);
@@ -119,7 +119,7 @@ final class SpriteTest extends TestCase
             sprite: $pattern,
             coordinates: new Vec2(0, 0),
             attribute: 0,
-            id: 0
+            id: 0,
         );
 
         $this::assertSame($pattern, $sprite->sprite);
@@ -134,7 +134,7 @@ final class SpriteTest extends TestCase
             sprite: array_fill(0, 8, array_fill(0, 8, 0)),
             coordinates: new Vec2(-8, -8),
             attribute: 0,
-            id: 0
+            id: 0,
         );
 
         $this::assertSame(-8.0, $sprite->coordinates->x);
@@ -148,7 +148,7 @@ final class SpriteTest extends TestCase
             sprite: array_fill(0, 8, array_fill(0, 8, 0)),
             coordinates: new Vec2(255, 239),
             attribute: 0,
-            id: 0
+            id: 0,
         );
 
         $this::assertSame(255.0, $sprite->coordinates->x);
@@ -163,7 +163,7 @@ final class SpriteTest extends TestCase
             sprite: array_fill(0, 8, array_fill(0, 8, 0)),
             coordinates: new Vec2(0, 0),
             attribute: 0x03, // Palette 3
-            id: 0
+            id: 0,
         );
 
         $paletteId = $sprite->attribute & 0x03;
@@ -177,7 +177,7 @@ final class SpriteTest extends TestCase
             sprite: array_fill(0, 8, array_fill(0, 8, 0)),
             coordinates: new Vec2(0, 0),
             attribute: 0x40,
-            id: 0
+            id: 0,
         );
 
         $isHorizontalFlip = (bool) ($sprite->attribute & 0x40);
@@ -191,7 +191,7 @@ final class SpriteTest extends TestCase
             sprite: array_fill(0, 8, array_fill(0, 8, 0)),
             coordinates: new Vec2(0, 0),
             attribute: 0x80,
-            id: 0
+            id: 0,
         );
 
         $isVerticalFlip = (bool) ($sprite->attribute & 0x80);
@@ -205,11 +205,10 @@ final class SpriteTest extends TestCase
             sprite: array_fill(0, 8, array_fill(0, 8, 0)),
             coordinates: new Vec2(0, 0),
             attribute: 0x20,
-            id: 0
+            id: 0,
         );
 
         $isLowPriority = (bool) ($sprite->attribute & 0x20);
         $this::assertTrue($isLowPriority);
     }
 }
-

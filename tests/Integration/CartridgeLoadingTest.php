@@ -152,4 +152,3 @@ final class CartridgeLoadingTest extends IntegrationTestCase
         }
     }
 }
-

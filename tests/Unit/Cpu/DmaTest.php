@@ -113,7 +113,7 @@ final class DmaTest extends TestCase
             ->method('transferSprite')
             ->with(
                 $this->anything(),
-                0xAA // All data should be 0xAA
+                0xAA, // All data should be 0xAA
             );
 
         $dma = new Dma($ram, $ppu);
@@ -158,7 +158,7 @@ final class DmaTest extends TestCase
             ->method('transferSprite')
             ->with(
                 $this->anything(),
-                0x55
+                0x55,
             );
 
         $dma = new Dma($ram, $ppu);
@@ -198,4 +198,3 @@ final class DmaTest extends TestCase
         $dma->runDma();
     }
 }
-

@@ -132,4 +132,3 @@ final class InterruptsTest extends TestCase
         $this::assertFalse($interrupts->isNmiAsserted());
     }
 }
-

@@ -139,4 +139,3 @@ final class DmaIntegrationTest extends IntegrationTestCase
         $this->assertFalse($dma->isDmaProcessing());
     }
 }
-

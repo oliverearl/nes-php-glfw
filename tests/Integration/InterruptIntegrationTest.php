@@ -129,4 +129,3 @@ final class InterruptIntegrationTest extends IntegrationTestCase
         $this->assertFalse($interrupts->isNmiAsserted());
     }
 }
-

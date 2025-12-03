@@ -25,7 +25,7 @@ final class RendererTest extends TestCase
         $renderingData = new RenderingData(
             palette: array_fill(0, 32, 0),
             background: null,
-            sprites: null
+            sprites: null,
         );
 
         $buffer = $renderer->render($renderingData);
@@ -52,7 +52,7 @@ final class RendererTest extends TestCase
             pattern: $pattern,
             paletteId: 0,
             scrollX: 0,
-            scrollY: 0
+            scrollY: 0,
         );
 
         $palette = array_fill(0, 32, 0);
@@ -61,7 +61,7 @@ final class RendererTest extends TestCase
         $renderingData = new RenderingData(
             palette: $palette,
             background: [$tile],
-            sprites: null
+            sprites: null,
         );
 
         $buffer = $renderer->render($renderingData);
@@ -83,7 +83,7 @@ final class RendererTest extends TestCase
             sprite: $pattern,
             coordinates: new Vec2(100, 100),
             attribute: 0x00,
-            id: 0
+            id: 0,
         );
 
         $palette = array_fill(0, 32, 0);
@@ -92,7 +92,7 @@ final class RendererTest extends TestCase
         $renderingData = new RenderingData(
             palette: $palette,
             background: null,
-            sprites: [$sprite]
+            sprites: [$sprite],
         );
 
         $buffer = $renderer->render($renderingData);
@@ -109,7 +109,7 @@ final class RendererTest extends TestCase
         $renderingData = new RenderingData(
             palette: array_fill(0, 32, 0),
             background: null,
-            sprites: null
+            sprites: null,
         );
 
         $buffer = $renderer->render($renderingData);
@@ -125,7 +125,7 @@ final class RendererTest extends TestCase
         $renderingData = new RenderingData(
             palette: array_fill(0, 32, 0),
             background: null,
-            sprites: null
+            sprites: null,
         );
 
         $buffer = $renderer->render($renderingData);
@@ -141,7 +141,7 @@ final class RendererTest extends TestCase
         $renderingData = new RenderingData(
             palette: array_fill(0, 32, 0),
             background: [],
-            sprites: null
+            sprites: null,
         );
 
         $buffer = $renderer->render($renderingData);
@@ -157,7 +157,7 @@ final class RendererTest extends TestCase
         $renderingData = new RenderingData(
             palette: array_fill(0, 32, 0),
             background: null,
-            sprites: []
+            sprites: [],
         );
 
         $buffer = $renderer->render($renderingData);
@@ -176,14 +176,14 @@ final class RendererTest extends TestCase
                 pattern: array_fill(0, 8, array_fill(0, 8, 0)),
                 paletteId: 0,
                 scrollX: 0,
-                scrollY: 0
+                scrollY: 0,
             );
         }
 
         $renderingData = new RenderingData(
             palette: array_fill(0, 32, 0),
             background: $tiles,
-            sprites: null
+            sprites: null,
         );
 
         $buffer = $renderer->render($renderingData);
@@ -202,14 +202,14 @@ final class RendererTest extends TestCase
                 sprite: array_fill(0, 8, array_fill(0, 8, 0)),
                 coordinates: new Vec2($i * 10, $i * 10),
                 attribute: 0x00,
-                id: $i
+                id: $i,
             );
         }
 
         $renderingData = new RenderingData(
             palette: array_fill(0, 32, 0),
             background: null,
-            sprites: $sprites
+            sprites: $sprites,
         );
 
         $buffer = $renderer->render($renderingData);
@@ -231,7 +231,7 @@ final class RendererTest extends TestCase
         $renderingData1 = new RenderingData(
             palette: $palette,
             background: [$tile],
-            sprites: null
+            sprites: null,
         );
 
         $buffer1 = $renderer->render($renderingData1);
@@ -240,7 +240,7 @@ final class RendererTest extends TestCase
         $renderingData2 = new RenderingData(
             palette: $palette,
             background: null,
-            sprites: null
+            sprites: null,
         );
 
         $buffer2 = $renderer->render($renderingData2);
@@ -259,13 +259,13 @@ final class RendererTest extends TestCase
             sprite: array_fill(0, 8, array_fill(0, 8, 0)),
             coordinates: new Vec2(50, 50),
             attribute: 0x40, // Horizontal flip bit
-            id: 0
+            id: 0,
         );
 
         $renderingData = new RenderingData(
             palette: array_fill(0, 32, 0),
             background: null,
-            sprites: [$sprite]
+            sprites: [$sprite],
         );
 
         $buffer = $renderer->render($renderingData);
@@ -282,13 +282,13 @@ final class RendererTest extends TestCase
             sprite: array_fill(0, 8, array_fill(0, 8, 0)),
             coordinates: new Vec2(50, 50),
             attribute: 0x80, // Vertical flip bit
-            id: 0
+            id: 0,
         );
 
         $renderingData = new RenderingData(
             palette: array_fill(0, 32, 0),
             background: null,
-            sprites: [$sprite]
+            sprites: [$sprite],
         );
 
         $buffer = $renderer->render($renderingData);
@@ -305,13 +305,13 @@ final class RendererTest extends TestCase
             sprite: array_fill(0, 8, array_fill(0, 8, 0)),
             coordinates: new Vec2(50, 50),
             attribute: 0x20, // Low priority bit
-            id: 0
+            id: 0,
         );
 
         $renderingData = new RenderingData(
             palette: array_fill(0, 32, 0),
             background: null,
-            sprites: [$sprite]
+            sprites: [$sprite],
         );
 
         $buffer = $renderer->render($renderingData);
@@ -319,4 +319,3 @@ final class RendererTest extends TestCase
         $this::assertCount(256 * 256 * 4, $buffer);
     }
 }
-

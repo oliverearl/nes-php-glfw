@@ -14,6 +14,6 @@ class Status
         public bool $decimalMode,
         public bool $interrupt,
         public bool $zero,
-        public bool $carry
+        public bool $carry,
     ) {}
 }

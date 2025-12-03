@@ -202,4 +202,3 @@ final class CpuBusIntegrationTest extends IntegrationTestCase
         $this->assertTrue(true);
     }
 }
-

@@ -146,14 +146,14 @@ class Cpu
 
     private function pushStatus(): void
     {
-        $status = (+$this->registers->p->negative) << 7 |
-            (+$this->registers->p->overflow) << 6 |
-            (+$this->registers->p->reserved) << 5 |
-            (+$this->registers->p->breakMode) << 4 |
-            (+$this->registers->p->decimalMode) << 3 |
-            (+$this->registers->p->interrupt) << 2 |
-            (+$this->registers->p->zero) << 1 |
-            (+$this->registers->p->carry);
+        $status = (+$this->registers->p->negative) << 7
+            | (+$this->registers->p->overflow) << 6
+            | (+$this->registers->p->reserved) << 5
+            | (+$this->registers->p->breakMode) << 4
+            | (+$this->registers->p->decimalMode) << 3
+            | (+$this->registers->p->interrupt) << 2
+            | (+$this->registers->p->zero) << 1
+            | (+$this->registers->p->carry);
 
         $this->push($status);
     }
@@ -274,8 +274,8 @@ class Cpu
                 );
             case Addressing::IndirectAbsolute:
                 $payload = $this->fetch($this->registers->pc, self::READ_WORD);
-                $address = $this->read($payload) +
-                    ($this->read(($payload & 0xFF00) | ((($payload & 0xFF) + 1) & 0xFF)) << 8);
+                $address = $this->read($payload)
+                    + ($this->read(($payload & 0xFF00) | ((($payload & 0xFF) + 1) & 0xFF)) << 8);
 
                 return new PayloadWithAdditionalCycle($address & 0xFFFF, 0);
         }
@@ -343,8 +343,8 @@ class Cpu
             case 'ADC':
                 $data = ($mode === Addressing::Immediate) ? $payload : $this->read($payload);
                 $operated = $data + $this->registers->a + $this->registers->p->carry;
-                $overflow = (!((($this->registers->a ^ $data) & 0x80) !== 0) &&
-                    ((($this->registers->a ^ $operated) & 0x80)) !== 0);
+                $overflow = (!((($this->registers->a ^ $data) & 0x80) !== 0)
+                    && ((($this->registers->a ^ $operated) & 0x80)) !== 0);
                 $this->registers->p->overflow = $overflow;
                 $this->registers->p->carry = $operated > 0xFF;
                 $this->registers->p->negative = (bool) ($operated & 0x80);
@@ -496,8 +496,8 @@ class Cpu
             case 'SBC':
                 $data = ($mode === Addressing::Immediate) ? $payload : $this->read($payload);
                 $operated = $this->registers->a - $data - ($this->registers->p->carry ? 0 : 1);
-                $overflow = ((($this->registers->a ^ $operated) & 0x80) !== 0 &&
-                    (($this->registers->a ^ $data) & 0x80) !== 0);
+                $overflow = ((($this->registers->a ^ $operated) & 0x80) !== 0
+                    && (($this->registers->a ^ $data) & 0x80) !== 0);
                 $this->registers->p->overflow = $overflow;
                 $this->registers->p->carry = $operated >= 0;
                 $this->registers->p->negative = (bool) ($operated & 0x80);
@@ -615,7 +615,7 @@ class Cpu
                 break;
             case 'NOP':
                 break;
-            // Unofficial Opecode
+                // Unofficial Opecode
             case 'NOPD':
                 $this->registers->pc++;
                 break;
@@ -640,8 +640,8 @@ class Cpu
             case 'ISB':
                 $data = ($this->read($payload) + 1) & 0xFF;
                 $operated = (~$data & 0xFF) + $this->registers->a + $this->registers->p->carry;
-                $overflow = (!((($this->registers->a ^ $data) & 0x80) !== 0) &&
-                    ((($this->registers->a ^ $operated) & 0x80)) !== 0);
+                $overflow = (!((($this->registers->a ^ $data) & 0x80) !== 0)
+                    && ((($this->registers->a ^ $operated) & 0x80)) !== 0);
                 $this->registers->p->overflow = $overflow;
                 $this->registers->p->carry = $operated > 0xFF;
                 $this->registers->p->negative = (bool) ($operated & 0x80);
@@ -680,8 +680,8 @@ class Cpu
                 $carry = (bool) ($data & 0x01);
                 $data = ($data >> 1) | ($this->registers->p->carry ? 0x80 : 0x00);
                 $operated = $data + $this->registers->a + $carry;
-                $overflow = (!((($this->registers->a ^ $data) & 0x80) !== 0) &&
-                    ((($this->registers->a ^ $operated) & 0x80)) !== 0);
+                $overflow = (!((($this->registers->a ^ $data) & 0x80) !== 0)
+                    && ((($this->registers->a ^ $operated) & 0x80)) !== 0);
                 $this->registers->p->overflow = $overflow;
                 $this->registers->p->negative = (bool) ($operated & 0x80);
                 $this->registers->p->zero = !($operated & 0xFF);
