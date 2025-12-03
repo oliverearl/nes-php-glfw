@@ -32,7 +32,8 @@ readonly class CpuBus
         }
 
         if ($address < 0x2000) {
-            return $this->ram->read($address - 0x0800);
+            // RAM mirrors every 0x800 bytes up to 0x2000
+            return $this->ram->read($address % 0x0800);
         }
 
         if ($address < 0x4000) {
@@ -67,7 +68,8 @@ readonly class CpuBus
         if ($address < 0x0800) {
             $this->ram->write($address, $data);
         } elseif ($address < 0x2000) {
-            $this->ram->write($address - 0x0800, $data);
+            // RAM mirrors every 0x800 bytes up to 0x2000
+            $this->ram->write($address % 0x0800, $data);
         } elseif ($address < 0x2008) {
             $this->ppu->write($address - 0x2000, $data);
         } elseif ($address >= 0x4000 && $address < 0x4020) {
