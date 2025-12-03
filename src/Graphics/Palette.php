@@ -49,11 +49,11 @@ class Palette
 
     private function isSpriteMirror(int $addr): bool
     {
-        return ($addr === 0x10) || ($addr === 0x14) || ($addr === 0x18) || ($addr === 0x1c);
+        return in_array($addr, [0x10, 0x14, 0x18, 0x1c], true);
     }
 
     private function isBackgroundMirror(int $addr): bool
     {
-        return ($addr === 0x04) || ($addr === 0x08) || ($addr === 0x0c);
+        return in_array($addr, [0x04, 0x08, 0x0c], true);
     }
 }

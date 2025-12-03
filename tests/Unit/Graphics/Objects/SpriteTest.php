@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Graphics\Objects;
 
+use ReflectionClass;
 use App\Graphics\Objects\Sprite;
 use GL\Math\Vec2;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -42,7 +43,7 @@ final class SpriteTest extends TestCase
             id: 0,
         );
 
-        $reflection = new \ReflectionClass($sprite);
+        $reflection = new ReflectionClass($sprite);
         $this::assertTrue($reflection->isReadOnly());
     }
 

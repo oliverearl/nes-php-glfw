@@ -31,8 +31,6 @@ final class SystemIntegrationTest extends IntegrationTestCase
             horizontalMirror: $cartridge->isHorizontalMirror,
         );
 
-        $renderer = new Renderer();
-
         // System is ready - verify all components exist
         $this::assertInstanceOf(Cpu::class, $cpu);
         $this::assertInstanceOf(Ppu::class, $ppu);

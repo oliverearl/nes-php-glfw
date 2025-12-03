@@ -142,7 +142,7 @@ class Gamepad
      */
     public function write(int $data): void
     {
-        if ($data & 0x01) {
+        if (($data & 0x01) !== 0) {
             // Strobe line high: controller should keep tracking live button states.
             $this->isSet = true;
         } elseif ($this->isSet && !($data & 0x01)) {

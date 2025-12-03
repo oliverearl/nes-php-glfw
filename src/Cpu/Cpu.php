@@ -44,13 +44,13 @@ class Cpu
 
     private bool $hasBranched = false;
 
-    /** @var array<int, \App\Cpu\Objects\OpcodeProps> */
+    /** @var array<int, OpcodeProps> */
     private array $opcodeList = [];
 
     /**
      * Creates a new CPU instance.
      */
-    public function __construct(private CpuBus $bus, private Interrupts $interrupts)
+    public function __construct(private readonly CpuBus $bus, private readonly Interrupts $interrupts)
     {
         $this->registers = Registers::getDefault();
 
@@ -233,7 +233,7 @@ class Cpu
                 );
             case Addressing::ZeroPageY:
                 return new PayloadWithAdditionalCycle(
-                    payload: $this->fetch($this->registers->pc) + $this->registers->x & 0xFF,
+                    payload: ($this->fetch($this->registers->pc) + $this->registers->y) & 0xFF,
                     additionalCycle: 0,
                 );
             case Addressing::Absolute:

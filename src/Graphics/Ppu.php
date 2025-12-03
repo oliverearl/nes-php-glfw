@@ -29,19 +29,19 @@ class Ppu
 
     private int $vramAddress = 0x0000;
 
-    private Ram $vram;
+    private readonly Ram $vram;
 
     private int $vramReadBuffer = 0;
 
-    private Ram $spriteRam;
+    private readonly Ram $spriteRam;
 
     /** @var list<int> */
     private array $background = [];
 
-    /** @var list<\App\Graphics\Objects\Sprite> */
+    /** @var list<Sprite> */
     private array $sprites = [];
 
-    private Palette $palette;
+    private readonly Palette $palette;
 
     private bool $isHorizontalScroll = true;
 
@@ -52,7 +52,7 @@ class Ppu
     /**
      * Creates a new PPU instance.
      */
-    public function __construct(private PpuBus $bus, private Interrupts $interrupts, private bool $isHorizontalMirror)
+    public function __construct(private readonly PpuBus $bus, private readonly Interrupts $interrupts, private readonly bool $isHorizontalMirror)
     {
         $this->registers = array_fill(0, 8, 0);
         $this->vram = new Ram(0x2000);
@@ -160,7 +160,7 @@ class Ppu
 
     private function buildSprites(): void
     {
-        $offset = ($this->registers[0] & 0x08) ? 0x1000 : 0x0000;
+        $offset = (($this->registers[0] & 0x08) !== 0) ? 0x1000 : 0x0000;
 
         for ($i = 0; $i < self::SPRITE_NUMBER; $i = ($i + 4) | 0) {
 
@@ -211,7 +211,7 @@ class Ppu
 
     private function vramOffset(): int
     {
-        return ($this->registers[0x00] & 0x04) ? 32 : 1;
+        return (($this->registers[0x00] & 0x04) !== 0) ? 32 : 1;
     }
 
     private function readCharacterRam(int $address): int
@@ -229,7 +229,7 @@ class Ppu
                 $address = $spriteId * 16 + $i + $offset;
                 $ram = $this->readCharacterRam($address);
 
-                if ($ram & (0x80 >> $j)) {
+                if (($ram & 0x80 >> $j) !== 0) {
                     $sprite[$i % 8][$j] += 0x01 << (int) floor($i / 8);
                 }
             }
@@ -263,7 +263,7 @@ class Ppu
     private function buildBackground(): void
     {
         $clampedTileY = $this->tileY() % 30;
-        $tableIdOffset = ((int) floor($this->tileY() / 30) % 2) ? 2 : 0;
+        $tableIdOffset = ((int) floor($this->tileY() / 30) % 2 !== 0) ? 2 : 0;
 
         for ($x = 0; $x < 32 + 1; $x = ($x + 1) | 0) {
             $tileX = ($x + $this->scrollTileX());
@@ -343,7 +343,7 @@ class Ppu
 
     private function backgroundTableOffset(): int
     {
-        return ($this->registers[0] & 0x10) ? 0x1000 : 0x0000;
+        return (($this->registers[0] & 0x10) !== 0) ? 0x1000 : 0x0000;
     }
 
     private function setVblank(): void

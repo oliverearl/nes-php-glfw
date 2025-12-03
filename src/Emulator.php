@@ -20,6 +20,7 @@ use App\Input\Gamepad;
 use GL\Buffer\UByteBuffer;
 use GL\Texture\Texture2D;
 use GL\VectorGraphics\VGImage;
+use Override;
 use RuntimeException;
 use VISU\Geo\Transform;
 use VISU\Graphics\{Camera, CameraProjectionMode, RenderTarget};
@@ -118,7 +119,8 @@ class Emulator extends QuickstartApp
      *
      * @throws \RuntimeException
      * @throws \VISU\OS\Exception\InputMappingException
-     */
+ */
+    #[Override]
     public function ready(): void
     {
         parent::ready();
@@ -132,6 +134,7 @@ class Emulator extends QuickstartApp
      * @inheritDoc
      * @throws \VISU\Exception\VISUException
      */
+    #[Override]
     public function draw(RenderContext $context, RenderTarget $renderTarget): void
     {
         // If the emulator is not running, show a placeholder animation.
@@ -142,7 +145,7 @@ class Emulator extends QuickstartApp
             return;
         } else {
             // Convert RenderingData to framebuffer using the renderer
-            $rawBuffer = $this->renderer->render(static::$renderingData);
+            $rawBuffer = $this->renderer->render(self::$renderingData);
         }
 
         // TODO: Make this a configuration value.
@@ -193,6 +196,7 @@ class Emulator extends QuickstartApp
     }
 
     /** @inheritDoc */
+    #[Override]
     public function update(): void
     {
         parent::update();
@@ -214,7 +218,7 @@ class Emulator extends QuickstartApp
             $renderingData = $this->ppu->run($cycle * 3);
 
             if ($renderingData !== false) {
-                static::$renderingData = $renderingData;
+                self::$renderingData = $renderingData;
                 $this->gamepad->fetch();
                 break;
             }
@@ -340,6 +344,6 @@ class Emulator extends QuickstartApp
      */
     private function isReadyToRender(): bool
     {
-        return static::$renderingData !== false;
+        return self::$renderingData !== false;
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Graphics;
 
+use Iterator;
 use App\Graphics\Palette;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -57,13 +58,9 @@ final class PaletteTest extends TestCase
         $this::assertSame($data[$baseAddr], $data[$mirrorAddr]);
     }
 
-    public static function spriteMirrorAddressProvider(): array
+    public static function spriteMirrorAddressProvider(): Iterator
     {
-        return [
-            'Mirror 0x10 to 0x00' => [0x10, 0x00],
-            // 0x14, 0x18, 0x1C are sprite mirrors but 0x04, 0x08, 0x0C are background mirrors
-            // So these all ultimately point to 0x00
-        ];
+        yield 'Mirror 0x10 to 0x00' => [0x10, 0x00];
     }
 
     #[Test]
@@ -111,13 +108,11 @@ final class PaletteTest extends TestCase
         $this::assertSame(0x55, $data[$mirrorAddr]);
     }
 
-    public static function backgroundMirrorAddressProvider(): array
+    public static function backgroundMirrorAddressProvider(): Iterator
     {
-        return [
-            'Mirror 0x04' => [0x04],
-            'Mirror 0x08' => [0x08],
-            'Mirror 0x0C' => [0x0C],
-        ];
+        yield 'Mirror 0x04' => [0x04];
+        yield 'Mirror 0x08' => [0x08];
+        yield 'Mirror 0x0C' => [0x0C];
     }
 
     #[Test]

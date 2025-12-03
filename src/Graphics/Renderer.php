@@ -44,7 +44,7 @@ class Renderer
     /**
      * Background tiles for sprite priority checking.
      *
-     * @var list<\App\Graphics\Objects\Tile>
+     * @var list<Tile>
      */
     private array $background = [];
 
@@ -78,7 +78,7 @@ class Renderer
     /**
      * Render all background tiles.
      *
-     * @param list<\App\Graphics\Objects\Tile> $background
+     * @param list<Tile> $background
      * @param list<int> $palette
      */
     private function renderBackground(array $background, array $palette): void
@@ -123,7 +123,7 @@ class Renderer
     /**
      * Render all sprites.
      *
-     * @param list<\App\Graphics\Objects\Sprite> $sprites
+     * @param list<Sprite> $sprites
      * @param list<int> $palette
      */
     private function renderSprites(array $sprites, array $palette): void

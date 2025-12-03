@@ -10,8 +10,8 @@ readonly class RenderingData
      * Creates a new RenderingData instance.
      *
      * @param list<int> $palette
-     * @param list<\App\Graphics\Objects\Tile>|null $background
-     * @param list<\App\Graphics\Objects\Sprite>|null $sprites
+     * @param list<Tile>|null $background
+     * @param list<Sprite>|null $sprites
      */
     public function __construct(
         public array $palette,

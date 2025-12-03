@@ -53,8 +53,7 @@ final class DmaTest extends TestCase
         // Expect transferSprite to be called 256 times
         $ppu->expects($this->exactly(256))
             ->method('transferSprite')
-            ->willReturnCallback(function (int $index, int $data) {
-                // Verify the index and data match
+            ->willReturnCallback(function (int $index, int $data): void {
                 $this::assertSame($index, $data);
             });
 
@@ -70,8 +69,7 @@ final class DmaTest extends TestCase
         $ram = new Ram(0x800);
         $ppu = $this->createMock(Ppu::class);
 
-        $ppu->expects($this->any())
-            ->method('transferSprite');
+        $ppu->method('transferSprite');
 
         $dma = new Dma($ram, $ppu);
 

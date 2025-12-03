@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Graphics\Objects;
 
+use ReflectionClass;
 use App\Graphics\Objects\Tile;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
@@ -40,7 +41,7 @@ final class TileTest extends TestCase
             scrollY: 0,
         );
 
-        $reflection = new \ReflectionClass($tile);
+        $reflection = new ReflectionClass($tile);
         $this::assertTrue($reflection->isReadOnly());
     }
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Graphics\Objects;
 
+use ReflectionClass;
 use App\Graphics\Objects\RenderingData;
 use App\Graphics\Objects\Sprite;
 use App\Graphics\Objects\Tile;
@@ -46,7 +47,7 @@ final class RenderingDataTest extends TestCase
             sprites: null,
         );
 
-        $reflection = new \ReflectionClass($renderingData);
+        $reflection = new ReflectionClass($renderingData);
         $this::assertTrue($reflection->isReadOnly());
     }
 

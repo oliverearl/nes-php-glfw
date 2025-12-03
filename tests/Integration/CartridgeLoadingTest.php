@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Integration;
 
+use RuntimeException;
 use App\Cartridge\Cartridge;
 use App\Cartridge\Loader;
 use PHPUnit\Framework\Attributes\Test;
@@ -101,7 +102,7 @@ final class CartridgeLoadingTest extends IntegrationTestCase
     #[Test]
     public function it_throws_exception_for_missing_file(): void
     {
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('File not found');
 
         new Loader('/nonexistent/file.nes');
@@ -117,7 +118,7 @@ final class CartridgeLoadingTest extends IntegrationTestCase
         try {
             $loader = new Loader($tempFile);
 
-            $this->expectException(\RuntimeException::class);
+            $this->expectException(RuntimeException::class);
             $this->expectExceptionMessage('Invalid NES file format');
 
             $loader->load();

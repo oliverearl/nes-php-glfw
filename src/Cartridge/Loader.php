@@ -26,7 +26,7 @@ readonly class Loader
     /**
      * Create a cartridge loader.
      *
-     * @throws \RuntimeException
+     * @throws RuntimeException
      */
     public function __construct(private string $filepath)
     {
@@ -42,7 +42,7 @@ readonly class Loader
     /**
      * Load the cartridge from the NES file.
      *
-     * @throws \RuntimeException
+     * @throws RuntimeException
      */
     public function load(): Cartridge
     {
