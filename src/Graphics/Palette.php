@@ -8,14 +8,24 @@ use App\Bus\Ram;
 
 class Palette
 {
+    /**
+     * Internal palette RAM storage.
+     */
     private readonly Ram $paletteRam;
 
+    /**
+     * Creates a new palette instance.
+     */
     public function __construct()
     {
         $this->paletteRam = new Ram(0x20);
     }
 
-    /** @return list<int> */
+    /**
+     * Reads the entire palette with mirroring applied.
+     *
+     * @return list<int>
+     */
     public function read(): array
     {
         $return = [];
@@ -33,11 +43,17 @@ class Palette
         return $return;
     }
 
+    /**
+     * Writes a value to the palette at the specified address.
+     */
     public function write(int $addr, int $data): void
     {
         $this->paletteRam->write($this->getPaletteAddress($addr), $data);
     }
 
+    /**
+     * Calculates the actual palette address accounting for mirroring.
+     */
     private function getPaletteAddress(int $addr): int
     {
         $mirrorDowned = (($addr & 0xFF) % 0x20);
@@ -47,11 +63,17 @@ class Palette
             : $mirrorDowned;
     }
 
+    /**
+     * Checks if an address is a sprite palette mirror.
+     */
     private function isSpriteMirror(int $addr): bool
     {
         return in_array($addr, [0x10, 0x14, 0x18, 0x1c], true);
     }
 
+    /**
+     * Checks if an address is a background palette mirror.
+     */
     private function isBackgroundMirror(int $addr): bool
     {
         return in_array($addr, [0x04, 0x08, 0x0c], true);

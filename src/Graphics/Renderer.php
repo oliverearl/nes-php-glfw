@@ -11,7 +11,7 @@ use App\Graphics\Objects\Tile;
 class Renderer
 {
     /**
-     * NES color palette (RGB values for each of the 64 NES colors).
+     * NES color palette mapping palette indices to RGB values.
      *
      * @var list<list<int>>
      */
@@ -35,33 +35,34 @@ class Renderer
     ];
 
     /**
-     * The framebuffer (RGBA, 256x256x4 bytes).
+     * The framebuffer storing RGBA pixel data.
      *
      * @var list<int>
      */
-    private array $frameBuffer = [];
+    private array $frameBuffer;
 
     /**
-     * Background tiles for sprite priority checking.
+     * Cached background tiles for sprite priority checking.
      *
      * @var list<Tile>
      */
     private array $background = [];
 
+    /**
+     * Creates a new renderer and initializes the framebuffer.
+     */
     public function __construct()
     {
-        // Initialize framebuffer (256 x 256 x 4 RGBA bytes)
         $this->frameBuffer = array_fill(0, 256 * 256 * 4, 0);
     }
 
     /**
-     * Render the NES frame from rendering data.
+     * Renders NES graphics data to an RGBA framebuffer.
      *
-     * @return list<int> The framebuffer array (RGBA format).
+     * @return list<int>
      */
     public function render(RenderingData $data): array
     {
-        // Clear the framebuffer
         $this->frameBuffer = array_fill(0, 256 * 256 * 4, 0);
 
         if ($data->background !== null && count($data->background) > 0) {
@@ -76,7 +77,7 @@ class Renderer
     }
 
     /**
-     * Render all background tiles.
+     * Renders all background tiles to the framebuffer.
      *
      * @param list<Tile> $background
      * @param list<int> $palette
@@ -93,7 +94,9 @@ class Renderer
     }
 
     /**
-     * Render a single background tile.
+     * Renders a single background tile to the framebuffer.
+     *
+     * @param list<int> $palette
      */
     private function renderTile(Tile $tile, int $tileX, int $tileY, array $palette): void
     {
@@ -121,7 +124,7 @@ class Renderer
     }
 
     /**
-     * Render all sprites.
+     * Renders all sprites to the framebuffer.
      *
      * @param list<Sprite> $sprites
      * @param list<int> $palette
@@ -136,7 +139,9 @@ class Renderer
     }
 
     /**
-     * Render a single sprite.
+     * Renders a single sprite to the framebuffer.
+     *
+     * @param list<int> $palette
      */
     private function renderSprite(Sprite $sprite, array $palette): void
     {
@@ -168,7 +173,7 @@ class Renderer
     }
 
     /**
-     * Check if a sprite pixel should be hidden behind the background.
+     * Checks if a sprite pixel should be hidden behind the background based on priority.
      */
     private function shouldPixelHide(int $x, int $y): bool
     {
@@ -182,7 +187,6 @@ class Renderer
 
         $sprite = $this->background[$backgroundIndex]->pattern;
 
-        // If background pixel is not transparent, we need to hide sprite.
         return !(($sprite[$y % 8][$x % 8] % 4) === 0);
     }
 }

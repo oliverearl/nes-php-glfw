@@ -11,7 +11,7 @@ use App\Input\Gamepad;
 readonly class CpuBus
 {
     /**
-     * Creates a new CPU bus instance.
+     * Creates a new CPU bus instance with all required components.
      */
     public function __construct(
         private Ram $ram,
@@ -22,7 +22,7 @@ readonly class CpuBus
     ) {}
 
     /**
-     * Reads data via the CPU bus at the specified address.
+     * Reads a byte from the CPU address space.
      */
     public function readByCpu(int $address): int
     {
@@ -31,7 +31,6 @@ readonly class CpuBus
         }
 
         if ($address < 0x2000) {
-            // RAM mirrors every 0x800 bytes up to 0x2000
             return $this->ram->read($address % 0x0800);
         }
 
@@ -55,19 +54,17 @@ readonly class CpuBus
             return $this->programRom->read($address - 0x8000);
         }
 
-        // For unmapped addresses (APU, etc.), return 0
         return 0;
     }
 
     /**
-     * Writes data via the CPU bus at the specified address.
+     * Writes a byte to the CPU address space.
      */
     public function writeByCpu(int $address, int $data): void
     {
         if ($address < 0x0800) {
             $this->ram->write($address, $data);
         } elseif ($address < 0x2000) {
-            // RAM mirrors every 0x800 bytes up to 0x2000
             $this->ram->write($address % 0x0800, $data);
         } elseif ($address < 0x2008) {
             $this->ppu->write($address - 0x2000, $data);

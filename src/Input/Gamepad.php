@@ -8,15 +8,6 @@ use VISU\OS\InputActionMap;
 use VISU\OS\InputContextMap;
 use VISU\OS\Key;
 
-/**
- * Class Keypad
- *
- * Emulates an NES controller for use in a PHP emulator.
- *
- * The NES controller uses a **serial shift register** mechanism:
- *  - CPU writes to $4016 to **strobe/latch** the current button state.
- *  - CPU reads from $4016 repeatedly to get one button state at a time (A → Right).
- */
 class Gamepad
 {
     /**
@@ -24,32 +15,48 @@ class Gamepad
      */
     public const string INPUT_CONTEXT_DEFAULT_KEYBOARD = 'default_keyboard';
 
-    /** A */
+    /**
+     * A button constant.
+     */
     public const string BUTTON_A = 'A';
 
-    /** B */
+    /**
+     * B button constant.
+     */
     public const string BUTTON_B = 'B';
 
-    /** SELECT */
+    /**
+     * SELECT button constant.
+     */
     public const string BUTTON_SELECT = 'SELECT';
 
-    /** START */
+    /**
+     * START button constant.
+     */
     public const string BUTTON_START = 'START';
 
-    /** ^ */
+    /**
+     * UP button constant.
+     */
     public const string BUTTON_UP = 'UP';
 
-    /** v */
+    /**
+     * DOWN button constant.
+     */
     public const string BUTTON_DOWN = 'DOWN';
 
-    /** <- */
+    /**
+     * LEFT button constant.
+     */
     public const string BUTTON_LEFT = 'LEFT';
 
-    /** -> */
+    /**
+     * RIGHT button constant.
+     */
     public const string BUTTON_RIGHT = 'RIGHT';
 
     /**
-     * Default button names and their associated keys.
+     * Default button names mapped to their keyboard keys.
      *
      * @var array<string, int>
      */
@@ -65,38 +72,36 @@ class Gamepad
     ];
 
     /**
-     * The Visu input system used to poll keyboard or gamepad state.
+     * The input context for reading keyboard/gamepad state.
      */
     private readonly InputContextMap $input;
 
     /**
-     * The current live button states.
-     * Indexed as: [A, B, SELECT, START, UP, DOWN, LEFT, RIGHT]
+     * Live button state buffer updated each frame.
      *
      * @var list<bool>
      */
     private array $keyBuffer;
 
     /**
-     * The latched button states.
-     * This is the snapshot of keyBuffer captured on strobe write from CPU.
+     * Latched button states captured during strobe operation.
      *
      * @var list<bool>
      */
     private array $keyRegisters = [];
 
     /**
-     * Whether the strobe line is high (CPU is telling controller to latch).
+     * Indicates whether the strobe line is currently high.
      */
     private bool $isSet = false;
 
     /**
-     * Current bit index for read() — 0 = A, 7 = Right.
+     * Current read index for serial reads (0-7).
      */
     private int $index = 0;
 
     /**
-     * Creates a new Gamepad instance.
+     * Creates a new gamepad instance and binds default keyboard controls.
      *
      * @throws \VISU\OS\Exception\InputMappingException
      */
@@ -115,9 +120,7 @@ class Gamepad
     }
 
     /**
-     * Poll the current input state from Visu and update the live key buffer.
-     *
-     * Should be called once per frame before CPU execution.
+     * Polls the current input state and updates the live key buffer.
      */
     public function fetch(): void
     {
@@ -134,7 +137,7 @@ class Gamepad
     }
 
     /**
-     * Emulate writing to the NES controller strobe register.
+     * Handles writes to the controller strobe register.
      *
      * On the real NES:
      *  - Writing a 1 to bit 0 of $4016 keeps the controller in "latch" mode.
@@ -143,16 +146,10 @@ class Gamepad
     public function write(int $data): void
     {
         if (($data & 0x01) !== 0) {
-            // Strobe line high: controller should keep tracking live button states.
             $this->isSet = true;
         } elseif ($this->isSet && !($data & 0x01)) {
-            // Strobe line fell from 1 → 0: latch current button states.
             $this->isSet = false;
-
-            // Reset the shift index so the next read starts from the first button. (A)
             $this->index = 0;
-
-            // Copy live keys to the latched register for serial reading.
             $this->keyRegisters = $this->keyBuffer;
         }
     }

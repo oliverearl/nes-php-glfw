@@ -14,43 +14,94 @@ use GL\Math\Vec2;
 
 class Ppu
 {
+    /**
+     * Total number of sprites in sprite RAM.
+     */
     public const int SPRITE_NUMBER = 0x100;
 
-    /** @var list<int> */
-    private array $registers = [];
+    /**
+     * PPU control and status registers.
+     *
+     * @var list<int>
+     */
+    private array $registers;
 
+    /**
+     * The current PPU cycle within a scanline.
+     */
     private int $cycle = 0;
 
+    /**
+     * The current scanline being processed.
+     */
     private int $scanline = 0;
 
+    /**
+     * Indicates whether the next VRAM address write is the lower byte.
+     */
     private bool $isLowerVramAddress = false;
 
+    /**
+     * The current address in sprite RAM.
+     */
     private int $spriteRamAddress = 0;
 
+    /**
+     * The current VRAM address pointer.
+     */
     private int $vramAddress = 0x0000;
 
+    /**
+     * Internal VRAM storage.
+     */
     private readonly Ram $vram;
 
+    /**
+     * Buffer for VRAM read operations.
+     */
     private int $vramReadBuffer = 0;
 
+    /**
+     * Sprite RAM storage (OAM - Object Attribute Memory).
+     */
     private readonly Ram $spriteRam;
 
-    /** @var list<int> */
+    /**
+     * The rendered background tiles for the current frame.
+     *
+     * @var list<int>
+     */
     private array $background = [];
 
-    /** @var list<Sprite> */
+    /**
+     * The sprites to be rendered for the current frame.
+     *
+     * @var list<Sprite>
+     */
     private array $sprites = [];
 
+    /**
+     * The palette handler for color mapping.
+     */
     private readonly Palette $palette;
 
+    /**
+     * Indicates whether the next scroll write is horizontal.
+     */
     private bool $isHorizontalScroll = true;
 
+    /**
+     * The horizontal scroll position.
+     */
     private int $scrollX = 0;
 
+    /**
+     * The vertical scroll position.
+     */
     private int $scrollY = 0;
 
     /**
-     * Creates a new PPU instance.
+     * Creates a new PPU instance and initializes internal state.
      */
     public function __construct(private readonly PpuBus $bus, private readonly Interrupts $interrupts, private readonly bool $isHorizontalMirror)
     {
@@ -61,7 +112,7 @@ class Ppu
     }
 
     /**
-     * Executes a single PPU cycle.
+     * Runs the PPU for the specified number of cycles and returns rendering data when a frame is complete.
      */
     public function run(int $cycle): false|RenderingData
     {
@@ -105,6 +156,9 @@ class Ppu
         return false;
     }
 
+    /**
+     * Reads data from a PPU register.
+     */
     public function read(int $address): int
     {
         if ($address === 0x0002) {
@@ -126,6 +180,9 @@ class Ppu
         return 0;
     }
 
+    /**
+     * Writes data to a PPU register.
+     */
     public function write(int $address, int $data): void
     {
         if ($address === 0x0003) {
@@ -151,6 +208,9 @@ class Ppu
         $this->registers[$address] = $data;
     }
 
+    /**
+     * Transfers a byte to sprite RAM during DMA operation.
+     */
     public function transferSprite(int $index, int $data): void
     {
         $address = $index + $this->spriteRamAddress;
@@ -158,6 +218,9 @@ class Ppu
         $this->spriteRam->write($address % 0x100, $data);
     }
 
+    /**
+     * Builds all sprites from sprite RAM.
+     */
     private function buildSprites(): void
     {
         $offset = (($this->registers[0] & 0x08) !== 0) ? 0x1000 : 0x0000;
@@ -179,11 +242,17 @@ class Ppu
         }
     }
 
+    /**
+     * Clears the VBlank flag in the status register.
+     */
     private function clearVblank(): void
     {
         $this->registers[0x02] &= 0x7F;
     }
 
+    /**
+     * Reads data from VRAM with buffering.
+     */
     private function readVram(): int
     {
         $buf = $this->vramReadBuffer;
@@ -204,22 +273,35 @@ class Ppu
         return $buf;
     }
 
+    /**
+     * Calculates the actual VRAM address accounting for mirroring.
+     */
     private function calculateVramAddress(): int
     {
         return ($this->vramAddress >= 0x3000 && $this->vramAddress < 0x3f00) ? $this->vramAddress -= 0x3000 : $this->vramAddress - 0x2000;
     }
 
+    /**
+     * Returns the VRAM address increment based on PPU control register.
+     */
     private function vramOffset(): int
     {
         return (($this->registers[0x00] & 0x04) !== 0) ? 32 : 1;
     }
 
+    /**
+     * Reads a byte from character RAM via the PPU bus.
+     */
     private function readCharacterRam(int $address): int
     {
         return $this->bus->readByPpu($address);
     }
 
-    /** @return list<list<int>> */
+    /**
+     * Builds a 8x8 sprite pattern from character RAM.
+     *
+     * @return list<list<int>>
+     */
     private function buildSprite(int $spriteId, int $offset): array
     {
         $sprite = array_fill(0, 8, array_fill(0, 8, 0));
@@ -238,6 +320,9 @@ class Ppu
         return $sprite;
     }
 
+    /**
+     * Checks if sprite 0 hit occurred on the current scanline.
+     */
     private function hasSpriteHit(): bool
     {
         $y = $this->spriteRam->read(0);
@@ -245,21 +330,33 @@ class Ppu
         return ($y === $this->scanline) && $this->isBackgroundEnabled() && $this->isSpriteEnabled();
     }
 
+    /**
+     * Checks if background rendering is enabled.
+     */
     private function isBackgroundEnabled(): bool
     {
         return (bool) ($this->registers[0x01] & 0x08);
     }
 
+    /**
+     * Checks if sprite rendering is enabled.
+     */
     private function isSpriteEnabled(): bool
     {
         return (bool) ($this->registers[0x01] & 0x10);
     }
 
+    /**
+     * Sets the sprite 0 hit flag in the status register.
+     */
     private function setSpriteHit(): void
     {
         $this->registers[0x02] |= 0x40;
     }
 
+    /**
+     * Builds background tiles for the current scanline.
+     */
     private function buildBackground(): void
     {
         $clampedTileY = $this->tileY() % 30;
@@ -277,26 +374,41 @@ class Ppu
         }
     }
 
+    /**
+     * Calculates the current tile Y position.
+     */
     private function tileY(): int
     {
         return (int) floor($this->scanline / 8) + $this->scrollTileY();
     }
 
+    /**
+     * Calculates the scroll-adjusted tile Y position.
+     */
     private function scrollTileY(): int
     {
         return (int) floor(($this->scrollY + ((int) floor($this->nameTableId() / 2) * 240)) / 8);
     }
 
+    /**
+     * Gets the current nametable ID from the control register.
+     */
     private function nameTableId(): int
     {
         return $this->registers[0x00] & 0x03;
     }
 
+    /**
+     * Calculates the scroll-adjusted tile X position.
+     */
     private function scrollTileX(): int
     {
         return (int) floor(($this->scrollX + (($this->nameTableId() % 2) * 256)) / 8);
     }
 
+    /**
+     * Builds a single background tile with sprite pattern and palette information.
+     */
     private function buildTile(int $tileX, int $tileY, int $offset): Tile
     {
         $blockId = $this->getBlockId($tileX, $tileY);
@@ -308,11 +420,17 @@ class Ppu
         return new Tile($sprite, $paletteId, $this->scrollX, $this->scrollY, );
     }
 
+    /**
+     * Gets the block ID for attribute table lookup.
+     */
     private function getBlockId(int $tileX, int $tileY): int
     {
         return (int) floor(($tileX % 4) / 2) + ((int) floor(($tileY % 4) / 2)) * 2;
     }
 
+    /**
+     * Gets the sprite ID from the nametable.
+     */
     private function getSpriteId(int $tileX, int $tileY, int $offset): int
     {
         $tileNumber = $tileY * 32 + $tileX;
@@ -321,6 +439,9 @@ class Ppu
         return $this->vram->read($spriteAddress);
     }
 
+    /**
+     * Applies nametable mirroring based on horizontal/vertical mirror mode.
+     */
     private function mirrorDownSpriteAddress(int $address): int
     {
         if (!$this->isHorizontalMirror) {
@@ -334,6 +455,9 @@ class Ppu
         return $address;
     }
 
+    /**
+     * Gets the attribute byte for a tile.
+     */
     private function getAttribute(int $tileX, int $tileY, int $offset): int
     {
         $address = (int) floor($tileX / 4) + ((int) floor($tileY / 4) * 8) + 0x03C0 + $offset;
@@ -341,43 +465,68 @@ class Ppu
         return $this->vram->read($this->mirrorDownSpriteAddress($address));
     }
 
+    /**
+     * Gets the background pattern table offset from the control register.
+     */
     private function backgroundTableOffset(): int
     {
         return (($this->registers[0] & 0x10) !== 0) ? 0x1000 : 0x0000;
     }
 
+    /**
+     * Sets the VBlank flag in the status register.
+     */
     private function setVblank(): void
     {
         $this->registers[0x02] |= 0x80;
     }
 
+    /**
+     * Checks if VBlank NMI is enabled.
+     */
     private function hasVblankIrqEnabled(): bool
     {
         return (bool) ($this->registers[0] & 0x80);
     }
 
+    /**
+     * Clears the sprite 0 hit flag.
+     */
     private function clearSpriteHit(): void
     {
         $this->registers[0x02] &= 0xbf;
     }
 
-    /** @return list<int> */
+    /**
+     * Gets the current palette data.
+     *
+     * @return list<int>
+     */
     private function getPalette(): array
     {
         return $this->palette->read();
     }
 
+    /**
+     * Writes to the sprite RAM address register.
+     */
     private function writeSpriteRamAddress(int $data): void
     {
         $this->spriteRamAddress = $data;
     }
 
+    /**
+     * Writes data to sprite RAM and increments the address.
+     */
     private function writeSpriteRamData(int $data): void
     {
         $this->spriteRam->write($this->spriteRamAddress, $data);
         ++$this->spriteRamAddress;
     }
 
+    /**
+     * Writes scroll position data (alternates between X and Y).
+     */
     private function writeScrollData(int $data): void
     {
         if ($this->isHorizontalScroll) {
@@ -389,6 +538,9 @@ class Ppu
         }
     }
 
+    /**
+     * Writes VRAM address data (alternates between high and low byte).
+     */
     private function writeVramAddress(int $data): void
     {
         if ($this->isLowerVramAddress) {
@@ -400,6 +552,9 @@ class Ppu
         }
     }
 
+    /**
+     * Writes data to VRAM or palette RAM.
+     */
     private function writeVramData(int $data): void
     {
         if ($this->vramAddress >= 0x2000) {
@@ -415,11 +570,17 @@ class Ppu
         $this->vramAddress += $this->vramOffset();
     }
 
+    /**
+     * Writes a byte to VRAM.
+     */
     private function writeVram(int $address, int $data): void
     {
         $this->vram->write($address, $data);
     }
 
+    /**
+     * Writes a byte to character RAM via the PPU bus.
+     */
     private function writeCharacterRam(int $address, int $data): void
     {
         $this->bus->writeByPpu($address, $data);

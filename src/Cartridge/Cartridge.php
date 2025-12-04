@@ -7,7 +7,7 @@ namespace App\Cartridge;
 readonly class Cartridge
 {
     /**
-     * Create a new NES cartridge.
+     * Creates a new NES cartridge with ROM data and mirroring configuration.
      *
      * @param list<int> $programRom
      * @param list<int> $characterRom
@@ -19,7 +19,7 @@ readonly class Cartridge
     ) {}
 
     /**
-     * Get the size of the program ROM.
+     * Gets the size of the character ROM in bytes.
      */
     public function getCharacterRomSize(): int
     {
@@ -27,7 +27,7 @@ readonly class Cartridge
     }
 
     /**
-     * Get the size of the character ROM.
+     * Gets the size of the program ROM in bytes.
      */
     public function getProgramRomSize(): int
     {

@@ -14,17 +14,17 @@ readonly class Loader
     public const int NES_HEADER_SIZE = 0x0010;
 
     /**
-     * Program ROM size in bytes.
+     * Program ROM page size in bytes.
      */
     public const int PROGRAM_ROM_SIZE = 0x4000;
 
     /**
-     * Character ROM size in bytes.
+     * Character ROM page size in bytes.
      */
     public const int CHARACTER_ROM_SIZE = 0x2000;
 
     /**
-     * Create a cartridge loader.
+     * Creates a cartridge loader for the specified NES ROM file.
      *
      * @throws RuntimeException
      */
@@ -40,7 +40,7 @@ readonly class Loader
     }
 
     /**
-     * Load the cartridge from the NES file.
+     * Loads and parses the NES ROM file into a Cartridge object.
      *
      * @throws RuntimeException
      */

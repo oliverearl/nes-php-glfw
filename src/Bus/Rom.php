@@ -9,22 +9,22 @@ use RuntimeException;
 readonly class Rom
 {
     /**
-     * Create a new ROM instance.
+     * Creates a new ROM instance.
      *
      * @param list<int> $data
      */
     public function __construct(public array $data) {}
 
-    /***
-     * Get the size of the ROM.
+    /**
+     * Gets the size of the ROM in bytes.
      */
     public function size(): int
     {
         return count($this->data);
     }
 
-    /***
-     * Read a byte from the ROM at the specified address.
+    /**
+     * Reads a byte from the ROM at the specified address.
      *
      * @throws \RuntimeException
      */

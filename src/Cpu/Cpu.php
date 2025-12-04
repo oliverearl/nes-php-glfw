@@ -37,18 +37,35 @@ class Cpu
         2, 5, 2, 8, 4, 4, 6, 6, 2, 4, 2, 7, 4, 4, 7, 7,
     ];
 
+    /**
+     * Constant for reading a single byte.
+     */
     private const int READ_BYTE = 1;
+
+    /**
+     * Constant for reading a word (two bytes).
+     */
     private const int READ_WORD = 2;
 
+    /**
+     * CPU registers (A, X, Y, PC, SP, and status flags).
+     */
     private Registers $registers;
 
+    /**
+     * Indicates whether the last instruction caused a branch.
+     */
     private bool $hasBranched = false;
 
-    /** @var array<int, OpcodeProps> */
+    /**
+     * Map of opcodes to their properties.
+     *
+     * @var array<int, OpcodeProps>
+     */
     private array $opcodeList = [];
 
     /**
-     * Creates a new CPU instance.
+     * Creates a new CPU instance and initializes the opcode table.
      */
     public function __construct(private readonly CpuBus $bus, private readonly Interrupts $interrupts)
     {
@@ -57,15 +74,14 @@ class Cpu
         $opcodes = $this->getOpcodes();
 
         foreach ($opcodes as $key => $opcode) {
-            // Convert key to string and ensure it's a proper hex string with leading zero if needed.
-            $keyStr = (string) $key;
-            $hexKey = strlen($keyStr) === 1 ? '0' . $keyStr : $keyStr;
+            $key = (string) $key;
+            $hexKey = strlen($key) === 1 ? '0' . $key : $key;
             $this->opcodeList[hexdec($hexKey)] = $opcode;
         }
     }
 
     /**
-     * Executes a single CPU cycle.
+     * Executes a single CPU instruction and returns the number of cycles consumed.
      *
      * @throws \RuntimeException
      */
@@ -81,10 +97,11 @@ class Cpu
 
         $opcode = $this->fetch($this->registers->pc);
 
-        // Check if opcode is defined
         if (!isset($this->opcodeList[$opcode])) {
-            // Unknown/illegal opcode - treat as 2-cycle NOP for compatibility
-            // Many games use unofficial opcodes, so we need to handle them gracefully
+            /*
+             * Unknown/illegal opcode - treat as 2-cycle NOP for compatibility.
+             * Many games use unofficial opcodes, so we need to handle them gracefully.
+             */
             return 2;
         }
 
@@ -96,7 +113,7 @@ class Cpu
     }
 
     /**
-     * Resets the CPU to its initial state.
+     * Resets the CPU to its power-on state.
      */
     public function reset(): void
     {
@@ -104,6 +121,9 @@ class Cpu
         $this->registers->pc = $this->read(0xFFFC, self::READ_WORD);
     }
 
+    /**
+     * Fetches data from memory and advances the program counter.
+     */
     private function fetch(int $address, int $size = self::READ_BYTE): int
     {
         $this->registers->pc += ($size === self::READ_BYTE) ? 1 : 2;
@@ -111,6 +131,9 @@ class Cpu
         return $this->read($address, $size);
     }
 
+    /**
+     * Reads data from memory via the CPU bus.
+     */
     private function read(int $address, int $size = self::READ_BYTE): int
     {
         $address &= 0xFFFF;
@@ -120,17 +143,26 @@ class Cpu
             : $this->bus->readByCpu($address);
     }
 
+    /**
+     * Writes data to memory via the CPU bus.
+     */
     private function write(int $address, int $data): void
     {
         $this->bus->writeByCpu($address, $data);
     }
 
+    /**
+     * Pushes a byte onto the stack.
+     */
     private function push(int $data): void
     {
         $this->write(0x100 | ($this->registers->sp & 0xFF), $data);
         $this->registers->sp--;
     }
 
+    /**
+     * Pops a byte from the stack.
+     */
     private function pop(): int
     {
         $this->registers->sp++;
@@ -138,12 +170,18 @@ class Cpu
         return $this->read(0x100 | ($this->registers->sp & 0xFF));
     }
 
+    /**
+     * Performs a branch operation by setting the program counter.
+     */
     private function branch(int $address): void
     {
         $this->registers->pc = $address;
         $this->hasBranched = true;
     }
 
+    /**
+     * Pushes the processor status flags onto the stack.
+     */
     private function pushStatus(): void
     {
         $status = (+$this->registers->p->negative) << 7
@@ -158,6 +196,9 @@ class Cpu
         $this->push($status);
     }
 
+    /**
+     * Pops the processor status flags from the stack.
+     */
     private function popStatus(): void
     {
         $status = $this->pop();
@@ -172,12 +213,18 @@ class Cpu
         $this->registers->p->carry = (bool) ($status & 0x01);
     }
 
+    /**
+     * Pops the program counter from the stack.
+     */
     private function popPC(): void
     {
         $this->registers->pc = $this->pop();
         $this->registers->pc += ($this->pop() << 8);
     }
 
+    /**
+     * Processes a Non-Maskable Interrupt (NMI).
+     */
     private function processNmi(): void
     {
         $this->interrupts->deassertNmi();
@@ -189,6 +236,9 @@ class Cpu
         $this->registers->pc = $this->read(0xFFFA, self::READ_WORD);
     }
 
+    /**
+     * Processes an Interrupt Request (IRQ).
+     */
     private function processIrq(): void
     {
         if ($this->registers->p->interrupt) {
@@ -205,7 +255,7 @@ class Cpu
     }
 
     /**
-     * Fetches the payload and calculates any additional cycles based on the addressing mode.
+     * Fetches the operand payload and calculates additional cycles based on the addressing mode.
      */
     private function getPayloadWithAdditionalCycle(Addressing $mode): PayloadWithAdditionalCycle
     {
@@ -283,6 +333,9 @@ class Cpu
         throw new RuntimeException("Unsupported addressing mode: {$mode->name}");
     }
 
+    /**
+     * Executes a single 6502 instruction based on the opcode name, payload, and addressing mode.
+     */
     private function execInstruction(string $name, int $payload, Addressing $mode): void
     {
         $this->hasBranched = false;
@@ -615,7 +668,6 @@ class Cpu
                 break;
             case 'NOP':
                 break;
-                // Unofficial Opecode
             case 'NOPD':
                 $this->registers->pc++;
                 break;
@@ -694,6 +746,11 @@ class Cpu
         }
     }
 
+    /**
+     * Returns the complete opcode table mapping hex values to opcode properties.
+     *
+     * @return array<int|string, OpcodeProps>
+     */
     private function getOpcodes(): array
     {
         return [
@@ -848,8 +905,8 @@ class Cpu
             'F0' => new OpcodeProps('BEQ', Addressing::Relative, self::CYCLES[0xF0]),
             'F8' => new OpcodeProps('SED', Addressing::Implied, self::CYCLES[0xF8]),
             'D8' => new OpcodeProps('CLD', Addressing::Implied, self::CYCLES[0xD8]),
-            // unofficial opecode
-            // Also see https://wiki.nesdev.com/w/index.php/CPU_unofficial_opcodes
+
+            /** @see https://wiki.nesdev.com/w/index.php/CPU_unofficial_opcodes */
             '1A' => new OpcodeProps('NOP', Addressing::Implied, self::CYCLES[0x1A]),
             '3A' => new OpcodeProps('NOP', Addressing::Implied, self::CYCLES[0x3A]),
             '5A' => new OpcodeProps('NOP', Addressing::Implied, self::CYCLES[0x5A]),

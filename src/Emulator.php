@@ -73,22 +73,32 @@ class Emulator extends QuickstartApp
     private Cartridge $cartridge;
 
     /**
-     * Input. Currently limited to a single default-style gamepad.
+     * Input handler for gamepad input.
      */
     private Gamepad $gamepad;
 
+    /**
+     * The PPU (Picture Processing Unit).
+     */
     private Ppu $ppu;
 
+    /**
+     * The DMA (Direct Memory Access) controller.
+     */
     private Dma $dma;
 
+    /**
+     * The CPU (Central Processing Unit).
+     */
     private Cpu $cpu;
 
     /**
-     * @inheritDoc
+     * Initializes the emulator and loads the ROM if available.
      *
+     * @inheritDoc
      * @throws \RuntimeException
      * @throws \VISU\OS\Exception\InputMappingException
- */
+     */
     #[Override]
     public function ready(): void
     {
@@ -100,63 +110,53 @@ class Emulator extends QuickstartApp
     }
 
     /**
+     * Renders the current frame to the screen.
+     *
      * @inheritDoc
      * @throws \VISU\Exception\VISUException
      */
     #[Override]
     public function draw(RenderContext $context, RenderTarget $renderTarget): void
     {
-        // If the emulator is not running, show a placeholder animation.
         if (! $this->isEmulatorRunning) {
             $rawBuffer = $this->generateWaitingAnimation($this->frameIndex);
         } elseif (! $this->isReadyToRender()) {
-            // Skip if we're running but not yet ready.
             return;
         } else {
-            // Convert RenderingData to framebuffer using the renderer
             $rawBuffer = $this->renderer->render(self::$renderingData);
         }
 
         // TODO: Make this a configuration value.
         $preserveAspect = false;
 
-        // 1. Clear screen, setup camera/view.
         $renderTarget->framebuffer()->clear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
         $viewport = $this->camera->getViewport($renderTarget);
         $this->camera->transformVGSpace($viewport, $this->vg);
 
-        // 2. Upload framebuffer to texture.
         $buffer = new UByteBuffer($rawBuffer);
         $texture = Texture2D::fromBuffer(self::NES_MAX_X, self::NES_MAX_Y, $buffer);
         $image = $this->vg->imageFromTexture($texture, VGImage::REPEAT_NONE, VGImage::FILTER_NEAREST);
 
-        // 3. Compute scaling factors.
         $scaleX = $viewport->width / self::NES_MAX_X;
         $scaleY = $viewport->height / self::NES_MAX_Y;
 
         if ($preserveAspect) {
-            // Scale uniformly to fit within viewport.
             $scale = min($scaleX, $scaleY);
             $scaleX = $scaleY = $scale;
         }
 
-        // Center within viewport.
         $offsetX = ($viewport->width - (self::NES_MAX_X * $scaleX)) / 2;
         $offsetY = ($viewport->height - (self::NES_MAX_Y * $scaleY)) / 2;
         $topLeft = $viewport->getTopLeft();
 
-        // 4. Begin VG draw
         $this->vg->save();
 
-        // Translate and scale VG space so NES image fills or fits viewport.
         $this->vg->translate($topLeft->x + $offsetX, $topLeft->y + $offsetY);
         $this->vg->scale($scaleX, $scaleY);
 
-        // Draw the image in NES native coordinates. (0–256, 0–224)
         $this->vg->beginPath();
         $this->vg->rect(0.0, 0.0, self::NES_MAX_X, self::NES_MAX_Y);
 
-        // Make a paint that maps 1:1 onto this rect.
         $paint = $image->makePaint(0.0, 0.0, self::NES_MAX_X, self::NES_MAX_Y);
         $this->vg->fillPaint($paint);
         $this->vg->fill();
@@ -164,7 +164,11 @@ class Emulator extends QuickstartApp
         $this->vg->restore();
     }
 
-    /** @inheritDoc */
+    /**
+     * Updates the emulator state by running the CPU and PPU until a frame is complete.
+     *
+     * @inheritDoc
+     */
     #[Override]
     public function update(): void
     {
@@ -174,7 +178,6 @@ class Emulator extends QuickstartApp
             return;
         }
 
-        // Run the emulator until a complete frame is rendered
         while (true) {
             $cycle = 0;
 
@@ -195,7 +198,7 @@ class Emulator extends QuickstartApp
     }
 
     /**
-     * Fire up the emulator.
+     * Loads the ROM and initializes the emulator components.
      *
      * @throws \RuntimeException
      * @throws \VISU\OS\Exception\InputMappingException
@@ -215,7 +218,7 @@ class Emulator extends QuickstartApp
 
 
     /**
-     * Reset the emulator state.
+     * Resets the emulator to its initial state with the loaded cartridge.
      *
      * @throws \VISU\OS\Exception\InputMappingException
      */
@@ -244,7 +247,7 @@ class Emulator extends QuickstartApp
     }
 
     /**
-     * Performs some initial setup for the game engine.
+     * Initializes the rendering engine and input handlers.
      *
      * @throws \RuntimeException
      */
@@ -267,7 +270,7 @@ class Emulator extends QuickstartApp
     }
 
     /**
-     * Check if a ROM was passed via argument.
+     * Checks if a ROM file was passed via command-line argument.
      */
     private function checkForInitialRom(): void
     {
@@ -279,8 +282,7 @@ class Emulator extends QuickstartApp
     }
 
     /**
-     * Generate a test canvas buffer with an animated pattern.
-     * This is used when there is no game loaded.
+     * Generates a test canvas buffer with an animated pattern for display when no game is loaded.
      *
      * @return list<int>
      */
@@ -288,12 +290,11 @@ class Emulator extends QuickstartApp
     {
         $buffer = [];
 
-        // Animate by shifting colors based on frame.
-        $shift = ($frame * 5) % 256; // Change 5 per frame, wrap at 256.
+        // Animate by shifting colours based on frame.
+        $shift = ($frame * 5) % 256;
 
         for ($y = 0; $y < self::NES_MAX_Y; $y++) {
             for ($x = 0; $x < self::NES_MAX_X; $x++) {
-                // Create a moving gradient.
                 $r = ($x + $shift) % 256;
                 $g = ($y + $shift) % 256;
                 $b = (128 + $shift) % 256;
@@ -309,7 +310,7 @@ class Emulator extends QuickstartApp
     }
 
     /**
-     * Check whether the emulator is ready to render a frame.
+     * Checks whether the emulator is ready to render a frame.
      */
     private function isReadyToRender(): bool
     {

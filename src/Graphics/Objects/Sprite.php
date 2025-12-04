@@ -9,7 +9,7 @@ use GL\Math\Vec2;
 readonly class Sprite
 {
     /**
-     * Creates a new Sprite instance.
+     * Creates a new sprite with pattern data, position, and attributes.
      *
      * @param list<int[]> $sprite
      */

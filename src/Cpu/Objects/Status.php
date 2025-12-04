@@ -6,6 +6,9 @@ namespace App\Cpu\Objects;
 
 class Status
 {
+    /**
+     * Creates a new CPU status register.
+     */
     public function __construct(
         public bool $negative,
         public bool $overflow,

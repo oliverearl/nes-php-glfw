@@ -7,12 +7,12 @@ namespace App\Bus;
 readonly class PpuBus
 {
     /**
-     * Create a new PpuBus instance.
+     * Creates a new PPU bus instance.
      */
     public function __construct(public Ram $characterRam) {}
 
     /**
-     * Read data by PPU.
+     * Reads a byte from character RAM via the PPU.
      */
     public function readByPpu(int $addr): int
     {
@@ -20,7 +20,7 @@ readonly class PpuBus
     }
 
     /**
-     * Write data by PPU.
+     * Writes a byte to character RAM via the PPU.
      */
     public function writeByPpu(int $addr, int $data): void
     {

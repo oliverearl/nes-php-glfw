@@ -6,6 +6,9 @@ namespace App\Cpu\Objects;
 
 class Registers
 {
+    /**
+     * Creates a new CPU register set.
+     */
     public function __construct(
         public int $a,
         public int $x,
@@ -16,7 +19,7 @@ class Registers
     ) {}
 
     /**
-     * Create an instance with default register values.
+     * Creates a register set with power-on default values.
      */
     public static function getDefault(): self
     {

@@ -7,7 +7,7 @@ namespace App\Graphics\Objects;
 readonly class Tile
 {
     /**
-     * Creates a new Tile instance.
+     * Creates a new background tile with pattern data and scroll information.
      *
      * @param list<int[]> $pattern
      */
