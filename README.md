@@ -13,8 +13,8 @@ extension for OpenGL graphics rendering via the VISU framework.
 
 ## About
 
-This is a technical demonstration project showcasing low-level emulation techniques in PHP. The emulator prioritizes accuracy over performance, 
-implementing cycle-accurate CPU execution and proper PPU timing for authentic NES behavior.
+This is a technical demonstration project showcasing low-level emulation techniques in PHP. The emulator prioritises accuracy over performance, 
+implementing cycle-accurate CPU execution and proper PPU timing for authentic NES behaviour.
 
 **This is a technical demo.** Do not expect high performance or production-ready gameplay. The project is intended for educational purposes and as a 
 proof-of-concept for emulation in PHP.
@@ -103,7 +103,7 @@ can also drag and drop a ROM file onto the window to load it.
 
 - **Graphics**
   - OpenGL rendering via PHP-GLFW
-  - Authentic NES color palette
+  - Authentic NES colour palette
   - 256x240 resolution output
 
 ### Not Yet Implemented
@@ -130,16 +130,16 @@ The project includes comprehensive test coverage with PHPUnit:
 
 ```bash
 # Run all tests
-vendor/bin/phpunit
+composer test
 
 # Run with coverage
-vendor/bin/phpunit --coverage-html coverage
+composer test:coverage
 
 # Run static analysis
-vendor/bin/phpstan analyze
+composer phpstan
 
 # Check code style
-vendor/bin/pint --test
+composer pint
 ```
 
 ## Development
@@ -147,11 +147,10 @@ vendor/bin/pint --test
 This project follows strict code quality standards:
 
 - **PHPStan** for static analysis
-- **Laravel Pint** for code formatting
+- **Laravel Pint** for code formatting (PER)
 - **PHPUnit** for comprehensive testing (234+ tests, 266,000+ assertions)
 
-See the development guidelines in `CLAUDE.md`, `.github/copilot-instructions.md`, or `.junie/guidelines.md` for AI-assisted development instructions.
-
+AI-assisted development guidelines 
 ## Technical Details
 
 ### Timing
