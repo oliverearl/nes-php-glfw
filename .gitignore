@@ -4,3 +4,4 @@
 .phpunit.cache
 .phpunit.result.cache
 .phpstan-memory-limit
+.DS_Store
