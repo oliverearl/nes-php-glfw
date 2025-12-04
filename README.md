@@ -150,7 +150,8 @@ This project follows strict code quality standards:
 - **Laravel Pint** for code formatting (PER)
 - **PHPUnit** for comprehensive testing (234+ tests, 266,000+ assertions)
 
-AI-assisted development guidelines 
+AI-assisted development guidelines are available for Claude, Copilot/Codex, JetBrains Junie, and Cursor.
+
 ## Technical Details
 
 ### Timing
