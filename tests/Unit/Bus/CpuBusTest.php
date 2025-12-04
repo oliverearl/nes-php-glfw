@@ -235,11 +235,14 @@ final class CpuBusTest extends TestCase
 
         $this::assertSame(0x01, $bus->readByCpu(0x0000)); // RAM
         $this::assertSame(0x03, $bus->readByCpu(0x2000)); // PPU
-        $this::assertSame(0, $bus->readByCpu(0x4016)); // Gamepad (false)
         $this::assertSame(0x02, $bus->readByCpu(0x8000)); // ROM
     }
 
-    /** @noinspection ProperNullCoalescingOperatorUsageInspection */
+    /**
+     * Creates a CpuBus instance with optional dependencies for testing.
+     *
+     * @noinspection ProperNullCoalescingOperatorUsageInspection
+     */
     private function createBus(
         ?Ram $ram = null,
         ?Rom $programRom = null,

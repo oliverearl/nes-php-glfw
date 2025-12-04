@@ -55,7 +55,6 @@ final class RegistersTest extends TestCase
         $this::assertSame(0x01FD, $registers->sp);
         $this::assertSame(0x0000, $registers->pc);
 
-        // Check default status flags
         $this::assertFalse($registers->p->negative);
         $this::assertFalse($registers->p->overflow);
         $this::assertTrue($registers->p->reserved);

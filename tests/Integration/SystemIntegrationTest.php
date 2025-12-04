@@ -16,9 +16,8 @@ final class SystemIntegrationTest extends IntegrationTestCase
     #[Test]
     public function it_initializes_complete_system_from_cartridge(): void
     {
-        // Create a test cartridge
-        $programRom = array_fill(0, 0x4000, 0xEA); // 16KB of NOPs
-        $characterRom = array_fill(0, 0x2000, 0); // 8KB CHR
+        $programRom = array_fill(0, 0x4000, 0xEA);
+        $characterRom = array_fill(0, 0x2000, 0);
 
         $cartridge = new Cartridge(
             isHorizontalMirror: true,
@@ -31,7 +30,6 @@ final class SystemIntegrationTest extends IntegrationTestCase
             horizontalMirror: $cartridge->isHorizontalMirror,
         );
 
-        // System is ready - verify all components exist
         $this::assertInstanceOf(Cpu::class, $cpu);
         $this::assertInstanceOf(Ppu::class, $ppu);
         $this::assertInstanceOf(CpuBus::class, $cpuBus);
@@ -44,17 +42,13 @@ final class SystemIntegrationTest extends IntegrationTestCase
 
         $cpu->reset();
 
-        // Run CPU for a few instructions
         for ($i = 0; $i < 10; $i++) {
             $cpuCycles = $cpu->run();
-
-            // PPU runs at 3x CPU speed
             $ppu->run($cpuCycles * 3);
 
             $this::assertGreaterThan(0, $cpuCycles);
         }
 
-        // System should still be running
         $this::assertTrue(true);
     }
 
@@ -66,7 +60,6 @@ final class SystemIntegrationTest extends IntegrationTestCase
 
         $cpu->reset();
 
-        // Run until we get rendering data (one complete frame)
         $renderingData = false;
         $maxIterations = 50000;
         $iterations = 0;
@@ -77,10 +70,8 @@ final class SystemIntegrationTest extends IntegrationTestCase
             $iterations++;
         }
 
-        // Should have completed a frame
         $this::assertNotFalse($renderingData);
 
-        // Should be able to render it
         $frameBuffer = $renderer->render($renderingData);
 
         $this::assertIsArray($frameBuffer);
@@ -92,20 +83,16 @@ final class SystemIntegrationTest extends IntegrationTestCase
     {
         [$cpu, $cpuBus, $ram, , $ppu, , $dma] = $this->createTestSystem();
 
-        // Prepare sprite data in RAM
         for ($i = 0; $i < 256; $i++) {
             $ram->write(0x0200 + $i, $i);
         }
 
-        // Trigger DMA
         $cpuBus->writeByCpu(0x4014, 0x02);
 
-        // Process DMA
         if ($dma->isDmaProcessing()) {
             $dma->runDma();
         }
 
-        // Continue running system
         for ($i = 0; $i < 100; $i++) {
             $cpuCycles = $cpu->run();
             $ppu->run($cpuCycles * 3);
@@ -119,19 +106,14 @@ final class SystemIntegrationTest extends IntegrationTestCase
     {
         [$cpu, $cpuBus, , , $ppu] = $this->createTestSystem();
 
-        // Write to PPU control
         $cpuBus->writeByCpu(0x2000, 0x80);
-
-        // Write to PPU scroll
         $cpuBus->writeByCpu(0x2005, 0x10);
         $cpuBus->writeByCpu(0x2005, 0x20);
 
-        // Read PPU status
         $status = $cpuBus->readByCpu(0x2002);
 
         $this::assertIsInt($status);
 
-        // Run some instructions
         for ($i = 0; $i < 10; $i++) {
             $cpuCycles = $cpu->run();
             $ppu->run($cpuCycles * 3);
@@ -145,13 +127,9 @@ final class SystemIntegrationTest extends IntegrationTestCase
     {
         [$cpu, $cpuBus, $ram, , $ppu] = $this->createTestSystem(setupResetVector: true);
 
-        // Write data to RAM
         $ram->write(0x0100, 0x42);
-
-        // Reset CPU to start from proper reset vector
         $cpu->reset();
 
-        // Run several frames
         for ($frame = 0; $frame < 3; $frame++) {
             $renderingData = false;
             $iterations = 0;
@@ -162,7 +140,6 @@ final class SystemIntegrationTest extends IntegrationTestCase
                 $iterations++;
             }
 
-            // RAM should maintain state
             $this::assertSame(0x42, $ram->read(0x0100));
         }
     }
@@ -173,19 +150,15 @@ final class SystemIntegrationTest extends IntegrationTestCase
         [$cpu, $cpuBus, $ram, , $ppu] = $this->createTestSystem(setupResetVector: true);
         $renderer = new Renderer();
 
-        // Reset CPU to start from proper reset vector
         $cpu->reset();
 
-        // Write to PPU address register to set palette address
         $cpuBus->writeByCpu(0x2006, 0x3F);
         $cpuBus->writeByCpu(0x2006, 0x00);
 
-        // Write palette data
         for ($i = 0; $i < 32; $i++) {
             $cpuBus->writeByCpu(0x2007, $i);
         }
 
-        // Run until frame completes
         $renderingData = false;
         $iterations = 0;
 

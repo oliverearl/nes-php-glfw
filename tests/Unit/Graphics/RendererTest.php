@@ -21,7 +21,6 @@ final class RendererTest extends TestCase
     {
         $renderer = new Renderer();
 
-        // Create minimal rendering data
         $renderingData = new RenderingData(
             palette: array_fill(0, 32, 0),
             background: null,
@@ -30,10 +29,8 @@ final class RendererTest extends TestCase
 
         $buffer = $renderer->render($renderingData);
 
-        // Should return a buffer of 256 * 256 * 4 (RGBA) bytes
         $this::assertCount(256 * 256 * 4, $buffer);
 
-        // All pixels should be 0 (black with no alpha)
         foreach ($buffer as $byte) {
             $this::assertSame(0, $byte);
         }
@@ -44,9 +41,8 @@ final class RendererTest extends TestCase
     {
         $renderer = new Renderer();
 
-        // Create a simple tile pattern (8x8)
         $pattern = array_fill(0, 8, array_fill(0, 8, 0));
-        $pattern[0][0] = 1; // Set one pixel
+        $pattern[0][0] = 1;
 
         $tile = new Tile(
             pattern: $pattern,
@@ -56,7 +52,7 @@ final class RendererTest extends TestCase
         );
 
         $palette = array_fill(0, 32, 0);
-        $palette[1] = 0x30; // Color index for pattern value 1
+        $palette[1] = 0x30;
 
         $renderingData = new RenderingData(
             palette: $palette,
@@ -75,9 +71,8 @@ final class RendererTest extends TestCase
     {
         $renderer = new Renderer();
 
-        // Create a simple sprite pattern (8x8)
         $pattern = array_fill(0, 8, array_fill(0, 8, 0));
-        $pattern[4][4] = 1; // Set center pixel
+        $pattern[4][4] = 1;
 
         $sprite = new Sprite(
             sprite: $pattern,
@@ -87,7 +82,7 @@ final class RendererTest extends TestCase
         );
 
         $palette = array_fill(0, 32, 0);
-        $palette[0x11] = 0x30; // Sprite palette color
+        $palette[0x11] = 0x30;
 
         $renderingData = new RenderingData(
             palette: $palette,
@@ -224,7 +219,6 @@ final class RendererTest extends TestCase
 
         $palette = array_fill(0, 32, 0);
 
-        // First render with data
         $pattern = array_fill(0, 8, array_fill(0, 8, 1));
         $tile = new Tile($pattern, 0, 0, 0);
 
@@ -236,7 +230,6 @@ final class RendererTest extends TestCase
 
         $buffer1 = $renderer->render($renderingData1);
 
-        // Second render with no data
         $renderingData2 = new RenderingData(
             palette: $palette,
             background: null,
@@ -245,7 +238,6 @@ final class RendererTest extends TestCase
 
         $buffer2 = $renderer->render($renderingData2);
 
-        // Buffers should be different (second should be cleared)
         $this::assertCount(256 * 256 * 4, $buffer1);
         $this::assertCount(256 * 256 * 4, $buffer2);
     }

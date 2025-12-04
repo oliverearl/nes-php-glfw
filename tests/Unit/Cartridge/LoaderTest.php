@@ -190,7 +190,6 @@ final class LoaderTest extends TestCase
         $loader = new Loader($this->testRomPath);
         $cartridge = $loader->load();
 
-        // Should load successfully with mapper 0 (NROM).
         $this::assertNotNull($cartridge);
     }
 

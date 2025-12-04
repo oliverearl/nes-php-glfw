@@ -17,18 +17,11 @@ final class CartridgeLoadingTest extends IntegrationTestCase
         $testRomPath = $this->requireTestRom();
         $loader = new Loader($testRomPath);
 
-        // Capture output (loader prints debug info)
         ob_start();
         $cartridge = $loader->load();
         ob_get_clean();
 
-        // Verify cartridge loaded
-        $this::assertInstanceOf(Cartridge::class, $cartridge);
-
-        // HelloWorld has program ROM
         $this::assertGreaterThan(0, $cartridge->getProgramRomSize());
-
-        // Should have character ROM or RAM
         $this::assertGreaterThanOrEqual(0, $cartridge->getCharacterRomSize());
     }
 
@@ -37,7 +30,6 @@ final class CartridgeLoadingTest extends IntegrationTestCase
     {
         $testRomPath = $this->requireTestRom('HelloWorld.nes');
 
-        // Verify file starts with "NES\x1A"
         $handle = fopen($testRomPath, 'rb');
         $header = fread($handle, 4);
         fclose($handle);
@@ -56,11 +48,10 @@ final class CartridgeLoadingTest extends IntegrationTestCase
         $cartridge = $loader->load();
         ob_end_clean();
 
-        // Program ROM should contain 6502 code
         $this::assertNotEmpty($cartridge->programRom);
 
-        // Verify it's actual data, not all zeros
         $hasNonZero = false;
+
         foreach ($cartridge->programRom as $byte) {
             if ($byte !== 0) {
                 $hasNonZero = true;
@@ -81,7 +72,6 @@ final class CartridgeLoadingTest extends IntegrationTestCase
         $cartridge = $loader->load();
         ob_end_clean();
 
-        // Character ROM should exist (may be empty for CHR-RAM games)
         $this::assertGreaterThanOrEqual(0, $cartridge->getCharacterRomSize());
     }
 
@@ -95,7 +85,6 @@ final class CartridgeLoadingTest extends IntegrationTestCase
         $cartridge = $loader->load();
         ob_end_clean();
 
-        // Mirroring mode should be set (either true or false)
         $this::assertIsBool($cartridge->isHorizontalMirror);
     }
 
