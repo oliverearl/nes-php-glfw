@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Cartridge;
 
 use App\Cartridge\Loader;
+use Override;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -19,18 +20,22 @@ final class LoaderTest extends TestCase
     private string $testRomPath;
 
     /** @inheritDoc */
+    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
+
         $this->testRomPath = sys_get_temp_dir() . '/test_rom.nes';
     }
 
     /** @inheritDoc */
+    #[Override]
     protected function tearDown(): void
     {
         if (file_exists($this->testRomPath)) {
             unlink($this->testRomPath);
         }
+
         parent::tearDown();
     }
 
