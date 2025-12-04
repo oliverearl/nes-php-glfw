@@ -42,11 +42,6 @@ class Emulator extends QuickstartApp
     public const int NES_MAX_Y = 224;
 
     /**
-     * Internal tracker of CPU cycle.
-     */
-    private static int $cycle = 0;
-
-    /**
      * The rendering data produced by the PPU for the current frame.
      * False if not ready to render.
      */
@@ -82,35 +77,9 @@ class Emulator extends QuickstartApp
      */
     private Gamepad $gamepad;
 
-    /**
-     * The cartridge loader.
-     */
-    private Loader $cartridgeLoader;
-
-    /**
-     * The primary RAM of the NES system.
-     */
-    private Ram $ram;
-
-    /**
-     * The character RAM of the NES system.
-     */
-    private Ram $characterRam;
-
-    /**
-     * The program ROM of the NES system.
-     */
-    private Rom $programRom;
-
-    private PpuBus $ppuBus;
-
-    private Interrupts $interrupts;
-
     private Ppu $ppu;
 
     private Dma $dma;
-
-    private CpuBus $cpuBus;
 
     private Cpu $cpu;
 
@@ -238,8 +207,8 @@ class Emulator extends QuickstartApp
         }
 
         $this->isEmulatorRunning = false;
-        $this->cartridgeLoader = new Loader($this->selectedRom);
-        $this->cartridge = $this->cartridgeLoader->load();
+        $cartridgeLoader = new Loader($this->selectedRom);
+        $this->cartridge = $cartridgeLoader->load();
 
         $this->reset();
     }
@@ -255,20 +224,20 @@ class Emulator extends QuickstartApp
         $this->isEmulatorRunning = false;
 
         $this->gamepad = new Gamepad($this->inputContext);
-        $this->ram = new Ram();
-        $this->characterRam = new Ram(0x4000);
+        $ram = new Ram();
+        $characterRam = new Ram(0x4000);
 
         for ($i = 0, $iMax = $this->cartridge->getCharacterRomSize(); $i < $iMax; $i++) {
-            $this->characterRam->write($i, $this->cartridge->characterRom[$i]);
+            $characterRam->write($i, $this->cartridge->characterRom[$i]);
         }
 
-        $this->programRom = new Rom($this->cartridge->programRom);
-        $this->ppuBus = new PpuBus($this->characterRam);
-        $this->interrupts = new Interrupts();
-        $this->ppu = new Ppu($this->ppuBus, $this->interrupts, $this->cartridge->isHorizontalMirror);
-        $this->dma = new Dma($this->ram, $this->ppu);
-        $this->cpuBus = new CpuBus($this->ram, $this->programRom, $this->ppu, $this->gamepad, $this->dma);
-        $this->cpu = new Cpu($this->cpuBus, $this->interrupts);
+        $programRom = new Rom($this->cartridge->programRom);
+        $ppuBus = new PpuBus($characterRam);
+        $interrupts = new Interrupts();
+        $this->ppu = new Ppu($ppuBus, $interrupts, $this->cartridge->isHorizontalMirror);
+        $this->dma = new Dma($ram, $this->ppu);
+        $cpuBus = new CpuBus($ram, $programRom, $this->ppu, $this->gamepad, $this->dma);
+        $this->cpu = new Cpu($cpuBus, $interrupts);
         $this->cpu->reset();
 
         $this->isEmulatorRunning = true;
