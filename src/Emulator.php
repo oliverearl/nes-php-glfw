@@ -165,7 +165,7 @@ class Emulator extends QuickstartApp
     }
 
     /**
-     * Updates the emulator state by running the CPU and PPU until a frame is complete.
+     * Updates the emulator state by running until one NES frame completes.
      *
      * @inheritDoc
      */
@@ -178,7 +178,11 @@ class Emulator extends QuickstartApp
             return;
         }
 
-        while (true) {
+        // Run the emulator until exactly one NES frame completes.
+        $maxIterations = 20000;
+        $iterations = 0;
+
+        while ($iterations < $maxIterations) {
             $cycle = 0;
 
             if ($this->dma->isDmaProcessing()) {
@@ -188,6 +192,8 @@ class Emulator extends QuickstartApp
 
             $cycle += $this->cpu->run();
             $renderingData = $this->ppu->run($cycle * 3);
+
+            $iterations++;
 
             if ($renderingData !== false) {
                 self::$renderingData = $renderingData;

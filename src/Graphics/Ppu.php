@@ -123,7 +123,11 @@ class Ppu
             $this->buildSprites();
         }
 
-        if ($this->cycle >= 341) {
+        /*
+         * Process all complete scanlines that fit within accumulated cycles.
+         * This loop ensures we don't lose timing by only processing one scanline per call.
+         */
+        while ($this->cycle >= 341) {
             $this->cycle -= 341;
             $this->scanline++;
 
@@ -147,6 +151,7 @@ class Ppu
                 $this->clearVblank();
                 $this->clearSpriteHit();
                 $this->scanline = 0;
+                $this->cycle = 0;
                 $this->interrupts->deassertNmi();
 
                 return new RenderingData($this->getPalette(), $this->isBackgroundEnabled() ? $this->background : null, $this->isSpriteEnabled() ? $this->sprites : null, );
