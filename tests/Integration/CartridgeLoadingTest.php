@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Tests\Integration;
 
 use RuntimeException;
-use App\Cartridge\Cartridge;
 use App\Cartridge\Loader;
 use PHPUnit\Framework\Attributes\Test;
 
