@@ -40,6 +40,16 @@ class Renderer
     ];
 
     /**
+     * Screen width in pixels.
+     */
+    private const int SCREEN_WIDTH = 256;
+
+    /**
+     * Screen height in pixels.
+     */
+    private const int SCREEN_HEIGHT = 224;
+
+    /**
      * The framebuffer storing RGBA pixel data.
      *
      * @var list<int>
@@ -65,7 +75,7 @@ class Renderer
      */
     public function __construct()
     {
-        $this->frameBuffer = array_fill(0, 256 * 256 * 4, 0);
+        $this->frameBuffer = array_fill(0, self::SCREEN_WIDTH * self::SCREEN_WIDTH * 4, 0);
     }
 
     /**
@@ -75,10 +85,7 @@ class Renderer
      */
     public function render(RenderingData $data): array
     {
-        // Use array_fill which is implemented in C and much faster than a PHP loop.
-        $this->frameBuffer = array_fill(0, 256 * 256 * 4, 0);
-
-        // Pre-compute RGBA values for the current palette.
+        $this->frameBuffer = array_fill(0, self::SCREEN_WIDTH * self::SCREEN_WIDTH * 4, 0);
         $this->buildPaletteRgba($data->palette);
 
         if ($data->background !== null && $data->background !== []) {
@@ -101,13 +108,26 @@ class Renderer
     {
         $this->paletteRgba = [];
         for ($i = 0; $i < 32; $i++) {
-            $colorId = $palette[$i] ?? 0;
-            $colorIdx = $colorId * 3;
+            $colorIdx = ($palette[$i] ?? 0) * 3;
+
             $this->paletteRgba[] = self::COLORS_FLAT[$colorIdx];
             $this->paletteRgba[] = self::COLORS_FLAT[$colorIdx + 1];
             $this->paletteRgba[] = self::COLORS_FLAT[$colorIdx + 2];
             $this->paletteRgba[] = 0xFF;
         }
+    }
+
+    /**
+     * Writes a pixel to the framebuffer at the given coordinates.
+     */
+    private function writePixel(int $x, int $y, int $colorOffset): void
+    {
+        $index = ($y * self::SCREEN_WIDTH + $x) * 4;
+
+        $this->frameBuffer[$index] = $this->paletteRgba[$colorOffset];
+        $this->frameBuffer[$index + 1] = $this->paletteRgba[$colorOffset + 1];
+        $this->frameBuffer[$index + 2] = $this->paletteRgba[$colorOffset + 2];
+        $this->frameBuffer[$index + 3] = 0xFF;
     }
 
     /**
@@ -118,39 +138,26 @@ class Renderer
     private function renderBackground(array $background): void
     {
         $this->background = $background;
-        $count = count($background);
 
-        for ($idx = 0; $idx < $count; $idx++) {
-            $tile = $background[$idx];
+        foreach ($background as $idx => $tile) {
             $tileX = ($idx % 33) * 8;
             $tileY = (int) ($idx / 33) * 8;
             $offsetX = $tile->scrollX % 8;
             $offsetY = $tile->scrollY % 8;
-            $paletteBase = $tile->paletteId * 4 * 4; // 4 colors × 4 components (RGBA).
-            $pattern = $tile->pattern;
+            $paletteBase = $tile->paletteId * 16; // 4 colors × 4 RGBA components.
 
             for ($i = 0; $i < 8; $i++) {
                 $y = $tileY + $i - $offsetY;
-                if ($y < 0 || $y >= 224) {
+                if ($y < 0 || $y >= self::SCREEN_HEIGHT) {
                     continue;
                 }
 
-                $rowBase = $y * 256 * 4;
-                $patternRow = $pattern[$i];
-
+                $patternRow = $tile->pattern[$i];
                 for ($j = 0; $j < 8; $j++) {
                     $x = $tileX + $j - $offsetX;
-                    if ($x < 0 || $x > 255) {
-                        continue;
+                    if ($x >= 0 && $x < self::SCREEN_WIDTH) {
+                        $this->writePixel($x, $y, $paletteBase + $patternRow[$j] * 4);
                     }
-
-                    $colorOffset = $paletteBase + $patternRow[$j] * 4;
-                    $index = $rowBase + $x * 4;
-
-                    $this->frameBuffer[$index] = $this->paletteRgba[$colorOffset];
-                    $this->frameBuffer[$index + 1] = $this->paletteRgba[$colorOffset + 1];
-                    $this->frameBuffer[$index + 2] = $this->paletteRgba[$colorOffset + 2];
-                    $this->frameBuffer[$index + 3] = 0xFF;
                 }
             }
         }
@@ -164,76 +171,56 @@ class Renderer
     private function renderSprites(array $sprites): void
     {
         foreach ($sprites as $sprite) {
-            if ($sprite !== null) {
-                $this->renderSprite($sprite);
+            $isVerticalReverse = ($sprite->attribute & 0x80) !== 0;
+            $isHorizontalReverse = ($sprite->attribute & 0x40) !== 0;
+            $isLowPriority = ($sprite->attribute & 0x20) !== 0;
+            $paletteBase = (($sprite->attribute & 0x03) + 4) * 16; // Sprite palettes start at index 4.
+
+            $baseX = (int) $sprite->coordinates->x;
+            $baseY = (int) $sprite->coordinates->y;
+
+            for ($i = 0; $i < 8; $i++) {
+                $y = $baseY + ($isVerticalReverse ? 7 - $i : $i);
+
+                if ($y < 0 || $y >= self::SCREEN_HEIGHT) {
+                    continue;
+                }
+
+                $patternRow = $sprite->sprite[$i];
+
+                for ($j = 0; $j < 8; $j++) {
+                    $patternValue = $patternRow[$j];
+                    if ($patternValue === 0) {
+                        continue;
+                    }
+
+                    $x = $baseX + ($isHorizontalReverse ? 7 - $j : $j);
+
+                    if ($x < 0 || $x >= self::SCREEN_WIDTH) {
+                        continue;
+                    }
+
+                    if ($isLowPriority && $this->isBackgroundPixelOpaque($x, $y)) {
+                        continue;
+                    }
+
+                    $this->writePixel($x, $y, $paletteBase + $patternValue * 4);
+                }
             }
         }
     }
 
     /**
-     * Renders a single sprite to the framebuffer.
-     */
-    private function renderSprite(Sprite $sprite): void
-    {
-        $isVerticalReverse = ($sprite->attribute & 0x80) !== 0;
-        $isHorizontalReverse = ($sprite->attribute & 0x40) !== 0;
-        $isLowPriority = ($sprite->attribute & 0x20) !== 0;
-        $paletteBase = (($sprite->attribute & 0x03) * 4 + 16) * 4; // Sprite palette starts at 16.
-
-        $baseX = (int) $sprite->coordinates->x;
-        $baseY = (int) $sprite->coordinates->y;
-        $spritePattern = $sprite->sprite;
-
-        for ($i = 0; $i < 8; $i++) {
-            $y = $baseY + ($isVerticalReverse ? 7 - $i : $i);
-            if ($y < 0 || $y >= 224) {
-                continue;
-            }
-
-            $rowBase = $y * 256 * 4;
-            $patternRow = $spritePattern[$i];
-
-            for ($j = 0; $j < 8; $j++) {
-                $patternValue = $patternRow[$j];
-                if ($patternValue === 0) {
-                    continue; // Transparent pixel.
-                }
-
-                $x = $baseX + ($isHorizontalReverse ? 7 - $j : $j);
-                if ($x < 0 || $x > 255) {
-                    continue;
-                }
-
-                if ($isLowPriority && $this->isBackgroundPixelOpaque($x, $y)) {
-                    continue;
-                }
-
-                $colorOffset = $paletteBase + $patternValue * 4;
-                $index = $rowBase + $x * 4;
-
-                $this->frameBuffer[$index] = $this->paletteRgba[$colorOffset];
-                $this->frameBuffer[$index + 1] = $this->paletteRgba[$colorOffset + 1];
-                $this->frameBuffer[$index + 2] = $this->paletteRgba[$colorOffset + 2];
-                $this->frameBuffer[$index + 3] = 0xFF;
-            }
-        }
-    }
-
-    /**
-     * Checks if the background pixel at the given position is opaque (non-zero pattern value).
+     * Checks if the background pixel at the given position is opaque.
      */
     private function isBackgroundPixelOpaque(int $x, int $y): bool
     {
-        $tileX = (int) ($x / 8);
-        $tileY = (int) ($y / 8);
-        $backgroundIndex = $tileY * 33 + $tileX;
+        $backgroundIndex = (int) ($y / 8) * 33 + (int) ($x / 8);
 
         if (!isset($this->background[$backgroundIndex])) {
             return false;
         }
 
-        $patternValue = $this->background[$backgroundIndex]->pattern[$y % 8][$x % 8];
-
-        return ($patternValue % 4) !== 0;
+        return ($this->background[$backgroundIndex]->pattern[$y % 8][$x % 8] % 4) !== 0;
     }
 }
