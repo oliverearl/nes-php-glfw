@@ -101,6 +101,14 @@ class Ppu
     private int $scrollY = 0;
 
     /**
+     * Cache for sprite patterns to avoid redundant builds.
+     * Key is (spriteId << 16) | offset, value is the 8x8 pattern array.
+     *
+     * @var array<int, list<list<int>>>
+     */
+    private array $spriteCache = [];
+
+    /**
      * Creates a new PPU instance and initializes internal state.
      */
     public function __construct(private readonly PpuBus $bus, private readonly Interrupts $interrupts, private readonly bool $isHorizontalMirror)
@@ -303,24 +311,43 @@ class Ppu
     }
 
     /**
-     * Builds a 8x8 sprite pattern from character RAM.
+     * Builds a 8x8 sprite pattern from character RAM with caching.
      *
      * @return list<list<int>>
      */
     private function buildSprite(int $spriteId, int $offset): array
     {
-        $sprite = array_fill(0, 8, array_fill(0, 8, 0));
+        $cacheKey = ($spriteId << 16) | $offset;
 
-        for ($i = 0; $i < 16; $i = ($i + 1) | 0) {
-            for ($j = 0; $j < 8; $j = ($j + 1) | 0) {
-                $address = $spriteId * 16 + $i + $offset;
-                $ram = $this->readCharacterRam($address);
+        if (isset($this->spriteCache[$cacheKey])) {
+            return $this->spriteCache[$cacheKey];
+        }
 
-                if (($ram & 0x80 >> $j) !== 0) {
-                    $sprite[$i % 8][$j] += 0x01 << (int) floor($i / 8);
+        $sprite = [
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+        ];
+
+        for ($i = 0; $i < 16; $i++) {
+            $address = $spriteId * 16 + $i + $offset;
+            $ram = $this->readCharacterRam($address);
+            $row = $i % 8;
+            $plane = (int) ($i >= 8);
+
+            for ($j = 0; $j < 8; $j++) {
+                if (($ram & (0x80 >> $j)) !== 0) {
+                    $sprite[$row][$j] += (0x01 << $plane);
                 }
             }
         }
+
+        $this->spriteCache[$cacheKey] = $sprite;
 
         return $sprite;
     }

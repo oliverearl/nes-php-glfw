@@ -63,7 +63,11 @@ class Renderer
      */
     public function render(RenderingData $data): array
     {
-        $this->frameBuffer = array_fill(0, 256 * 256 * 4, 0);
+        // Clear framebuffer in place instead of allocating new array.
+        $bufferSize = 256 * 256 * 4;
+        for ($i = 0; $i < $bufferSize; $i++) {
+            $this->frameBuffer[$i] = 0;
+        }
 
         if ($data->background !== null && count($data->background) > 0) {
             $this->renderBackground($data->background, $data->palette);

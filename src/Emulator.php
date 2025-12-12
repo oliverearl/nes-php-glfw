@@ -93,6 +93,56 @@ class Emulator extends QuickstartApp
     private ?array $cachedFrameBuffer = null;
 
     /**
+     * Debug: last time we logged performance stats.
+     */
+    private float $debugLastLogTime = 0.0;
+
+    /**
+     * Debug: accumulated time spent in update() this second.
+     */
+    private float $debugUpdateTime = 0.0;
+
+    /**
+     * Debug: accumulated time spent in draw() this second.
+     */
+    private float $debugDrawTime = 0.0;
+
+    /**
+     * Debug: number of update() calls this second.
+     */
+    private int $debugUpdateCount = 0;
+
+    /**
+     * Debug: number of draw() calls this second.
+     */
+    private int $debugDrawCount = 0;
+
+    /**
+     * Debug: number of NES frames produced this second.
+     */
+    private int $debugNesFrames = 0;
+
+    /**
+     * Debug: total iterations in update() this second.
+     */
+    private int $debugIterations = 0;
+
+    /**
+     * Debug: time spent in renderer->render() this second.
+     */
+    private float $debugRenderTime = 0.0;
+
+    /**
+     * Debug: time spent in CPU execution this second.
+     */
+    private float $debugCpuTime = 0.0;
+
+    /**
+     * Debug: time spent in PPU execution this second.
+     */
+    private float $debugPpuTime = 0.0;
+
+    /**
      * Initializes the emulator and loads the ROM if available.
      *
      * @inheritDoc
@@ -118,6 +168,8 @@ class Emulator extends QuickstartApp
     #[Override]
     public function draw(RenderContext $context, RenderTarget $renderTarget): void
     {
+        $startTime = microtime(true);
+
         if (! $this->isEmulatorRunning) {
             $rawBuffer = $this->generateWaitingAnimation($this->frameIndex);
         } elseif ($this->cachedFrameBuffer === null) {
@@ -164,6 +216,9 @@ class Emulator extends QuickstartApp
         $this->vg->fill();
 
         $this->vg->restore();
+
+        $this->debugDrawTime += microtime(true) - $startTime;
+        $this->debugDrawCount++;
     }
 
     /**
@@ -178,15 +233,18 @@ class Emulator extends QuickstartApp
     #[Override]
     public function update(): void
     {
+        $updateStartTime = microtime(true);
+
         parent::update();
 
         if (! $this->isEmulatorRunning) {
+            $this->logDebugStats();
             return;
         }
 
         /*
          * Run emulator until one NES frame completes.
-         * A frame takes roughly 29,780 CPU cycles (341*262/3).\
+         * A frame takes roughly 29,780 CPU cycles (341*262/3).
          * We run in a loop but with a safety limit.
          */
         $maxIterations = 30000;
@@ -200,18 +258,78 @@ class Emulator extends QuickstartApp
                 $cycle = 514;
             }
 
+            $cpuStart = microtime(true);
             $cycle += $this->cpu->run();
+            $this->debugCpuTime += microtime(true) - $cpuStart;
+
+            $ppuStart = microtime(true);
             $renderingData = $this->ppu->run($cycle * 3);
+            $this->debugPpuTime += microtime(true) - $ppuStart;
 
             $iterations++;
 
             if ($renderingData !== false) {
-                // Pre-render the framebuffer immediately so draw() is fast.
+                $renderStart = microtime(true);
                 $this->cachedFrameBuffer = $this->renderer->render($renderingData);
+                $this->debugRenderTime += microtime(true) - $renderStart;
+
                 $this->gamepad->fetch();
+                $this->debugNesFrames++;
                 break;
             }
         }
+
+        $this->debugIterations += $iterations;
+        $this->debugUpdateTime += microtime(true) - $updateStartTime;
+        $this->debugUpdateCount++;
+
+        $this->logDebugStats();
+    }
+
+    /**
+     * Logs debug performance statistics once per second.
+     */
+    private function logDebugStats(): void
+    {
+        $now = microtime(true);
+        if ($now - $this->debugLastLogTime < 1.0) {
+            return;
+        }
+
+        $avgUpdate = $this->debugUpdateCount > 0 ? ($this->debugUpdateTime / $this->debugUpdateCount) * 1000 : 0;
+        $avgDraw = $this->debugDrawCount > 0 ? ($this->debugDrawTime / $this->debugDrawCount) * 1000 : 0;
+        $avgCpu = $this->debugUpdateCount > 0 ? ($this->debugCpuTime / $this->debugUpdateCount) * 1000 : 0;
+        $avgPpu = $this->debugUpdateCount > 0 ? ($this->debugPpuTime / $this->debugUpdateCount) * 1000 : 0;
+        $avgRender = $this->debugNesFrames > 0 ? ($this->debugRenderTime / $this->debugNesFrames) * 1000 : 0;
+        $avgIterations = $this->debugUpdateCount > 0 ? $this->debugIterations / $this->debugUpdateCount : 0;
+
+        error_log(sprintf(
+            '[NES Debug] Updates: %d (avg %.2fms) | Draws: %d (avg %.2fms) | NES frames: %d | Iters/update: %.0f',
+            $this->debugUpdateCount,
+            $avgUpdate,
+            $this->debugDrawCount,
+            $avgDraw,
+            $this->debugNesFrames,
+            $avgIterations
+        ));
+        error_log(sprintf(
+            '[NES Debug] Breakdown: CPU %.2fms | PPU %.2fms | Render %.2fms (per update avg)',
+            $avgCpu,
+            $avgPpu,
+            $avgRender
+        ));
+
+        // Reset counters.
+        $this->debugLastLogTime = $now;
+        $this->debugUpdateTime = 0.0;
+        $this->debugDrawTime = 0.0;
+        $this->debugCpuTime = 0.0;
+        $this->debugPpuTime = 0.0;
+        $this->debugRenderTime = 0.0;
+        $this->debugUpdateCount = 0;
+        $this->debugDrawCount = 0;
+        $this->debugNesFrames = 0;
+        $this->debugIterations = 0;
     }
 
     /**
