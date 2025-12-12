@@ -13,7 +13,6 @@ use App\Cartridge\Loader;
 use App\Cpu\Cpu;
 use App\Cpu\Dma;
 use App\Cpu\Interrupts;
-use App\Graphics\Objects\RenderingData;
 use App\Graphics\Ppu;
 use App\Graphics\Renderer;
 use App\Input\Gamepad;
@@ -40,12 +39,6 @@ class Emulator extends QuickstartApp
      * NES display dimensions in pixels. (Height)
      */
     public const int NES_MAX_Y = 224;
-
-    /**
-     * The rendering data produced by the PPU for the current frame.
-     * False if not ready to render.
-     */
-    private static false|RenderingData $renderingData = false;
 
     /**
      * Indicates whether the NES emulator is currently running.
@@ -93,6 +86,13 @@ class Emulator extends QuickstartApp
     private Cpu $cpu;
 
     /**
+     * Cached framebuffer from last completed NES frame.
+     *
+     * @var list<int>|null
+     */
+    private ?array $cachedFrameBuffer = null;
+
+    /**
      * Initializes the emulator and loads the ROM if available.
      *
      * @inheritDoc
@@ -120,10 +120,12 @@ class Emulator extends QuickstartApp
     {
         if (! $this->isEmulatorRunning) {
             $rawBuffer = $this->generateWaitingAnimation($this->frameIndex);
-        } elseif (! $this->isReadyToRender()) {
+        } elseif ($this->cachedFrameBuffer === null) {
+            // No frame ready yet, skip drawing.
             return;
         } else {
-            $rawBuffer = $this->renderer->render(self::$renderingData);
+            // Use the pre-rendered framebuffer from update().
+            $rawBuffer = $this->cachedFrameBuffer;
         }
 
         // TODO: Make this a configuration value.
@@ -165,7 +167,11 @@ class Emulator extends QuickstartApp
     }
 
     /**
-     * Updates the emulator state by running until one NES frame completes.
+     * Updates the emulator state incrementally without blocking.
+     *
+     * Runs a fixed budget of CPU cycles per tick to avoid blocking the game loop.
+     * The NES produces ~60 frames per second. Each update() call processes one
+     * NES frame worth of cycles, but we limit iterations to prevent blocking.
      *
      * @inheritDoc
      */
@@ -178,8 +184,12 @@ class Emulator extends QuickstartApp
             return;
         }
 
-        // Run the emulator until exactly one NES frame completes.
-        $maxIterations = 20000;
+        /*
+         * Run emulator until one NES frame completes.
+         * A frame takes roughly 29,780 CPU cycles (341*262/3).\
+         * We run in a loop but with a safety limit.
+         */
+        $maxIterations = 30000;
         $iterations = 0;
 
         while ($iterations < $maxIterations) {
@@ -196,7 +206,8 @@ class Emulator extends QuickstartApp
             $iterations++;
 
             if ($renderingData !== false) {
-                self::$renderingData = $renderingData;
+                // Pre-render the framebuffer immediately so draw() is fast.
+                $this->cachedFrameBuffer = $this->renderer->render($renderingData);
                 $this->gamepad->fetch();
                 break;
             }
@@ -313,13 +324,5 @@ class Emulator extends QuickstartApp
         }
 
         return $buffer;
-    }
-
-    /**
-     * Checks whether the emulator is ready to render a frame.
-     */
-    private function isReadyToRender(): bool
-    {
-        return self::$renderingData !== false;
     }
 }
