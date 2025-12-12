@@ -125,14 +125,14 @@ class Gamepad
     public function fetch(): void
     {
         $this->keyBuffer = [
-            $this->input->actions->didButtonPress(self::BUTTON_A),
-            $this->input->actions->didButtonPress(self::BUTTON_B),
-            $this->input->actions->didButtonPress(self::BUTTON_SELECT),
-            $this->input->actions->didButtonPress(self::BUTTON_START),
-            $this->input->actions->didButtonPress(self::BUTTON_UP),
-            $this->input->actions->didButtonPress(self::BUTTON_DOWN),
-            $this->input->actions->didButtonPress(self::BUTTON_LEFT),
-            $this->input->actions->didButtonPress(self::BUTTON_RIGHT),
+            $this->input->actions->isButtonDown(self::BUTTON_A),
+            $this->input->actions->isButtonDown(self::BUTTON_B),
+            $this->input->actions->isButtonDown(self::BUTTON_SELECT),
+            $this->input->actions->isButtonDown(self::BUTTON_START),
+            $this->input->actions->isButtonDown(self::BUTTON_UP),
+            $this->input->actions->isButtonDown(self::BUTTON_DOWN),
+            $this->input->actions->isButtonDown(self::BUTTON_LEFT),
+            $this->input->actions->isButtonDown(self::BUTTON_RIGHT),
         ];
     }
 

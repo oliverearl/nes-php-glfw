@@ -242,6 +242,8 @@ class Emulator extends QuickstartApp
             return;
         }
 
+        $this->gamepad->fetch();
+
         /*
          * Run emulator until one NES frame completes.
          * A frame takes roughly 29,780 CPU cycles (341*262/3).
@@ -273,7 +275,6 @@ class Emulator extends QuickstartApp
                 $this->cachedFrameBuffer = $this->renderer->render($renderingData);
                 $this->debugRenderTime += microtime(true) - $renderStart;
 
-                $this->gamepad->fetch();
                 $this->debugNesFrames++;
                 break;
             }
