@@ -13,6 +13,7 @@ use App\Cartridge\Loader;
 use App\Cpu\Cpu;
 use App\Cpu\Dma;
 use App\Cpu\Interrupts;
+use App\Debug\Profiler;
 use App\Graphics\Ppu;
 use App\Graphics\Renderer;
 use App\Input\Gamepad;
@@ -30,6 +31,8 @@ use VISU\Signals\Input\DropSignal;
 
 class Emulator extends QuickstartApp
 {
+    use Profiler;
+
     /**
      * NES display dimensions in pixels. (Width)
      */
@@ -92,55 +95,6 @@ class Emulator extends QuickstartApp
      */
     private ?array $cachedFrameBuffer = null;
 
-    /**
-     * Debug: last time we logged performance stats.
-     */
-    private float $debugLastLogTime = 0.0;
-
-    /**
-     * Debug: accumulated time spent in update() this second.
-     */
-    private float $debugUpdateTime = 0.0;
-
-    /**
-     * Debug: accumulated time spent in draw() this second.
-     */
-    private float $debugDrawTime = 0.0;
-
-    /**
-     * Debug: number of update() calls this second.
-     */
-    private int $debugUpdateCount = 0;
-
-    /**
-     * Debug: number of draw() calls this second.
-     */
-    private int $debugDrawCount = 0;
-
-    /**
-     * Debug: number of NES frames produced this second.
-     */
-    private int $debugNesFrames = 0;
-
-    /**
-     * Debug: total iterations in update() this second.
-     */
-    private int $debugIterations = 0;
-
-    /**
-     * Debug: time spent in renderer->render() this second.
-     */
-    private float $debugRenderTime = 0.0;
-
-    /**
-     * Debug: time spent in CPU execution this second.
-     */
-    private float $debugCpuTime = 0.0;
-
-    /**
-     * Debug: time spent in PPU execution this second.
-     */
-    private float $debugPpuTime = 0.0;
 
     /**
      * Initializes the emulator and loads the ROM if available.
@@ -153,6 +107,8 @@ class Emulator extends QuickstartApp
     public function ready(): void
     {
         parent::ready();
+
+        $this->setDebugEnabled(in_array('--profile', $this->getArgs(), strict: true));
 
         $this->initializeEngine();
         $this->checkForInitialRom();
@@ -168,7 +124,7 @@ class Emulator extends QuickstartApp
     #[Override]
     public function draw(RenderContext $context, RenderTarget $renderTarget): void
     {
-        $startTime = microtime(true);
+        $debugStart = $this->debugStartDraw();
 
         if (! $this->isEmulatorRunning) {
             $rawBuffer = $this->generateWaitingAnimation($this->frameIndex);
@@ -217,8 +173,7 @@ class Emulator extends QuickstartApp
 
         $this->vg->restore();
 
-        $this->debugDrawTime += microtime(true) - $startTime;
-        $this->debugDrawCount++;
+        $this->debugEndDraw($debugStart);
     }
 
     /**
@@ -233,12 +188,12 @@ class Emulator extends QuickstartApp
     #[Override]
     public function update(): void
     {
-        $updateStartTime = microtime(true);
+        $debugUpdateStart = $this->debugStartUpdate();
 
         parent::update();
 
         if (! $this->isEmulatorRunning) {
-            $this->logDebugStats();
+            $this->debugLog();
             return;
         }
 
@@ -260,77 +215,29 @@ class Emulator extends QuickstartApp
                 $cycle = 514;
             }
 
-            $cpuStart = microtime(true);
+            $debugCpuStart = $this->debugStartCpu();
             $cycle += $this->cpu->run();
-            $this->debugCpuTime += microtime(true) - $cpuStart;
+            $this->debugEndCpu($debugCpuStart);
 
-            $ppuStart = microtime(true);
+            $debugPpuStart = $this->debugStartPpu();
             $renderingData = $this->ppu->run($cycle * 3);
-            $this->debugPpuTime += microtime(true) - $ppuStart;
+            $this->debugEndPpu($debugPpuStart);
 
             $iterations++;
 
             if ($renderingData !== false) {
-                $renderStart = microtime(true);
+                $debugRenderStart = $this->debugStartRender();
                 $this->cachedFrameBuffer = $this->renderer->render($renderingData);
-                $this->debugRenderTime += microtime(true) - $renderStart;
+                $this->debugEndRender($debugRenderStart);
 
-                $this->debugNesFrames++;
+                $this->debugRecordNesFrame();
                 break;
             }
         }
 
-        $this->debugIterations += $iterations;
-        $this->debugUpdateTime += microtime(true) - $updateStartTime;
-        $this->debugUpdateCount++;
-
-        $this->logDebugStats();
-    }
-
-    /**
-     * Logs debug performance statistics once per second.
-     */
-    private function logDebugStats(): void
-    {
-        $now = microtime(true);
-        if ($now - $this->debugLastLogTime < 1.0) {
-            return;
-        }
-
-        $avgUpdate = $this->debugUpdateCount > 0 ? ($this->debugUpdateTime / $this->debugUpdateCount) * 1000 : 0;
-        $avgDraw = $this->debugDrawCount > 0 ? ($this->debugDrawTime / $this->debugDrawCount) * 1000 : 0;
-        $avgCpu = $this->debugUpdateCount > 0 ? ($this->debugCpuTime / $this->debugUpdateCount) * 1000 : 0;
-        $avgPpu = $this->debugUpdateCount > 0 ? ($this->debugPpuTime / $this->debugUpdateCount) * 1000 : 0;
-        $avgRender = $this->debugNesFrames > 0 ? ($this->debugRenderTime / $this->debugNesFrames) * 1000 : 0;
-        $avgIterations = $this->debugUpdateCount > 0 ? $this->debugIterations / $this->debugUpdateCount : 0;
-
-        error_log(sprintf(
-            '[NES Debug] Updates: %d (avg %.2fms) | Draws: %d (avg %.2fms) | NES frames: %d | Iters/update: %.0f',
-            $this->debugUpdateCount,
-            $avgUpdate,
-            $this->debugDrawCount,
-            $avgDraw,
-            $this->debugNesFrames,
-            $avgIterations
-        ));
-        error_log(sprintf(
-            '[NES Debug] Breakdown: CPU %.2fms | PPU %.2fms | Render %.2fms (per update avg)',
-            $avgCpu,
-            $avgPpu,
-            $avgRender
-        ));
-
-        // Reset counters.
-        $this->debugLastLogTime = $now;
-        $this->debugUpdateTime = 0.0;
-        $this->debugDrawTime = 0.0;
-        $this->debugCpuTime = 0.0;
-        $this->debugPpuTime = 0.0;
-        $this->debugRenderTime = 0.0;
-        $this->debugUpdateCount = 0;
-        $this->debugDrawCount = 0;
-        $this->debugNesFrames = 0;
-        $this->debugIterations = 0;
+        $this->debugRecordIterations($iterations);
+        $this->debugEndUpdate($debugUpdateStart);
+        $this->debugLog();
     }
 
     /**
@@ -410,11 +317,33 @@ class Emulator extends QuickstartApp
      */
     private function checkForInitialRom(): void
     {
-        $args = $this->container->getParameter('argv');
+        $args = $this->getArgs();
 
-        if ($rom = $args[0] ?? false) {
-            $this->selectedRom = realpath($rom);
+        // Filter out flags and find the ROM file argument.
+        foreach ($args as $arg) {
+            // Skip the script name and any flags.
+            if ($arg === $args[0] || str_starts_with($arg, '--')) {
+                continue;
+            }
+
+            // Found a potential ROM file.
+            if (file_exists($arg)) {
+                $this->selectedRom = realpath($arg);
+                break;
+            }
         }
+    }
+
+    /**
+     * Retrieves the command-line arguments passed to the application.
+     *
+     * @return list<string>
+     */
+    private function getArgs(): array
+    {
+        global $argv;
+
+        return array_map('strtolower', $argv ?? $_SERVER['argv'] ?? []);
     }
 
     /**

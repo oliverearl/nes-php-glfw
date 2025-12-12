@@ -69,6 +69,26 @@ php bin/start.php path/to/rom.nes
 If you don't start the emulator with a loaded ROM, it will display a graphical pattern. You
 can also drag and drop a ROM file onto the window to load it.
 
+### Profiler
+
+Enable performance debugging to see detailed timing metrics by passing the `--profile` flag:
+
+```bash
+php bin/start.php path/to/rom.nes --profile
+```
+
+This will output performance statistics every second to `stderr`, showing:
+- Average time spent in update/draw cycles
+- CPU, PPU, and rendering breakdown
+- NES frames per second
+- Iterations per update
+
+Example debug output:
+```
+[NES Debug] Updates: 28 (avg 35.61ms) | Draws: 3 (avg 0.95ms) | NES frames: 28 | Iters/update: 9696
+[NES Debug] Breakdown: CPU 13.80ms | PPU 5.63ms | Render 14.02ms (per update avg)
+```
+
 ### Controls
 
 - Arrow Keys: D-Pad
