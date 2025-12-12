@@ -214,7 +214,8 @@ final class CpuBusTest extends TestCase
         $bus->writeByCpu(0x6000, 0xAA);
         $bus->writeByCpu(0x8000, 0x55);
 
-        $this::assertTrue(true); // Assert no exception was thrown.
+        /** @phpstan-ignore-next-line Assert no exception was thrown. */
+        $this::assertTrue(true);
     }
 
     #[Test]

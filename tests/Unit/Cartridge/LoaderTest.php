@@ -161,11 +161,9 @@ final class LoaderTest extends TestCase
         $cartridge = $loader->load();
 
         // Program ROM should start with reset vector pattern.
-        $this::assertIsArray($cartridge->programRom);
         $this::assertCount(0x4000, $cartridge->programRom);
 
         // Character ROM should have pattern data.
-        $this::assertIsArray($cartridge->characterRom);
         $this::assertCount(0x2000, $cartridge->characterRom);
     }
 
@@ -195,6 +193,7 @@ final class LoaderTest extends TestCase
         $loader = new Loader($this->testRomPath);
         $cartridge = $loader->load();
 
+        /** @phpstan-ignore-next-line Assert no exception was thrown. */
         $this::assertNotNull($cartridge);
     }
 
