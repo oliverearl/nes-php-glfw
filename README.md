@@ -95,7 +95,7 @@ Example debug output:
 - Z: A Button
 - X: B Button
 - Enter: Start
-- Right Shift: Select
+- Backspace: Select
 
 ## Features
 
@@ -124,7 +124,7 @@ Example debug output:
 - **Graphics**
   - OpenGL rendering via PHP-GLFW
   - Authentic NES colour palette
-  - 256x240 resolution output
+  - 256x224 resolution output
 
 ### Not Yet Implemented
 
