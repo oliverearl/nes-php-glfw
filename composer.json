@@ -1,11 +1,13 @@
 {
     "name": "oliverearl/nes-emulator",
+    "description": "An NES emulator written in PHP using PHP-GLFW and the Visu game framework.",
     "license": "MIT",
     "autoload": {
         "psr-4": {
             "App\\": "src/"
         }
     },
+    "type": "project",
     "autoload-dev": {
         "psr-4": {
             "Tests\\": "tests/"
