@@ -62,23 +62,23 @@ readonly class Loader
             $nes[$i] = (ord($contents[$i]) & 0xFF);
         }
 
-        printf('ROM size: %d (0x%s)%s', count($nes), dechex(count($nes)), PHP_EOL);
+        $this->debugLog('ROM size: %d (0x%s)', count($nes), dechex(count($nes)));
 
         $programRomPages = $nes[4];
-        printf('Program ROM pages: %d%s', $programRomPages, PHP_EOL);
+        $this->debugLog('Program ROM pages: %d', $programRomPages);
 
         $characterRomPages = $nes[5];
-        printf('Character ROM pages: %d%s', $characterRomPages, PHP_EOL);
+        $this->debugLog('Character ROM pages: %d', $characterRomPages);
 
         $isHorizontalMirror = !($nes[6] & 0x01);
         $mapper = ((($nes[6] & 0xF0) >> 4) | $nes[7] & 0xF0);
-        printf("Mapper: %d\n", $mapper);
+        $this->debugLog('Mapper: %d', $mapper);
 
         $characterRomStart = self::NES_HEADER_SIZE + $programRomPages * self::PROGRAM_ROM_SIZE;
-        printf('Character ROM start: 0x%s (%d)%s', dechex($characterRomStart), $characterRomStart, PHP_EOL);
+        $this->debugLog('Character ROM start: 0x%s (%d)', dechex($characterRomStart), $characterRomStart);
 
         $characterRomEnd = $characterRomStart + $characterRomPages * self::CHARACTER_ROM_SIZE;
-        printf('Character ROM end: 0x%s (%d)%s', dechex($characterRomEnd), $characterRomEnd, PHP_EOL);
+        $this->debugLog('Character ROM end: 0x%s (%d)', dechex($characterRomEnd), $characterRomEnd);
 
         $cartridge = new Cartridge(
             $isHorizontalMirror,
@@ -86,20 +86,30 @@ readonly class Loader
             array_slice($nes, $characterRomStart, $characterRomEnd - $characterRomStart),
         );
 
-        printf(
-            'Program ROM: 0x0000 - 0x%s (%d bytes)%s',
+        $this->debugLog(
+            'Program ROM: 0x0000 - 0x%s (%d bytes)',
             dechex($cartridge->getProgramRomSize() - 1),
             count($cartridge->programRom),
-            PHP_EOL,
         );
 
-        printf(
-            'Character ROM: 0x0000 - 0x%s (%d bytes)%s',
+        $this->debugLog(
+            'Character ROM: 0x0000 - 0x%s (%d bytes)',
             dechex($cartridge->getCharacterRomSize() - 1),
             count($cartridge->characterRom),
-            PHP_EOL,
         );
 
         return $cartridge;
+    }
+
+    /**
+     * Outputs debug information as long as we're not running tests.
+     */
+    private function debugLog(string $format, mixed ...$args): void
+    {
+        if (defined('PHPUNIT_COMPOSER_INSTALL') || defined('__PHPUNIT_PHAR__')) {
+            return;
+        }
+
+        printf($format . PHP_EOL, ...$args);
     }
 }
