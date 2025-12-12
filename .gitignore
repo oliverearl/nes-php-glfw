@@ -1,5 +1,12 @@
 /var/cache/*
+!/var/cache/.gitkeep
+!/var/cache/rector/
+/var/cache/rector/*
+!/var/cache/rector/.gitkeep
+/var/storage/*
+!/var/storage/.gitkeep
 /vendor/
+/old
 .idea
 .phpunit.cache
 .phpunit.result.cache
