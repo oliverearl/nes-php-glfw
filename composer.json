@@ -16,7 +16,7 @@
     "require": {
         "php": "^8.5",
         "ext-glfw": "*",
-        "phpgl/visu": "@dev",
+        "phpgl/visu": "dev-master#c6addbcc681c2636fd463ce154dfba38d3abaa61",
         "larapack/dd": "^1.1"
     },
     "require-dev": {
