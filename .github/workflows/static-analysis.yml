@@ -32,7 +32,7 @@ jobs:
             ${{ runner.os }}-php-8.5-
 
       - name: Install dependencies
-        run: composer install --prefer-dist --no-progress --no-interaction
+        run: composer install --prefer-dist --no-progress --no-interaction --ignore-platform-req=ext-glfw
 
       - name: Run PHPStan
         run: vendor/bin/phpstan analyze --memory-limit=1G --error-format=github

@@ -36,7 +36,7 @@ jobs:
             ${{ runner.os }}-php-8.5-
 
       - name: Install dependencies
-        run: composer install --prefer-dist --no-progress --no-interaction
+        run: composer install --prefer-dist --no-progress --no-interaction --ignore-platform-req=ext-glfw
 
       - name: Run PHPUnit tests
         run: vendor/bin/phpunit --testdox
