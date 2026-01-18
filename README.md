@@ -211,7 +211,7 @@ bindings.
 Inspiration and PHP reference was drawn from various PHP emulation projects, including:
 - [This incredibly impressive Chip8 emulator using Visu and PHP-GLFW](https://github.com/mario-deluna/php-chip8)
 - [A PHP emulator that renders to the terminal](https://github.com/hasegawa-tomoki/php-terminal-nes-emulator)
-- [A similar Game Boy emulator that also renders to the terminal]()https://github.com/gabrielrcouto/php-terminal-gameboy-emulator)
+- [A similar Game Boy emulator that also renders to the terminal](https://github.com/gabrielrcouto/php-terminal-gameboy-emulator)
 - [A Hello World ROM that is used as as test fixture](https://github.com/thomaslantern/nes-hello-world)
 
 Nintendo, NES, Super Mario Bros, and related logos are trademarks of Nintendo. This project is not affiliated with or endorsed by Nintendo.
