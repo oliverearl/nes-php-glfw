@@ -29,7 +29,7 @@ final class RendererTest extends TestCase
 
         $buffer = $renderer->render($renderingData);
 
-        $this::assertCount(256 * 256 * 4, $buffer);
+        $this::assertCount(256 * 224 * 4, $buffer);
 
         foreach ($buffer as $byte) {
             $this::assertSame(0, $byte);
@@ -63,7 +63,7 @@ final class RendererTest extends TestCase
         $buffer = $renderer->render($renderingData);
 
         $this::assertIsArray($buffer);
-        $this::assertCount(256 * 256 * 4, $buffer);
+        $this::assertCount(256 * 224 * 4, $buffer);
     }
 
     #[Test]
@@ -93,7 +93,7 @@ final class RendererTest extends TestCase
         $buffer = $renderer->render($renderingData);
 
         $this::assertIsArray($buffer);
-        $this::assertCount(256 * 256 * 4, $buffer);
+        $this::assertCount(256 * 224 * 4, $buffer);
     }
 
     #[Test]
@@ -109,7 +109,7 @@ final class RendererTest extends TestCase
 
         $buffer = $renderer->render($renderingData);
 
-        $this::assertCount(256 * 256 * 4, $buffer);
+        $this::assertCount(256 * 224 * 4, $buffer);
     }
 
     #[Test]
@@ -125,7 +125,7 @@ final class RendererTest extends TestCase
 
         $buffer = $renderer->render($renderingData);
 
-        $this::assertCount(256 * 256 * 4, $buffer);
+        $this::assertCount(256 * 224 * 4, $buffer);
     }
 
     #[Test]
@@ -141,7 +141,7 @@ final class RendererTest extends TestCase
 
         $buffer = $renderer->render($renderingData);
 
-        $this::assertCount(256 * 256 * 4, $buffer);
+        $this::assertCount(256 * 224 * 4, $buffer);
     }
 
     #[Test]
@@ -157,7 +157,7 @@ final class RendererTest extends TestCase
 
         $buffer = $renderer->render($renderingData);
 
-        $this::assertCount(256 * 256 * 4, $buffer);
+        $this::assertCount(256 * 224 * 4, $buffer);
     }
 
     #[Test]
@@ -183,7 +183,7 @@ final class RendererTest extends TestCase
 
         $buffer = $renderer->render($renderingData);
 
-        $this::assertCount(256 * 256 * 4, $buffer);
+        $this::assertCount(256 * 224 * 4, $buffer);
     }
 
     #[Test]
@@ -209,7 +209,7 @@ final class RendererTest extends TestCase
 
         $buffer = $renderer->render($renderingData);
 
-        $this::assertCount(256 * 256 * 4, $buffer);
+        $this::assertCount(256 * 224 * 4, $buffer);
     }
 
     #[Test]
@@ -238,8 +238,8 @@ final class RendererTest extends TestCase
 
         $buffer2 = $renderer->render($renderingData2);
 
-        $this::assertCount(256 * 256 * 4, $buffer1);
-        $this::assertCount(256 * 256 * 4, $buffer2);
+        $this::assertCount(256 * 224 * 4, $buffer1);
+        $this::assertCount(256 * 224 * 4, $buffer2);
     }
 
     #[Test]
@@ -262,7 +262,7 @@ final class RendererTest extends TestCase
 
         $buffer = $renderer->render($renderingData);
 
-        $this::assertCount(256 * 256 * 4, $buffer);
+        $this::assertCount(256 * 224 * 4, $buffer);
     }
 
     #[Test]
@@ -285,7 +285,7 @@ final class RendererTest extends TestCase
 
         $buffer = $renderer->render($renderingData);
 
-        $this::assertCount(256 * 256 * 4, $buffer);
+        $this::assertCount(256 * 224 * 4, $buffer);
     }
 
     #[Test]
@@ -308,6 +308,6 @@ final class RendererTest extends TestCase
 
         $buffer = $renderer->render($renderingData);
 
-        $this::assertCount(256 * 256 * 4, $buffer);
+        $this::assertCount(256 * 224 * 4, $buffer);
     }
 }

@@ -75,7 +75,7 @@ class Renderer
      */
     public function __construct()
     {
-        $this->frameBuffer = array_fill(0, self::SCREEN_WIDTH * self::SCREEN_WIDTH * 4, 0);
+        $this->frameBuffer = array_fill(0, self::SCREEN_WIDTH * self::SCREEN_HEIGHT * 4, 0);
     }
 
     /**
@@ -85,7 +85,7 @@ class Renderer
      */
     public function render(RenderingData $data): array
     {
-        $this->frameBuffer = array_fill(0, self::SCREEN_WIDTH * self::SCREEN_WIDTH * 4, 0);
+        $this->frameBuffer = array_fill(0, self::SCREEN_WIDTH * self::SCREEN_HEIGHT * 4, 0);
         $this->buildPaletteRgba($data->palette);
 
         if ($data->background !== null && $data->background !== []) {

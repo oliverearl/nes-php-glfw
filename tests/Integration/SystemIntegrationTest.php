@@ -75,7 +75,7 @@ final class SystemIntegrationTest extends IntegrationTestCase
         $frameBuffer = $renderer->render($renderingData);
 
         $this::assertIsArray($frameBuffer);
-        $this::assertCount(256 * 256 * 4, $frameBuffer);
+        $this::assertCount(256 * 224 * 4, $frameBuffer);
     }
 
     #[Test]
