@@ -81,6 +81,11 @@ class Ppu
     private array $sprites = [];
 
     /**
+     * Indicates whether frame-scoped render data has been prepared.
+     */
+    private bool $isFramePrepared = false;
+
+    /**
      * The palette handler for color mapping.
      */
     private readonly Palette $palette;
@@ -126,9 +131,8 @@ class Ppu
     {
         $this->cycle += $cycle;
 
-        if ($this->scanline === 0) {
-            $this->background = [];
-            $this->buildSprites();
+        if ($this->scanline === 0 && ! $this->isFramePrepared) {
+            $this->prepareFrame();
         }
 
         /*
@@ -160,6 +164,7 @@ class Ppu
                 $this->clearSpriteHit();
                 $this->scanline = 0;
                 $this->cycle = 0;
+                $this->isFramePrepared = false;
                 $this->interrupts->deassertNmi();
 
                 return new RenderingData($this->getPalette(), $this->isBackgroundEnabled() ? $this->background : null, $this->isSpriteEnabled() ? $this->sprites : null, );
@@ -229,6 +234,17 @@ class Ppu
         $address = $index + $this->spriteRamAddress;
 
         $this->spriteRam->write($address % 0x100, $data);
+    }
+
+    /**
+     * Prepares frame-scoped background and sprite data once at the start of a frame.
+     */
+    private function prepareFrame(): void
+    {
+        $this->background = [];
+        $this->sprites = [];
+        $this->buildSprites();
+        $this->isFramePrepared = true;
     }
 
     /**
