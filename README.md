@@ -206,7 +206,10 @@ This project follows strict code quality standards:
 - **Laravel Pint** for code formatting (PER)
 - **PHPUnit** for comprehensive testing (256 tests, 233,000+ assertions)
 
-AI-assisted development guidelines are available in `AGENTS.md` and `CLAUDE.md`.
+Contributor guidance is available in [CONTRIBUTING.md](CONTRIBUTING.md). AI-assisted development guidelines are available in [AGENTS.md](AGENTS.md).
+
+Please do not submit copyrighted commercial ROMs in issues, pull requests, or test fixtures. Use synthetic ROMs, homebrew ROMs, or public test ROMs
+with compatible redistribution terms if you must include ROM files.
 
 ## Technical Details
 
