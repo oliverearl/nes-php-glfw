@@ -81,13 +81,15 @@ final class PaletteTest extends TestCase
         $this::assertSame(0x11, $data[0x08]);
         $this::assertSame(0x11, $data[0x0C]);
 
-        // 0x14, 0x18, 0x1C are sprite mirrors that point to 0x04, 0x08, 0x0C.
-        // When read(), they get the value from those addresses.
-        // Since 0x04, 0x08, 0x0C themselves read from 0x00, the chain works.
-        // However, the read() method reads the RAM value at (mirror - 0x10).
-        // So 0x14 reads RAM[0x04], 0x18 reads RAM[0x08], 0x1C reads RAM[0x0C].
-        // These RAM locations are 0 unless explicitly written.
-        // So we need to write to them or accept they're 0.
+        /*
+         * 0x14, 0x18, 0x1C are sprite mirrors that point to 0x04, 0x08, 0x0C.
+         * When read(), they get the value from those addresses.
+         * Since 0x04, 0x08, 0x0C themselves read from 0x00, the chain works.
+         * However, the read() method reads the RAM value at (mirror - 0x10).
+         * So 0x14 reads RAM[0x04], 0x18 reads RAM[0x08], 0x1C reads RAM[0x0C].
+         * These RAM locations are 0 unless explicitly written.
+         * So we need to write to them or accept they're 0.
+         */
         $this::assertSame(0, $data[0x14]); // Reads RAM[0x04] which is 0.
         $this::assertSame(0, $data[0x18]); // Reads RAM[0x08] which is 0.
         $this::assertSame(0, $data[0x1C]); // Reads RAM[0x0C] which is 0.

@@ -128,9 +128,11 @@ final class CartridgeLoadingTest extends IntegrationTestCase
         $programSize = $cartridge->getProgramRomSize();
         $characterSize = $cartridge->getCharacterRomSize();
 
-        // Both should be multiples of their page sizes.
-        // Program ROM pages are 16KB (0x4000).
-        // Character ROM pages are 8KB (0x2000).
+        /*
+         * Both should be multiples of their page sizes.
+         * Program ROM pages are 16KB (0x4000).
+         * Character ROM pages are 8KB (0x2000).
+         */
 
         if ($programSize > 0) {
             $this::assertSame(0, $programSize % 0x4000, 'Program ROM should be multiple of 16KB');

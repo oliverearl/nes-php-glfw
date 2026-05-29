@@ -96,8 +96,10 @@ final class DmaIntegrationTest extends IntegrationTestCase
     {
         [, $cpuBus, $ram, , , , $dma] = $this->createTestSystem();
 
-        // Write typical sprite data (4 bytes per sprite, 64 sprites).
-        // Format: Y, Tile, Attributes, X.
+        /*
+         * Write typical sprite data (4 bytes per sprite, 64 sprites).
+         * Format: Y, Tile, Attributes, X.
+         */
         for ($sprite = 0; $sprite < 64; $sprite++) {
             $base = 0x0200 + ($sprite * 4);
             $ram->write($base, $sprite * 4); // Y position.

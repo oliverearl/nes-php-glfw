@@ -73,8 +73,10 @@ final class PpuBusIntegrationTest extends IntegrationTestCase
     {
         [$ppu, $ppuBus, $characterRom] = $this->createPpuSystem();
 
-        // Sprite pattern at tile index 0 in pattern table 0.
-        // Each tile is 16 bytes (8 bytes for low bit plane, 8 for high).
+        /*
+         * Sprite pattern at tile index 0 in pattern table 0.
+         * Each tile is 16 bytes (8 bytes for low bit plane, 8 for high).
+         */
         for ($i = 0; $i < 16; $i++) {
             $characterRom->write($i, $i);
         }
