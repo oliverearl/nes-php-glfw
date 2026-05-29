@@ -57,6 +57,11 @@ class BenchmarkResult
     public readonly int $renderNanoseconds;
 
     /**
+     * Time spent checksumming rendered framebuffers in nanoseconds.
+     */
+    public readonly int $checksumNanoseconds;
+
+    /**
      * Total CPU instructions executed during measured frames.
      */
     public readonly int $iterations;
@@ -90,6 +95,7 @@ class BenchmarkResult
         int $cpuNanoseconds,
         int $ppuNanoseconds,
         int $renderNanoseconds,
+        int $checksumNanoseconds,
         int $iterations,
         int $cpuCycles,
         int $peakMemoryBytes,
@@ -105,6 +111,7 @@ class BenchmarkResult
         $this->cpuNanoseconds = $cpuNanoseconds;
         $this->ppuNanoseconds = $ppuNanoseconds;
         $this->renderNanoseconds = $renderNanoseconds;
+        $this->checksumNanoseconds = $checksumNanoseconds;
         $this->iterations = $iterations;
         $this->cpuCycles = $cpuCycles;
         $this->peakMemoryBytes = $peakMemoryBytes;
@@ -127,13 +134,17 @@ class BenchmarkResult
             'rendered_frames' => $this->renderedFrames,
             'render_enabled' => $this->renderedFrames > 0,
             'total_seconds' => $this->seconds($this->totalNanoseconds),
+            'total_seconds_excluding_checksum' => $this->seconds($this->totalNanosecondsExcludingChecksum()),
             'nes_frames_per_second' => $this->framesPerSecond(),
+            'nes_frames_per_second_excluding_checksum' => $this->framesPerSecondExcludingChecksum(),
             'cpu_seconds' => $this->seconds($this->cpuNanoseconds),
             'ppu_seconds' => $this->seconds($this->ppuNanoseconds),
             'render_seconds' => $this->seconds($this->renderNanoseconds),
+            'checksum_seconds' => $this->seconds($this->checksumNanoseconds),
             'avg_cpu_ms_per_frame' => $this->millisecondsPerFrame($this->cpuNanoseconds),
             'avg_ppu_ms_per_frame' => $this->millisecondsPerFrame($this->ppuNanoseconds),
             'avg_render_ms_per_frame' => $this->renderedFrames === 0 ? 0.0 : $this->seconds($this->renderNanoseconds) * 1000 / $this->renderedFrames,
+            'avg_checksum_ms_per_rendered_frame' => $this->renderedFrames === 0 ? 0.0 : $this->seconds($this->checksumNanoseconds) * 1000 / $this->renderedFrames,
             'iterations' => $this->iterations,
             'avg_iterations_per_frame' => $this->iterations / $this->measuredFrames,
             'cpu_cycles' => $this->cpuCycles,
@@ -153,6 +164,28 @@ class BenchmarkResult
         }
 
         return $this->measuredFrames / $this->seconds($this->totalNanoseconds);
+    }
+
+    /**
+     * Calculates measured NES frames per second without checksum overhead.
+     */
+    public function framesPerSecondExcludingChecksum(): float
+    {
+        $nanoseconds = $this->totalNanosecondsExcludingChecksum();
+
+        if ($nanoseconds === 0) {
+            return 0.0;
+        }
+
+        return $this->measuredFrames / $this->seconds($nanoseconds);
+    }
+
+    /**
+     * Returns total measured time without framebuffer checksum overhead.
+     */
+    private function totalNanosecondsExcludingChecksum(): int
+    {
+        return max(0, $this->totalNanoseconds - $this->checksumNanoseconds);
     }
 
     /**

@@ -40,10 +40,12 @@ ROM: %s
 SHA-256: %s
 Frames: %d measured, %d warmup
 FPS: %.2f
-Total: %.4fs
+FPS excl. checksum: %.2f
+Total: %.4fs (%.4fs excl. checksum)
 CPU: %.4fs (%.3fms/frame)
 PPU: %.4fs (%.3fms/frame)
 Render: %.4fs (%.3fms/rendered frame, %d rendered frames)
+Checksum: %.4fs (%.3fms/rendered frame)
 Iterations/frame: %.0f
 CPU cycles/frame: %.0f
 Peak memory: %d bytes
@@ -55,7 +57,9 @@ TEXT,
             $data['measured_frames'],
             $data['warmup_frames'],
             $data['nes_frames_per_second'],
+            $data['nes_frames_per_second_excluding_checksum'],
             $data['total_seconds'],
+            $data['total_seconds_excluding_checksum'],
             $data['cpu_seconds'],
             $data['avg_cpu_ms_per_frame'],
             $data['ppu_seconds'],
@@ -63,6 +67,8 @@ TEXT,
             $data['render_seconds'],
             $data['avg_render_ms_per_frame'],
             $data['rendered_frames'],
+            $data['checksum_seconds'],
+            $data['avg_checksum_ms_per_rendered_frame'],
             $data['avg_iterations_per_frame'],
             $data['avg_cpu_cycles_per_frame'],
             $data['peak_memory_bytes'],

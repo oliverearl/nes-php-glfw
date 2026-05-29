@@ -28,6 +28,7 @@ final class BenchmarkRunnerTest extends TestCase
             $this::assertGreaterThan(0, $result->iterations);
             $this::assertGreaterThan(0, $result->cpuCycles);
             $this::assertGreaterThan(0, $result->framesPerSecond());
+            $this::assertSame(0, $result->checksumNanoseconds);
             $this::assertNull($result->framebufferChecksum);
         } finally {
             unlink($romPath);
@@ -44,6 +45,8 @@ final class BenchmarkRunnerTest extends TestCase
 
             $this::assertSame(1, $result->renderedFrames);
             $this::assertGreaterThanOrEqual(0, $result->renderNanoseconds);
+            $this::assertGreaterThanOrEqual(0, $result->checksumNanoseconds);
+            $this::assertGreaterThanOrEqual($result->framesPerSecond(), $result->framesPerSecondExcludingChecksum());
             $this::assertNotNull($result->framebufferChecksum);
         } finally {
             unlink($romPath);

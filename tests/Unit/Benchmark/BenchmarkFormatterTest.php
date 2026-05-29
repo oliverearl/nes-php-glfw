@@ -26,6 +26,8 @@ final class BenchmarkFormatterTest extends TestCase
         $this::assertSame(2, $data['measured_frames']);
         $this::assertSame(1, $data['rendered_frames']);
         $this::assertSame('abc123', $data['framebuffer_checksum']);
+        $this::assertSame(0.05, $data['checksum_seconds']);
+        $this::assertSame(2.1052631578947367, $data['nes_frames_per_second_excluding_checksum']);
     }
 
     #[Test]
@@ -36,6 +38,8 @@ final class BenchmarkFormatterTest extends TestCase
 
         $this::assertStringContainsString('Headless NES benchmark', $output);
         $this::assertStringContainsString('Frames: 2 measured, 1 warmup', $output);
+        $this::assertStringContainsString('FPS excl. checksum: 2.11', $output);
+        $this::assertStringContainsString('Checksum: 0.0500s (50.000ms/rendered frame)', $output);
         $this::assertStringContainsString('Framebuffer checksum: abc123', $output);
     }
 
@@ -63,6 +67,7 @@ final class BenchmarkFormatterTest extends TestCase
             cpuNanoseconds: 200_000_000,
             ppuNanoseconds: 300_000_000,
             renderNanoseconds: 100_000_000,
+            checksumNanoseconds: 50_000_000,
             iterations: 100,
             cpuCycles: 500,
             peakMemoryBytes: 123456,

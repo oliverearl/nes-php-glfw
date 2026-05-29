@@ -53,6 +53,7 @@ class BenchmarkRunner
         $cpuNanoseconds = 0;
         $ppuNanoseconds = 0;
         $renderNanoseconds = 0;
+        $checksumNanoseconds = 0;
         $renderedFrames = 0;
         $framebufferChecksum = null;
         $start = hrtime(true);
@@ -64,6 +65,7 @@ class BenchmarkRunner
             $cpuNanoseconds += $frame->cpuNanoseconds;
             $ppuNanoseconds += $frame->ppuNanoseconds;
             $renderNanoseconds += $frame->renderNanoseconds;
+            $checksumNanoseconds += $frame->checksumNanoseconds;
 
             if ($frame->framebufferChecksum !== null) {
                 $renderedFrames++;
@@ -84,6 +86,7 @@ class BenchmarkRunner
             cpuNanoseconds: $cpuNanoseconds,
             ppuNanoseconds: $ppuNanoseconds,
             renderNanoseconds: $renderNanoseconds,
+            checksumNanoseconds: $checksumNanoseconds,
             iterations: $iterations,
             cpuCycles: $cpuCycles,
             peakMemoryBytes: memory_get_peak_usage(true),
@@ -148,6 +151,9 @@ class BenchmarkRunner
         $renderStart = hrtime(true);
         $framebuffer = $renderer->render($renderingData);
         $renderNanoseconds = hrtime(true) - $renderStart;
+        $checksumStart = hrtime(true);
+        $framebufferChecksum = $this->checksum($framebuffer);
+        $checksumNanoseconds = hrtime(true) - $checksumStart;
 
         return new BenchmarkFrameResult(
             iterations: $iterations,
@@ -155,7 +161,8 @@ class BenchmarkRunner
             cpuNanoseconds: $cpuNanoseconds,
             ppuNanoseconds: $ppuNanoseconds,
             renderNanoseconds: $renderNanoseconds,
-            framebufferChecksum: $this->checksum($framebuffer),
+            checksumNanoseconds: $checksumNanoseconds,
+            framebufferChecksum: $framebufferChecksum,
         );
     }
 
