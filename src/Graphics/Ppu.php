@@ -307,7 +307,7 @@ class Ppu
      */
     private function calculateVramAddress(): int
     {
-        return ($this->vramAddress >= 0x3000 && $this->vramAddress < 0x3f00) ? $this->vramAddress -= 0x3000 : $this->vramAddress - 0x2000;
+        return ($this->vramAddress >= 0x3000 && $this->vramAddress < 0x3f00) ? $this->vramAddress - 0x3000 : $this->vramAddress - 0x2000;
     }
 
     /**

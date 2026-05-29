@@ -49,6 +49,22 @@ final class PpuTest extends TestCase
         $this::assertSame(4, $renderingData->sprites[0]->id);
     }
 
+    #[Test]
+    public function it_keeps_vram_address_progression_when_writing_to_nametable_mirrors(): void
+    {
+        $ppu = $this->createPpu();
+
+        $this->writeVramAddress($ppu, 0x3000);
+        $ppu->write(0x07, 0x11);
+        $ppu->write(0x07, 0x22);
+
+        $this->writeVramAddress($ppu, 0x2000);
+        $ppu->read(0x07);
+
+        $this::assertSame(0x11, $ppu->read(0x07));
+        $this::assertSame(0x22, $ppu->read(0x07));
+    }
+
     /**
      * Creates a PPU instance with blank character RAM.
      */
@@ -71,6 +87,15 @@ final class PpuTest extends TestCase
         $ppu->write(0x04, $id);
         $ppu->write(0x04, $attribute);
         $ppu->write(0x04, $x);
+    }
+
+    /**
+     * Writes a complete 16-bit VRAM address through PPUADDR.
+     */
+    private function writeVramAddress(Ppu $ppu, int $address): void
+    {
+        $ppu->write(0x06, ($address >> 8) & 0xFF);
+        $ppu->write(0x06, $address & 0xFF);
     }
 
     /**
