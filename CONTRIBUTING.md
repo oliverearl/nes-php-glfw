@@ -15,7 +15,7 @@ Thanks for taking an interest in this NES emulator. This project is a technical 
 2. Add or update tests before changing behavior where practical.
 3. Keep changes scoped to one bug fix, feature, or cleanup.
 4. Update documentation when behavior, workflow, controls, architecture, or contributor expectations change.
-5. When changing agentic development guidance, update [AGENTS.md](AGENTS.md) first, then keep Claude, Copilot, Junie, and contributor-facing docs in sync.
+5. When changing agentic development guidance, update [AGENTS.md](AGENTS.md) first, then keep Cursor, Claude, Copilot, Junie, and contributor-facing docs in sync.
 6. Run the relevant checks from [README.md](README.md) before opening a pull request.
 
 ## Tests

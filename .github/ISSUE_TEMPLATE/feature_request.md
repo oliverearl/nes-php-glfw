@@ -29,7 +29,7 @@ A clear and concise description of any alternative solutions or features you've 
 If this request depends on NES hardware behavior, link to NESdev, 6502 documentation, test ROM documentation, or another reference where helpful.
 
 **Agentic development documentation**
-If this feature changes development workflow, coding standards, testing expectations, emulator architecture guidance, or AI-assisted contribution guidance, describe the required documentation updates. `AGENTS.md` is the master agentic development document; Claude, Copilot, Junie, and contributor-facing docs should be kept in sync with it.
+If this feature changes development workflow, coding standards, testing expectations, emulator architecture guidance, or AI-assisted contribution guidance, describe the required documentation updates. `AGENTS.md` is the master agentic development document; Cursor, Claude, Copilot, Junie, and contributor-facing docs should be kept in sync with it.
 
 **Additional context**
 Add any other context or screenshots about the feature request here.

@@ -6,8 +6,8 @@ This document provides guidelines for AI-assisted development of this NES (Ninte
 
 - `AGENTS.md` is the master agentic development document for this repository.
 - If this document disagrees with `AGENTS.md`, follow `AGENTS.md`.
-- Keep this document and all other agentic development documents in sync with `AGENTS.md`, including `CLAUDE.md` and `.github/copilot-instructions.md`.
-- When changing agent guidance, update `AGENTS.md` first, then update the corresponding Claude, Copilot, Junie, and contributor-facing documentation in the same change.
+- Keep this document and all other agentic development documents in sync with `AGENTS.md`, including `.cursorrules`, `CLAUDE.md`, and `.github/copilot-instructions.md`.
+- When changing agent guidance, update `AGENTS.md` first, then update the corresponding Cursor, Claude, Copilot, Junie, and contributor-facing documentation in the same change.
 
 ## Project Overview
 
