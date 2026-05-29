@@ -6,18 +6,18 @@
 [![PHP Version](https://img.shields.io/badge/php-8.5-blue.svg)](https://www.php.net/)
 [![License](https://img.shields.io/github/license/oliverearl/nes-php-glfw)](LICENSE)
 
-A cycle-accurate Nintendo Entertainment System (NES) emulator written in PHP, implementing the 6502 CPU and PPU. It makes use of the PHP-GLFW 
+A cycle-accurate Nintendo Entertainment System (NES) emulator written in PHP, implementing the 6502 CPU and PPU. It makes use of the PHP-GLFW
 extension for OpenGL graphics rendering via the VISU framework.
 
 ![Screenshot](.github/images/screenshot.png)
 
 ## About
 
-This is a technical demonstration project showcasing low-level emulation techniques in PHP. The emulator prioritises accuracy over performance, 
-implementing cycle-accurate CPU execution and proper PPU timing for authentic NES behaviour.
+This is a technical demonstration project showcasing low-level emulation techniques in PHP. The emulator prioritises accuracy and clear hardware
+modelling while keeping the runtime practical enough for experimentation with supported ROMs.
 
-**This is a technical demo.** Do not expect high performance or production-ready gameplay. The project is intended for educational purposes and as a 
-proof-of-concept for emulation in PHP.
+**This is a technical demo.** It is intended for educational purposes and as a proof-of-concept for emulation in PHP, not as a complete
+production-ready NES emulator.
 
 ## Requirements
 
@@ -27,7 +27,7 @@ proof-of-concept for emulation in PHP.
 
 ### Critical Performance Note
 
-**Disable Xdebug for acceptable performance.** Running the emulator with Xdebug enabled will result in extremely poor performance. Ensure Xdebug is 
+**Disable Xdebug for best performance.** Running the emulator with Xdebug enabled will result in extremely poor performance. Ensure Xdebug is
 disabled when running the emulator:
 
 ```bash
@@ -45,7 +45,7 @@ xdebug.mode=off
 1. Clone the repository:
 ```bash
 git clone https://github.com/oliverearl/nes-php-glfw.git
-cd nes-emulator
+cd nes-php-glfw
 ```
 
 2. Install dependencies:
@@ -55,7 +55,7 @@ composer install
 
 3. Ensure PHP-GLFW extension is installed and enabled.
 
-For more information on getting this installed on your platform, refer to 
+For more information on getting this installed on your platform, refer to
 [their website](https://phpgl.net/getting-started/getting-started-with-php-and-opengl.html) for easy instructions.
 
 ## Usage
@@ -165,7 +165,7 @@ The benchmark accepts any local NES ROM path.
 - Mapper support beyond NROM (Mapper 0)
 - Save states
 - Controller configuration
-- Additional performance optimisations
+- Further performance tuning
 
 ## Architecture
 
@@ -204,9 +204,9 @@ This project follows strict code quality standards:
 
 - **PHPStan** for static analysis
 - **Laravel Pint** for code formatting (PER)
-- **PHPUnit** for comprehensive testing (254+ tests, 233,000+ assertions)
+- **PHPUnit** for comprehensive testing (256 tests, 233,000+ assertions)
 
-AI-assisted development guidelines are available for Claude, Copilot/Codex, JetBrains Junie, and Cursor.
+AI-assisted development guidelines are available in `AGENTS.md` and `CLAUDE.md`.
 
 ## Technical Details
 
@@ -241,14 +241,14 @@ This project is open source. See the [LICENSE](LICENSE) file for details.
 
 ## Acknowledgments
 
-Built with the [VISU framework](https://github.com/phpgl/visu) for graphics rendering and the [PHP-GLFW](https://phpgl.net/) extension for OpenGL 
+Built with the [VISU framework](https://github.com/phpgl/visu) for graphics rendering and the [PHP-GLFW](https://phpgl.net/) extension for OpenGL
 bindings.
 
 Inspiration and PHP reference was drawn from various PHP emulation projects, including:
 - [This incredibly impressive Chip8 emulator using Visu and PHP-GLFW](https://github.com/mario-deluna/php-chip8)
 - [A PHP emulator that renders to the terminal](https://github.com/hasegawa-tomoki/php-terminal-nes-emulator)
 - [A similar Game Boy emulator that also renders to the terminal](https://github.com/gabrielrcouto/php-terminal-gameboy-emulator)
-- [A Hello World ROM that is used as as test fixture](https://github.com/thomaslantern/nes-hello-world)
+- [A Hello World ROM that is used as a test fixture](https://github.com/thomaslantern/nes-hello-world)
 
 Nintendo, NES, Super Mario Bros, and related logos are trademarks of Nintendo. This project is not affiliated with or endorsed by Nintendo.
 All trademarks and copyrights are the property of their respective owners.
@@ -257,5 +257,6 @@ All trademarks and copyrights are the property of their respective owners.
 
 ---
 
-**Note:** This is a technical demonstration project. The focus is on accuracy and educational value, not on performance or completeness. 
+**Note:** This is a technical demonstration project. The focus is on accuracy, educational value, and readable hardware modelling rather than full
+NES library compatibility.
 Contributions and feedback are welcome.

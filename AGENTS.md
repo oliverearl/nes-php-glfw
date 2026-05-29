@@ -163,7 +163,7 @@ final class RamTest extends TestCase
     {
         $ram = new Ram(256);
         $ram->write(100, 0x42);
-        
+
         $this::assertSame(0x42, $ram->read(100));
     }
 }
@@ -191,18 +191,18 @@ final class SystemIntegrationTest extends IntegrationTestCase
     {
         [$cpu, , , , $ppu] = $this->createTestSystem();
         $renderer = new Renderer();
-        
+
         $cpu->reset();
-        
+
         $renderingData = false;
         $iterations = 0;
-        
+
         while ($renderingData === false && $iterations < 50000) {
             $cpuCycles = $cpu->run();
             $renderingData = $ppu->run($cpuCycles * 3);
             $iterations++;
         }
-        
+
         $this::assertNotFalse($renderingData);
         $frameBuffer = $renderer->render($renderingData);
         $this::assertCount(256 * 224 * 4, $frameBuffer);
@@ -219,7 +219,7 @@ final class SystemIntegrationTest extends IntegrationTestCase
 - Error conditions must be tested with appropriate `expectException()`
 
 **Current Coverage:**
-- 254 tests with 233,000+ assertions
+- 256 tests with 233,000+ assertions
 - Unit tests for all components
 - Integration tests for system interactions
 - ROM loading and parsing tests
@@ -299,9 +299,9 @@ final class SystemIntegrationTest extends IntegrationTestCase
 public function it_handles_specific_case(): void
 {
     $component = new Component();
-    
+
     $result = $component->doSomething();
-    
+
     $this::assertSame($expected, $result);
 }
 ```
@@ -312,14 +312,14 @@ public function it_handles_specific_case(): void
 public function it_integrates_components(): void
 {
     [$cpu, $bus, $ram] = $this->createTestSystem();
-    
+
     // Setup
     $ram->write(0x0200, 0x42);
-    
+
     // Execute
     $cpu->reset();
     $cycles = $cpu->run();
-    
+
     // Assert
     $this::assertGreaterThan(0, $cycles);
 }
@@ -373,7 +373,7 @@ php bin/start.php path/to/rom.nes
 
 ## Notes
 
-- This emulator prioritizes accuracy over performance
+- This emulator prioritizes accuracy and correctness over raw speed
 - Cycle counting is critical for timing-sensitive games
 - Unofficial opcodes are supported for compatibility
 - The project uses PHP-GLFW for graphics via VISU framework
