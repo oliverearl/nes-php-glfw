@@ -1,12 +1,12 @@
-# Junie Development Guidelines for NES Emulator
+# Codex Development Guidelines for NES Emulator
 
 This document provides guidelines for AI-assisted development of this NES (Nintendo Entertainment System) emulator written in PHP.
 
 ## Agent Document Source of Truth
 
 - `AGENTS.md` is the master agentic development document for this repository.
-- If this document disagrees with `AGENTS.md`, follow `AGENTS.md`.
-- Keep this document and all other agentic development documents in sync with `AGENTS.md`, including `CLAUDE.md` and `.github/copilot-instructions.md`.
+- If another agentic development document disagrees with `AGENTS.md`, follow `AGENTS.md`.
+- Keep all other agentic development documents in sync with `AGENTS.md`, including `CLAUDE.md`, `.github/copilot-instructions.md`, and `.junie/guidelines.md`.
 - When changing agent guidance, update `AGENTS.md` first, then update the corresponding Claude, Copilot, Junie, and contributor-facing documentation in the same change.
 
 ## Project Overview
