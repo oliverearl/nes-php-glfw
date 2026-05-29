@@ -226,10 +226,10 @@ final class CpuBusTest extends TestCase
 
         $programRom = new Rom([0x02]);
 
-        $ppu = $this->createMock(Ppu::class);
+        $ppu = $this->createStub(Ppu::class);
         $ppu->method('read')->willReturn(0x03);
 
-        $gamepad = $this->createMock(Gamepad::class);
+        $gamepad = $this->createStub(Gamepad::class);
         $gamepad->method('read')->willReturn(false);
 
         $bus = $this->createBus($ram, $programRom, $ppu, $gamepad);
@@ -254,9 +254,9 @@ final class CpuBusTest extends TestCase
         return new CpuBus(
             $ram ?? new Ram(0x800),
             $programRom ?? new Rom([]),
-            $ppu ?? $this->createMock(Ppu::class),
-            $gamepad ?? $this->createMock(Gamepad::class),
-            $dma ?? $this->createMock(Dma::class),
+            $ppu ?? $this->createStub(Ppu::class),
+            $gamepad ?? $this->createStub(Gamepad::class),
+            $dma ?? $this->createStub(Dma::class),
         );
     }
 }

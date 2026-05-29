@@ -1,3 +1,7 @@
 {
-  "preset": "per"
+  "preset": "per",
+  "exclude": [
+    "var",
+    "vendor"
+  ]
 }

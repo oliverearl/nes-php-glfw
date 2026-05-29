@@ -18,7 +18,7 @@ final class DmaTest extends TestCase
     public function it_initializes_without_processing(): void
     {
         $ram = new Ram(0x800);
-        $ppu = $this->createMock(Ppu::class);
+        $ppu = $this->createStub(Ppu::class);
 
         $dma = new Dma($ram, $ppu);
 
@@ -29,7 +29,7 @@ final class DmaTest extends TestCase
     public function it_starts_processing_on_write(): void
     {
         $ram = new Ram(0x800);
-        $ppu = $this->createMock(Ppu::class);
+        $ppu = $this->createStub(Ppu::class);
 
         $dma = new Dma($ram, $ppu);
 
@@ -67,9 +67,7 @@ final class DmaTest extends TestCase
     public function it_stops_processing_after_run(): void
     {
         $ram = new Ram(0x800);
-        $ppu = $this->createMock(Ppu::class);
-
-        $ppu->method('transferSprite');
+        $ppu = $this->createStub(Ppu::class);
 
         $dma = new Dma($ram, $ppu);
 

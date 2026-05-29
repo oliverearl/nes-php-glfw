@@ -34,8 +34,6 @@ abstract class IntegrationTestCase extends BaseTestCase
     /**
      * Creates a complete test system with all components initialized.
      *
-     * @throws \PHPUnit\Framework\MockObject\Exception
-     *
      * @return array{0: Cpu, 1: CpuBus, 2: Ram, 3: Rom, 4: Ppu, 5: Interrupts, 6: Dma, 7: Gamepad}
      */
     protected function createTestSystem(
@@ -68,7 +66,7 @@ abstract class IntegrationTestCase extends BaseTestCase
         $characterRom = new Ram($characterRomSize);
         $ppuBus = new PpuBus($characterRom);
         $ppu = new Ppu($ppuBus, $interrupts, $horizontalMirror);
-        $gamepad = $this->createMock(Gamepad::class);
+        $gamepad = $this->createStub(Gamepad::class);
         $dma = new Dma($ram, $ppu);
         $cpuBus = new CpuBus($ram, $programRom, $ppu, $gamepad, $dma);
         $cpu = new Cpu($cpuBus, $interrupts);
@@ -98,8 +96,6 @@ abstract class IntegrationTestCase extends BaseTestCase
      *
      * @param array<int> $romData
      *
-     * @throws \PHPUnit\Framework\MockObject\Exception
-     *
      * @return array{0: Cpu, 1: CpuBus, 2: Ram, 3: Rom, 4: Ppu, 5: Interrupts, 6: Dma, 7: Gamepad}
      */
     protected function createTestSystemWithRom(
@@ -114,7 +110,7 @@ abstract class IntegrationTestCase extends BaseTestCase
         $characterRom = new Ram($characterRomSize);
         $ppuBus = new PpuBus($characterRom);
         $ppu = new Ppu($ppuBus, $interrupts, $horizontalMirror);
-        $gamepad = $this->createMock(Gamepad::class);
+        $gamepad = $this->createStub(Gamepad::class);
         $dma = new Dma($ram, $ppu);
         $cpuBus = new CpuBus($ram, $programRom, $ppu, $gamepad, $dma);
         $cpu = new Cpu($cpuBus, $interrupts);
