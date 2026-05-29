@@ -218,6 +218,7 @@ final class RendererTest extends TestCase
         $renderer = new Renderer();
 
         $palette = array_fill(0, 32, 0);
+        $palette[1] = 0x30;
 
         $pattern = array_fill(0, 8, array_fill(0, 8, 1));
         $tile = new Tile($pattern, 0, 0, 0);
@@ -240,6 +241,73 @@ final class RendererTest extends TestCase
 
         $this::assertCount(256 * 224 * 4, $buffer1);
         $this::assertCount(256 * 224 * 4, $buffer2);
+        $this::assertSame(0xFF, $buffer1[$this->pixelOffset(0, 0)]);
+        $this::assertSame(0, $buffer2[$this->pixelOffset(0, 0)]);
+    }
+
+    #[Test]
+    public function it_clears_pixels_not_covered_by_partial_background_between_renders(): void
+    {
+        $renderer = new Renderer();
+
+        $palette = array_fill(0, 32, 0);
+        $palette[1] = 0x30;
+
+        $opaquePattern = array_fill(0, 8, array_fill(0, 8, 1));
+        $transparentPattern = array_fill(0, 8, array_fill(0, 8, 0));
+        $fullBackground = array_fill(0, 33 * 28, new Tile($opaquePattern, 0, 0, 0));
+
+        $buffer1 = $renderer->render(new RenderingData(
+            palette: $palette,
+            background: $fullBackground,
+            sprites: null,
+        ));
+
+        $buffer2 = $renderer->render(new RenderingData(
+            palette: $palette,
+            background: [new Tile($transparentPattern, 0, 0, 0)],
+            sprites: null,
+        ));
+
+        $this::assertSame(0xFF, $buffer1[$this->pixelOffset(20, 20)]);
+        $this::assertSame(0, $buffer2[$this->pixelOffset(20, 20)]);
+        $this::assertSame(0, $buffer2[$this->pixelOffset(20, 20) + 3]);
+    }
+
+    #[Test]
+    public function it_does_not_use_previous_background_when_rendering_low_priority_sprites_without_background(): void
+    {
+        $renderer = new Renderer();
+
+        $palette = array_fill(0, 32, 0);
+        $palette[1] = 0x30;
+        $palette[0x11] = 0x30;
+
+        $backgroundPattern = array_fill(0, 8, array_fill(0, 8, 1));
+        $spritePattern = array_fill(0, 8, array_fill(0, 8, 0));
+        $spritePattern[0][0] = 1;
+
+        $renderer->render(new RenderingData(
+            palette: $palette,
+            background: [new Tile($backgroundPattern, 0, 0, 0)],
+            sprites: null,
+        ));
+
+        $buffer = $renderer->render(new RenderingData(
+            palette: $palette,
+            background: null,
+            sprites: [
+                new Sprite(
+                    sprite: $spritePattern,
+                    coordinates: new Vec2(0, 0),
+                    attribute: 0x20,
+                    id: 0,
+                ),
+            ],
+        ));
+
+        $this::assertSame(0xFF, $buffer[$this->pixelOffset(0, 0)]);
+        $this::assertSame(0xFF, $buffer[$this->pixelOffset(0, 0) + 3]);
     }
 
     #[Test]
@@ -309,5 +377,13 @@ final class RendererTest extends TestCase
         $buffer = $renderer->render($renderingData);
 
         $this::assertCount(256 * 224 * 4, $buffer);
+    }
+
+    /**
+     * Calculates the RGBA framebuffer offset for a pixel.
+     */
+    private function pixelOffset(int $x, int $y): int
+    {
+        return ($y * 256 + $x) * 4;
     }
 }
