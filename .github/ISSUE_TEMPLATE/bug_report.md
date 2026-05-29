@@ -1,38 +1,55 @@
 ---
 name: Bug report
-about: Create a report to help us improve
+about: Report an emulator, test, documentation, or tooling problem
 title: ''
-labels: ''
+labels: bug
 assignees: ''
 
 ---
 
 **Describe the bug**
-A clear and concise description of what the bug is.
+A clear and concise description of the problem.
 
 **To Reproduce**
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+Steps, command, or test case that reproduces the behavior:
+1.
+2.
+3.
 
 **Expected behavior**
 A clear and concise description of what you expected to happen.
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
+**Actual behavior**
+A clear and concise description of what happened instead.
 
-**Desktop (please complete the following information):**
- - OS: [e.g. iOS]
- - Browser [e.g. chrome, safari]
- - Version [e.g. 22]
+**Environment**
+- OS:
+- PHP version:
+- PHP-GLFW version, if relevant:
+- Commit or release:
 
-**Smartphone (please complete the following information):**
- - Device: [e.g. iPhone6]
- - OS: [e.g. iOS8.1]
- - Browser [e.g. stock browser, safari]
- - Version [e.g. 22]
+**ROM or test fixture**
+- ROM name or test fixture:
+- Mapper:
+- Is the ROM redistributable or synthetic?
+
+Do not attach copyrighted commercial ROMs. If possible, reproduce the issue with a synthetic or homebrew ROM.
+
+**Screenshots or logs**
+If applicable, add screenshots, profiler output, benchmark output, stack traces, or test failures.
+
+**Area**
+- [ ] CPU behavior or timing.
+- [ ] PPU behavior or rendering.
+- [ ] Input, ROM loading, or cartridge behavior.
+- [ ] Performance or benchmarking.
+- [ ] Documentation or tooling.
+
+**Regression**
+Did this work in a previous commit or release? If yes, which one?
+
+**References**
+If this relates to hardware behavior, link to NESdev, 6502 documentation, or another reference where helpful.
 
 **Additional context**
 Add any other context about the problem here.
