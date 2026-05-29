@@ -109,6 +109,7 @@ class Gamepad implements Controller
     {
         $this->input = $input;
         $this->keyBuffer = array_fill(0, 8, false);
+        $this->keyRegisters = $this->keyBuffer;
 
         $actions = new InputActionMap();
 
@@ -164,6 +165,10 @@ class Gamepad implements Controller
      */
     public function read(): bool
     {
+        if ($this->isSet) {
+            return $this->keyBuffer[0];
+        }
+
         if ($this->index >= 8) {
             return true;
         }
