@@ -66,9 +66,9 @@ readonly class CpuBus
             $this->ram->write($address, $data);
         } elseif ($address < 0x2000) {
             $this->ram->write($address % 0x0800, $data);
-        } elseif ($address < 0x2008) {
-            $this->ppu->write($address - 0x2000, $data);
-        } elseif ($address >= 0x4000 && $address < 0x4020) {
+        } elseif ($address < 0x4000) {
+            $this->ppu->write(($address - 0x2000) % 8, $data);
+        } elseif ($address < 0x4020) {
             if ($address === 0x4014) {
                 $this->dma->write($data);
             } elseif ($address === 0x4016) {

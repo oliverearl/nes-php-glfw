@@ -188,17 +188,14 @@ final class CpuBusIntegrationTest extends IntegrationTestCase
     #[Test]
     public function it_handles_ppu_register_mirroring(): void
     {
-        [$cpu, $cpuBus] = $this->createTestSystem();
+        [, $cpuBus, , , $ppu, $interrupts] = $this->createTestSystem();
 
-        // PPU registers (0x2000-0x2007) are mirrored every 8 bytes up to 0x3FFF
-        // Writing to 0x2000 should be same as 0x2008, 0x2010, etc.
+        $cpuBus->writeByCpu(0x2008, 0x80);
 
-        $cpuBus->writeByCpu(0x2000, 0x80);
-        $cpuBus->writeByCpu(0x2008, 0x90);
-        $cpuBus->writeByCpu(0x3FF8, 0xA0);
+        for ($i = 0; $i < 242 && ! $interrupts->isNmiAsserted(); $i++) {
+            $ppu->run(341);
+        }
 
-        // All writes should go to the same register (last write wins)
-        // Just verify no exceptions are thrown
-        $this::assertTrue(true);
+        $this::assertTrue($interrupts->isNmiAsserted());
     }
 }
