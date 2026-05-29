@@ -14,6 +14,7 @@ use App\Cpu\Cpu;
 use App\Cpu\Dma;
 use App\Cpu\Interrupts;
 use App\Debug\Profiler;
+use App\Graphics\Objects\RenderingData;
 use App\Graphics\Ppu;
 use App\Graphics\Renderer;
 use App\Input\Gamepad;
@@ -42,6 +43,21 @@ class Emulator extends QuickstartApp
      * NES display dimensions in pixels. (Height)
      */
     public const int NES_MAX_Y = 224;
+
+    /**
+     * Temporary CLI flag for preferring real-time pacing over displaying every emulated frame.
+     */
+    public const string DROP_FRAMES_FLAG = '--drop-frames';
+
+    /**
+     * VISU update catch-up limit when every emulated frame should be displayed.
+     */
+    private const int SLOW_MOTION_MAX_UPDATES_PER_RENDER = 1;
+
+    /**
+     * VISU update catch-up limit when stale visual frames may be dropped.
+     */
+    private const int DROP_FRAMES_MAX_UPDATES_PER_RENDER = 10;
 
     /**
      * Indicates whether the NES emulator is currently running.
@@ -95,6 +111,39 @@ class Emulator extends QuickstartApp
      */
     private ?array $cachedFrameBuffer = null;
 
+    /**
+     * Latest completed NES frame data awaiting conversion to a framebuffer.
+     */
+    private ?RenderingData $pendingRenderingData = null;
+
+    /**
+     * Indicates whether update catch-up may drop stale visual frames to preserve pacing.
+     */
+    private bool $dropFramesToMaintainRealtime = false;
+
+    /**
+     * Returns the VISU update catch-up limit implied by the temporary frame pacing flag.
+     *
+     * @param list<string> $args
+     */
+    public static function maxUpdatesPerRenderForArgs(array $args): int
+    {
+        return self::shouldDropFramesToMaintainRealtime($args)
+            ? self::DROP_FRAMES_MAX_UPDATES_PER_RENDER
+            : self::SLOW_MOTION_MAX_UPDATES_PER_RENDER;
+    }
+
+    /**
+     * Checks whether the temporary real-time frame pacing flag is present.
+     *
+     * @param list<string> $args
+     */
+    public static function shouldDropFramesToMaintainRealtime(array $args): bool
+    {
+        return array_any($args, fn(string $arg): bool => strtolower($arg) === self::DROP_FRAMES_FLAG);
+
+    }
+
 
     /**
      * Initializes the emulator and loads the ROM if available.
@@ -109,6 +158,7 @@ class Emulator extends QuickstartApp
         parent::ready();
 
         $this->setDebugEnabled(in_array('--profile', $this->getArgs(), strict: true));
+        $this->dropFramesToMaintainRealtime = self::shouldDropFramesToMaintainRealtime($this->getArgs());
 
         $this->initializeEngine();
         $this->checkForInitialRom();
@@ -128,6 +178,14 @@ class Emulator extends QuickstartApp
 
         if (! $this->isEmulatorRunning) {
             $rawBuffer = $this->generateWaitingAnimation($this->frameIndex);
+        } elseif ($this->pendingRenderingData !== null) {
+            $debugRenderStart = $this->debugStartRender();
+            $this->cachedFrameBuffer = $this->renderer->render($this->pendingRenderingData);
+            $this->pendingRenderingData = null;
+            $this->debugEndRender($debugRenderStart);
+            $this->debugRecordRenderedFrame();
+
+            $rawBuffer = $this->cachedFrameBuffer;
         } elseif ($this->cachedFrameBuffer === null) {
             // No frame ready yet, skip drawing.
             return;
@@ -179,9 +237,9 @@ class Emulator extends QuickstartApp
     /**
      * Updates the emulator state incrementally without blocking.
      *
-     * Runs a fixed budget of CPU cycles per tick to avoid blocking the game loop.
-     * The NES produces ~60 frames per second. Each update() call processes one
-     * NES frame worth of cycles, but we limit iterations to prevent blocking.
+     * Each update processes up to one NES frame and leaves framebuffer conversion
+     * for draw(). When VISU catch-up is enabled, later updates overwrite pending
+     * frame data so stale visual frames are dropped before expensive rendering.
      *
      * @inheritDoc
      */
@@ -193,6 +251,13 @@ class Emulator extends QuickstartApp
         parent::update();
 
         if (! $this->isEmulatorRunning) {
+            $this->debugEndUpdate($debugUpdateStart);
+            $this->debugLog();
+            return;
+        }
+
+        if (! $this->dropFramesToMaintainRealtime && $this->pendingRenderingData !== null) {
+            $this->debugEndUpdate($debugUpdateStart);
             $this->debugLog();
             return;
         }
@@ -226,10 +291,7 @@ class Emulator extends QuickstartApp
             $iterations++;
 
             if ($renderingData !== false) {
-                $debugRenderStart = $this->debugStartRender();
-                $this->cachedFrameBuffer = $this->renderer->render($renderingData);
-                $this->debugEndRender($debugRenderStart);
-
+                $this->pendingRenderingData = $renderingData;
                 $this->debugRecordNesFrame();
                 break;
             }
@@ -255,6 +317,8 @@ class Emulator extends QuickstartApp
         $this->isEmulatorRunning = false;
         $cartridgeLoader = new Loader($this->selectedRom);
         $this->cartridge = $cartridgeLoader->load();
+        $this->cachedFrameBuffer = null;
+        $this->pendingRenderingData = null;
 
         $this->reset();
     }
@@ -343,7 +407,7 @@ class Emulator extends QuickstartApp
     {
         global $argv;
 
-        return array_map('strtolower', $argv ?? $_SERVER['argv'] ?? []);
+        return $argv;
     }
 
     /**

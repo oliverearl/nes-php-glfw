@@ -69,6 +69,19 @@ php bin/start.php path/to/rom.nes
 If you don't start the emulator with a loaded ROM, it will display a graphical pattern. You
 can also drag and drop a ROM file onto the window to load it.
 
+### Frame Pacing
+
+By default, the emulator prioritises smooth, accurate presentation over forcing wall-clock speed. If PHP cannot complete a full NES frame inside
+the host frame budget, playback slows down and every completed NES frame is still presented. This keeps animation stable and avoids the emulator
+doing expensive catch-up work for frames that would never reach the screen.
+
+For heavily struggling systems, `--drop-frames` enables an experimental real-time pacing mode. VISU may run catch-up updates before drawing, and
+only the latest completed NES frame is rendered. This can make wall-clock pacing more aggressive, but it may skip visible emulator frames:
+
+```bash
+php bin/start.php path/to/rom.nes --drop-frames
+```
+
 ### Profiler
 
 Enable performance debugging to see detailed timing metrics by passing the `--profile` flag:
@@ -81,12 +94,13 @@ This will output performance statistics every second to `stderr`, showing:
 - Average time spent in update/draw cycles
 - CPU, PPU, and rendering breakdown
 - NES frames per second
+- Rendered frames per second
 - Iterations per update
 
 Example debug output:
 ```
-[NES Debug] Updates: 28 (avg 35.61ms) | Draws: 3 (avg 0.95ms) | NES frames: 28 | Iters/update: 9696
-[NES Debug] Breakdown: CPU 13.80ms | PPU 5.63ms | Render 14.02ms (per update avg)
+[NES Debug] Updates: 28 (avg 35.61ms) | Draws: 3 (avg 0.95ms) | NES frames: 28 | Rendered frames: 3 | Iters/update: 9696
+[NES Debug] Breakdown: CPU 13.80ms | PPU 5.63ms | Render 14.02ms (per rendered frame avg)
 ```
 
 ### Controls
@@ -223,4 +237,3 @@ All trademarks and copyrights are the property of their respective owners.
 
 **Note:** This is a technical demonstration project. The focus is on accuracy and educational value, not on performance or completeness. 
 Contributions and feedback are welcome.
-

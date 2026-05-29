@@ -42,6 +42,11 @@ trait Profiler
     private int $debugNesFrames = 0;
 
     /**
+     * Number of frames converted to framebuffers this second.
+     */
+    private int $debugRenderedFrames = 0;
+
+    /**
      * Total iterations in update() this second.
      */
     private int $debugIterations = 0;
@@ -188,6 +193,18 @@ trait Profiler
     }
 
     /**
+     * Records that an NES frame was converted to a framebuffer.
+     */
+    private function debugRecordRenderedFrame(): void
+    {
+        if (! $this->debugEnabled) {
+            return;
+        }
+
+        $this->debugRenderedFrames++;
+    }
+
+    /**
      * Records the number of iterations in an update cycle.
      */
     private function debugRecordIterations(int $iterations): void
@@ -217,23 +234,24 @@ trait Profiler
         $avgDraw = $this->debugDrawCount > 0 ? ($this->debugDrawTime / $this->debugDrawCount) * 1000 : 0;
         $avgCpu = $this->debugUpdateCount > 0 ? ($this->debugCpuTime / $this->debugUpdateCount) * 1000 : 0;
         $avgPpu = $this->debugUpdateCount > 0 ? ($this->debugPpuTime / $this->debugUpdateCount) * 1000 : 0;
-        $avgRender = $this->debugNesFrames > 0 ? ($this->debugRenderTime / $this->debugNesFrames) * 1000 : 0;
+        $avgRender = $this->debugRenderedFrames > 0 ? ($this->debugRenderTime / $this->debugRenderedFrames) * 1000 : 0;
         $avgIterations = $this->debugUpdateCount > 0 ? $this->debugIterations / $this->debugUpdateCount : 0;
 
         /** @noinspection ForgottenDebugOutputInspection */
         error_log(sprintf(
-            '[NES Debug] Updates: %d (avg %.2fms) | Draws: %d (avg %.2fms) | NES frames: %d | Iters/update: %.0f',
+            '[NES Debug] Updates: %d (avg %.2fms) | Draws: %d (avg %.2fms) | NES frames: %d | Rendered frames: %d | Iters/update: %.0f',
             $this->debugUpdateCount,
             $avgUpdate,
             $this->debugDrawCount,
             $avgDraw,
             $this->debugNesFrames,
+            $this->debugRenderedFrames,
             $avgIterations,
         ));
 
         /** @noinspection ForgottenDebugOutputInspection */
         error_log(sprintf(
-            '[NES Debug] Breakdown: CPU %.2fms | PPU %.2fms | Render %.2fms (per update avg)',
+            '[NES Debug] Breakdown: CPU %.2fms | PPU %.2fms | Render %.2fms (per rendered frame avg)',
             $avgCpu,
             $avgPpu,
             $avgRender,
@@ -248,6 +266,7 @@ trait Profiler
         $this->debugUpdateCount = 0;
         $this->debugDrawCount = 0;
         $this->debugNesFrames = 0;
+        $this->debugRenderedFrames = 0;
         $this->debugIterations = 0;
     }
 }

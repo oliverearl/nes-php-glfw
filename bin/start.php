@@ -14,4 +14,5 @@ new Quickstart(function (QuickstartOptions $options) use ($container): void {
     $options->appClass = Emulator::class;
     $options->container = $container;
     $options->windowTitle = $container->getParameter('project.name');
+    $options->gameLoopMaxUpdatesPerFrame = Emulator::maxUpdatesPerRenderForArgs(array_values($_SERVER['argv'] ?? []));
 })->run();
