@@ -120,8 +120,7 @@ composer benchmark -- path/to/homebrew-or-test-rom.nes --frames=300 --warmup=30 
 When rendering is enabled, checksum timing is reported separately from renderer timing. The output also includes checksum-excluded FPS so framebuffer
 verification overhead does not obscure emulator throughput.
 
-The benchmark accepts any local iNES ROM path, but automated tests use generated synthetic NROM data only. Do not commit copyrighted ROMs.
-External homebrew or test ROM collections can be useful for manual comparison, but they are not downloaded or vendored by this project.
+The benchmark accepts any local NES ROM path.
 
 ### Controls
 
