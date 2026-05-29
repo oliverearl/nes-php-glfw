@@ -259,7 +259,7 @@ class Ppu
             $y = $this->spriteRam->read($i) - 8;
 
             if ($y < 0) {
-                return;
+                continue;
             }
 
             $spriteId = $this->spriteRam->read($i + 1);
@@ -267,7 +267,7 @@ class Ppu
             $x = $this->spriteRam->read($i + 3);
             $sprite = $this->buildSprite($spriteId, $offset);
 
-            $this->sprites[$i / 4] = new Sprite($sprite, new Vec2($x, $y), $attr, $spriteId);
+            $this->sprites[] = new Sprite($sprite, new Vec2($x, $y), $attr, $spriteId);
         }
     }
 

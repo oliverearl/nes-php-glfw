@@ -34,6 +34,21 @@ final class PpuTest extends TestCase
         $this::assertSame(3, $renderingData->sprites[0]->id);
     }
 
+    #[Test]
+    public function it_skips_offscreen_sprites_without_dropping_later_visible_sprites(): void
+    {
+        $ppu = $this->createPpu();
+        $ppu->write(0x01, 0x10);
+        $this->writeSprite($ppu, 0x00, 0, 1, 0, 10);
+        $this->writeSprite($ppu, 0x04, 24, 4, 0, 40);
+
+        $renderingData = $this->runUntilFrameCompletes($ppu);
+
+        $this::assertNotNull($renderingData->sprites);
+        $this::assertCount(1, $renderingData->sprites);
+        $this::assertSame(4, $renderingData->sprites[0]->id);
+    }
+
     /**
      * Creates a PPU instance with blank character RAM.
      */
