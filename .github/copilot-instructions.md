@@ -219,7 +219,7 @@ final class SystemIntegrationTest extends IntegrationTestCase
 - Error conditions must be tested with appropriate `expectException()`
 
 **Current Coverage:**
-- 240 tests with 233,000+ assertions
+- 254 tests with 233,000+ assertions
 - Unit tests for all components
 - Integration tests for system interactions
 - ROM loading and parsing tests
@@ -356,6 +356,9 @@ vendor/bin/phpstan analyze
 
 # Format code
 vendor/bin/pint
+
+# Run headless benchmark
+composer benchmark -- path/to/homebrew-or-test-rom.nes
 
 # Run emulator with ROM
 php bin/start.php path/to/rom.nes

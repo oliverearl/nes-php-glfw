@@ -8,7 +8,7 @@ use VISU\OS\InputActionMap;
 use VISU\OS\InputContextMap;
 use VISU\OS\Key;
 
-class Gamepad
+class Gamepad implements Controller
 {
     /**
      * Input context key for the default keyboard mapping.

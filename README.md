@@ -103,6 +103,23 @@ Example debug output:
 [NES Debug] Breakdown: CPU 13.80ms | PPU 5.63ms | Render 14.02ms (per rendered frame avg)
 ```
 
+### Headless Benchmark
+
+Run the emulator core without VISU/OpenGL to collect repeatable CPU, PPU, and optional software-renderer performance metrics:
+
+```bash
+composer benchmark -- path/to/homebrew-or-test-rom.nes --frames=300 --warmup=30
+```
+
+Use `--render` to include `Renderer::render()` framebuffer conversion time, and `--json` for machine-readable output:
+
+```bash
+composer benchmark -- path/to/homebrew-or-test-rom.nes --frames=300 --warmup=30 --render --json
+```
+
+The benchmark accepts any local iNES ROM path, but automated tests use generated synthetic NROM data only. Do not commit copyrighted ROMs.
+External homebrew or test ROM collections can be useful for manual comparison, but they are not downloaded or vendored by this project.
+
 ### Controls
 
 - Arrow Keys: D-Pad
@@ -174,6 +191,9 @@ composer phpstan
 
 # Check code style
 composer pint
+
+# Run headless benchmark
+composer benchmark -- path/to/homebrew-or-test-rom.nes
 ```
 
 ## Development
@@ -182,7 +202,7 @@ This project follows strict code quality standards:
 
 - **PHPStan** for static analysis
 - **Laravel Pint** for code formatting (PER)
-- **PHPUnit** for comprehensive testing (240+ tests, 233,000+ assertions)
+- **PHPUnit** for comprehensive testing (254+ tests, 233,000+ assertions)
 
 AI-assisted development guidelines are available for Claude, Copilot/Codex, JetBrains Junie, and Cursor.
 

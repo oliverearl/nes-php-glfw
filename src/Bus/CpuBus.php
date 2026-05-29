@@ -6,7 +6,7 @@ namespace App\Bus;
 
 use App\Cpu\Dma;
 use App\Graphics\Ppu;
-use App\Input\Gamepad;
+use App\Input\Controller;
 
 readonly class CpuBus
 {
@@ -17,7 +17,7 @@ readonly class CpuBus
         private Ram $ram,
         private Rom $programRom,
         private Ppu $ppu,
-        private Gamepad $gamepad,
+        private Controller $gamepad,
         private Dma $dma,
     ) {}
 

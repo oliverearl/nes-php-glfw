@@ -32,6 +32,8 @@
         "test:unit": "phpunit --testsuite=Unit",
         "test:integration": "phpunit --testsuite=Integration",
         "test:coverage": "phpunit --coverage-html=coverage",
+        "benchmark": "php bin/benchmark.php",
+        "benchmark:help": "php bin/benchmark.php --help",
         "pint": "php vendor/bin/pint",
         "phpstan": "php -d memory_limit=512M vendor/bin/phpstan analyse",
         "phpstan:baseline": "php -d memory_limit=512M vendor/bin/phpstan analyse --generate-baseline",

@@ -9,6 +9,7 @@ use App\Bus\Ram;
 use App\Bus\Rom;
 use App\Cpu\Dma;
 use App\Graphics\Ppu;
+use App\Input\Controller;
 use App\Input\Gamepad;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
@@ -248,7 +249,7 @@ final class CpuBusTest extends TestCase
         ?Ram $ram = null,
         ?Rom $programRom = null,
         ?Ppu $ppu = null,
-        ?Gamepad $gamepad = null,
+        ?Controller $gamepad = null,
         ?Dma $dma = null,
     ): CpuBus {
         return new CpuBus(

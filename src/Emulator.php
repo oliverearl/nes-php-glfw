@@ -4,16 +4,12 @@ declare(strict_types=1);
 
 namespace App;
 
-use App\Bus\CpuBus;
-use App\Bus\PpuBus;
-use App\Bus\Ram;
-use App\Bus\Rom;
 use App\Cartridge\Cartridge;
 use App\Cartridge\Loader;
 use App\Cpu\Cpu;
 use App\Cpu\Dma;
-use App\Cpu\Interrupts;
 use App\Debug\Profiler;
+use App\Emulation\NesSystemFactory;
 use App\Graphics\Objects\RenderingData;
 use App\Graphics\Ppu;
 use App\Graphics\Renderer;
@@ -334,21 +330,10 @@ class Emulator extends QuickstartApp
         $this->isEmulatorRunning = false;
 
         $this->gamepad = new Gamepad($this->inputContext);
-        $ram = new Ram();
-        $characterRam = new Ram(0x4000);
-
-        for ($i = 0, $iMax = $this->cartridge->getCharacterRomSize(); $i < $iMax; $i++) {
-            $characterRam->write($i, $this->cartridge->characterRom[$i]);
-        }
-
-        $programRom = new Rom($this->cartridge->programRom);
-        $ppuBus = new PpuBus($characterRam);
-        $interrupts = new Interrupts();
-        $this->ppu = new Ppu($ppuBus, $interrupts, $this->cartridge->isHorizontalMirror);
-        $this->dma = new Dma($ram, $this->ppu);
-        $cpuBus = new CpuBus($ram, $programRom, $this->ppu, $this->gamepad, $this->dma);
-        $this->cpu = new Cpu($cpuBus, $interrupts);
-        $this->cpu->reset();
+        $system = (new NesSystemFactory())->create($this->cartridge, $this->gamepad);
+        $this->ppu = $system->ppu;
+        $this->dma = $system->dma;
+        $this->cpu = $system->cpu;
 
         $this->isEmulatorRunning = true;
     }

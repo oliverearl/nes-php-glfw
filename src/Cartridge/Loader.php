@@ -28,8 +28,10 @@ readonly class Loader
      *
      * @throws RuntimeException
      */
-    public function __construct(private string $filepath)
-    {
+    public function __construct(
+        private string $filepath,
+        private bool $debugEnabled = true,
+    ) {
         if (! file_exists($this->filepath) || ! is_file($this->filepath)) {
             throw new RuntimeException("File not found: {$this->filepath}");
         }
@@ -106,7 +108,7 @@ readonly class Loader
      */
     private function debugLog(string $format, mixed ...$args): void
     {
-        if (defined('PHPUNIT_COMPOSER_INSTALL') || defined('__PHPUNIT_PHAR__')) {
+        if (! $this->debugEnabled || defined('PHPUNIT_COMPOSER_INSTALL') || defined('__PHPUNIT_PHAR__')) {
             return;
         }
 
