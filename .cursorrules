@@ -219,7 +219,7 @@ final class SystemIntegrationTest extends IntegrationTestCase
 - Error conditions must be tested with appropriate `expectException()`
 
 **Current Coverage:**
-- 256 tests with 233,000+ assertions
+- 258 tests with 233,000+ assertions
 - Unit tests for all components
 - Integration tests for system interactions
 - ROM loading and parsing tests

@@ -204,7 +204,7 @@ This project follows strict code quality standards:
 
 - **PHPStan** for static analysis
 - **Laravel Pint** for code formatting (PER)
-- **PHPUnit** for comprehensive testing (256 tests, 233,000+ assertions)
+- **PHPUnit** for comprehensive testing (258 tests, 233,000+ assertions)
 
 Contributor guidance is available in [CONTRIBUTING.md](CONTRIBUTING.md). AI-assisted development guidelines are available in [AGENTS.md](AGENTS.md).
 
