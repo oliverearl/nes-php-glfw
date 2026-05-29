@@ -251,8 +251,10 @@ class Renderer
 
             for ($i = 0; $i < 8; $i++) {
                 $y = $baseY + ($isVerticalReverse ? 7 - $i : $i);
-
-                if ($y < 0 || $y >= self::SCREEN_HEIGHT) {
+                if ($y < 0) {
+                    continue;
+                }
+                if ($y >= self::SCREEN_HEIGHT) {
                     continue;
                 }
 
@@ -265,8 +267,10 @@ class Renderer
                     }
 
                     $x = $baseX + ($isHorizontalReverse ? 7 - $j : $j);
-
-                    if ($x < 0 || $x >= self::SCREEN_WIDTH) {
+                    if ($x < 0) {
+                        continue;
+                    }
+                    if ($x >= self::SCREEN_WIDTH) {
                         continue;
                     }
 

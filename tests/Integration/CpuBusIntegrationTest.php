@@ -13,10 +13,10 @@ final class CpuBusIntegrationTest extends IntegrationTestCase
     {
         [$cpu, $cpuBus, $ram] = $this->createTestSystem();
 
-        // Write data to RAM
+        // Write data to RAM.
         $ram->write(0x0200, 0x42);
 
-        // CPU should be able to read it through the bus
+        // CPU should be able to read it through the bus.
         $data = $cpuBus->readByCpu(0x0200);
 
         $this::assertSame(0x42, $data);
@@ -27,10 +27,10 @@ final class CpuBusIntegrationTest extends IntegrationTestCase
     {
         [$cpu, $cpuBus, $ram] = $this->createTestSystem();
 
-        // CPU writes through bus
+        // CPU writes through bus.
         $cpuBus->writeByCpu(0x0300, 0xAA);
 
-        // RAM should have the data
+        // RAM should have the data.
         $this::assertSame(0xAA, $ram->read(0x0300));
     }
 
@@ -39,10 +39,10 @@ final class CpuBusIntegrationTest extends IntegrationTestCase
     {
         [, $cpuBus, , $programRom] = $this->createTestSystem();
 
-        // Read from ROM address space (0x8000+)
+        // Read from ROM address space (0x8000+).
         $data = $cpuBus->readByCpu(0x8000);
 
-        // Should get first byte of ROM (NOP = 0xEA)
+        // Should get first byte of ROM (NOP = 0xEA).
         $this::assertSame(0xEA, $data);
     }
 
@@ -51,10 +51,10 @@ final class CpuBusIntegrationTest extends IntegrationTestCase
     {
         [$cpu, $cpuBus, $ram] = $this->createTestSystem();
 
-        // Write to base RAM address
+        // Write to base RAM address.
         $ram->write(0x0100, 0x55);
 
-        // Read from mirrored address (0x0800+ mirrors 0x0000-0x07FF)
+        // Read from mirrored address (0x0800+ mirrors 0x0000-0x07FF).
         $data = $cpuBus->readByCpu(0x0900);
 
         $this::assertSame(0x55, $data);
@@ -63,20 +63,20 @@ final class CpuBusIntegrationTest extends IntegrationTestCase
     #[Test]
     public function it_handles_rom_mirroring_for_16kb_roms(): void
     {
-        // Create 16KB ROM (should mirror at 0xC000)
+        // Create 16KB ROM (should mirror at 0xC000).
         $romData = array_fill(0, 0x4000, 0);
-        $romData[0] = 0x4C; // First byte
-        $romData[0x3FFF] = 0xFF; // Last byte
+        $romData[0] = 0x4C; // First byte.
+        $romData[0x3FFF] = 0xFF; // Last byte.
 
         [, $cpuBus] = $this->createTestSystemWithRom($romData);
 
-        // Read from 0x8000 (start of ROM)
+        // Read from 0x8000 (start of ROM).
         $this::assertSame(0x4C, $cpuBus->readByCpu(0x8000));
 
-        // Read from 0xC000 (should mirror to 0x8000 for 16KB ROM)
+        // Read from 0xC000 (should mirror to 0x8000 for 16KB ROM).
         $this::assertSame(0x4C, $cpuBus->readByCpu(0xC000));
 
-        // Read last byte
+        // Read last byte.
         $this::assertSame(0xFF, $cpuBus->readByCpu(0xBFFF));
         $this::assertSame(0xFF, $cpuBus->readByCpu(0xFFFF));
     }
@@ -84,17 +84,17 @@ final class CpuBusIntegrationTest extends IntegrationTestCase
     #[Test]
     public function it_handles_32kb_rom_without_mirroring(): void
     {
-        // Create 32KB ROM (no mirroring needed)
+        // Create 32KB ROM (no mirroring needed).
         $romData = array_fill(0, 0x8000, 0);
-        $romData[0] = 0x4C; // First byte of low bank
-        $romData[0x4000] = 0x6C; // First byte of high bank
+        $romData[0] = 0x4C; // First byte of low bank.
+        $romData[0x4000] = 0x6C; // First byte of high bank.
 
         [, $cpuBus] = $this->createTestSystemWithRom($romData);
 
-        // Read from low bank
+        // Read from low bank.
         $this::assertSame(0x4C, $cpuBus->readByCpu(0x8000));
 
-        // Read from high bank
+        // Read from high bank.
         $this::assertSame(0x6C, $cpuBus->readByCpu(0xC000));
     }
 
@@ -105,10 +105,10 @@ final class CpuBusIntegrationTest extends IntegrationTestCase
 
         $original = $cpuBus->readByCpu(0x8000);
 
-        // Attempt to write to ROM (should be ignored)
+        // Attempt to write to ROM (should be ignored).
         $cpuBus->writeByCpu(0x8000, 0xFF);
 
-        // ROM should be unchanged
+        // ROM should be unchanged.
         $this::assertSame($original, $cpuBus->readByCpu(0x8000));
     }
 
@@ -117,7 +117,7 @@ final class CpuBusIntegrationTest extends IntegrationTestCase
     {
         [$cpu, $cpuBus] = $this->createTestSystem();
 
-        // APU registers (0x4000-0x4017) should return 0 (not crash)
+        // APU registers (0x4000-0x4017) should return 0 (not crash).
         $this::assertSame(0, $cpuBus->readByCpu(0x4000));
         $this::assertSame(0, $cpuBus->readByCpu(0x4017));
     }
@@ -125,27 +125,26 @@ final class CpuBusIntegrationTest extends IntegrationTestCase
     #[Test]
     public function it_handles_apu_register_writes_without_error(): void
     {
+        $this->expectNotToPerformAssertions();
+
         [$cpu, $cpuBus] = $this->createTestSystem();
 
-        // APU writes should be silently ignored (not crash)
+        // APU writes should be silently ignored without crashing.
         $cpuBus->writeByCpu(0x4000, 0xFF);
         $cpuBus->writeByCpu(0x4001, 0xAA);
-
-        // Should not throw any exceptions
-        $this::assertTrue(true);
     }
 
     #[Test]
     public function it_executes_simple_instruction_sequence(): void
     {
-        // Create a simple program: LDA #$42, STA $0200
+        // Create a simple program: LDA #$42, STA $0200.
         $program = [
-            0xA9, 0x42, // LDA #$42 (Load 0x42 into accumulator)
-            0x8D, 0x00, 0x02, // STA $0200 (Store accumulator at $0200)
-            0xEA, // NOP
+            0xA9, 0x42, // LDA #$42 (Load 0x42 into accumulator).
+            0x8D, 0x00, 0x02, // STA $0200 (Store accumulator at $0200).
+            0xEA, // NOP.
         ];
 
-        // Write program to ROM
+        // Write program to ROM.
         $modifiedRom = array_fill(0, 0x8000, 0xEA);
         foreach ($program as $i => $byte) {
             $modifiedRom[$i] = $byte;
@@ -153,17 +152,19 @@ final class CpuBusIntegrationTest extends IntegrationTestCase
 
         [$cpu] = $this->createTestSystemWithRom($modifiedRom);
 
-        // Reset CPU (sets PC to reset vector)
+        // Reset CPU (sets PC to reset vector).
         $cpu->reset();
 
-        // Execute LDA instruction
+        // Execute LDA instruction.
         $cycles1 = $cpu->run();
 
-        // Execute STA instruction
+        // Execute STA instruction.
         $cycles2 = $cpu->run();
 
-        // Just verify cycles were consumed (actual memory write verification
-        // would require examining CPU internals or running many more instructions)
+        /*
+         * Just verify cycles were consumed.
+         * Verifying the memory write would require examining CPU internals or running more instructions.
+         */
         $this::assertGreaterThan(0, $cycles1);
         $this::assertGreaterThan(0, $cycles2);
     }
@@ -173,16 +174,14 @@ final class CpuBusIntegrationTest extends IntegrationTestCase
     {
         [$cpu, $cpuBus, , , $ppu] = $this->createTestSystem();
 
-        // Write to PPU control register (0x2000)
+        // Write to PPU control register (0x2000).
         $cpuBus->writeByCpu(0x2000, 0x80);
 
-        // The write should go through
-        $this::assertTrue(true);
-
-        // PPU status register read (0x2002) should work
+        // PPU status register read (0x2002) should work.
         $status = $cpuBus->readByCpu(0x2002);
 
-        $this::assertIsInt($status);
+        $this::assertGreaterThanOrEqual(0, $status);
+        $this::assertLessThanOrEqual(255, $status);
     }
 
     #[Test]

@@ -75,7 +75,7 @@ final class CpuBusTest extends TestCase
         $ppu = $this->createMock(Ppu::class);
         $ppu->expects($this->once())
             ->method('read')
-            ->with(0x02) // 0x2002 - 0x2000 = 0x02
+            ->with(0x02) // 0x2002 - 0x2000 = 0x02.
             ->willReturn(0x80);
 
         $bus = $this->createBus(ppu: $ppu);
@@ -182,14 +182,14 @@ final class CpuBusTest extends TestCase
     #[Test]
     public function it_handles_16kb_rom_mirroring(): void
     {
-        // For ROMs <= 16KB, upper bank mirrors lower bank
+        // For ROMs <= 16KB, upper bank mirrors lower bank.
         $data = array_fill(0, 0x4000, 0xBB);
         $data[0x0100] = 0xCC;
         $programRom = new Rom($data);
 
         $bus = $this->createBus(programRom: $programRom);
 
-        // Reading from 0xC000 should mirror 0x8000
+        // Reading from 0xC000 should mirror 0x8000.
         $this::assertSame(0xCC, $bus->readByCpu(0x8100));
         $this::assertSame(0xCC, $bus->readByCpu(0xC100));
     }
@@ -208,15 +208,14 @@ final class CpuBusTest extends TestCase
     #[Test]
     public function it_ignores_writes_to_unmapped_areas(): void
     {
+        $this->expectNotToPerformAssertions();
+
         $bus = $this->createBus();
 
         // These should not throw exceptions.
         $bus->writeByCpu(0x4001, 0xFF);
         $bus->writeByCpu(0x6000, 0xAA);
         $bus->writeByCpu(0x8000, 0x55);
-
-        /** @phpstan-ignore-next-line Assert no exception was thrown. */
-        $this::assertTrue(true);
     }
 
     #[Test]
@@ -235,9 +234,9 @@ final class CpuBusTest extends TestCase
 
         $bus = $this->createBus($ram, $programRom, $ppu, $gamepad);
 
-        $this::assertSame(0x01, $bus->readByCpu(0x0000)); // RAM
-        $this::assertSame(0x03, $bus->readByCpu(0x2000)); // PPU
-        $this::assertSame(0x02, $bus->readByCpu(0x8000)); // ROM
+        $this::assertSame(0x01, $bus->readByCpu(0x0000)); // RAM.
+        $this::assertSame(0x03, $bus->readByCpu(0x2000)); // PPU.
+        $this::assertSame(0x02, $bus->readByCpu(0x8000)); // ROM.
     }
 
     /**

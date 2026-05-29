@@ -92,12 +92,12 @@ final class PpuBusTest extends TestCase
 
         // Write 8x8 sprite pattern (16 bytes).
         for ($i = 0; $i < 16; $i++) {
-            $ppuBus->writeByPpu(0x0000 + $i, 0xFF);
+            $ppuBus->writeByPpu($i, 0xFF);
         }
 
         // Verify sprite data.
         for ($i = 0; $i < 16; $i++) {
-            $this::assertSame(0xFF, $ppuBus->readByPpu(0x0000 + $i));
+            $this::assertSame(0xFF, $ppuBus->readByPpu($i));
         }
     }
 
@@ -160,7 +160,7 @@ final class PpuBusTest extends TestCase
         $characterRam = new Ram(0x2000);
         $ppuBus = new PpuBus($characterRam);
 
-        // Test first and last addresses
+        // Test first and last addresses.
         $ppuBus->writeByPpu(0x0000, 0xAA);
         $ppuBus->writeByPpu(0x1FFF, 0x55);
 

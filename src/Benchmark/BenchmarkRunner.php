@@ -144,7 +144,7 @@ class BenchmarkRunner
         int $cpuNanoseconds,
         int $ppuNanoseconds,
     ): BenchmarkFrameResult {
-        if ($renderer === null) {
+        if (!$renderer instanceof Renderer) {
             return new BenchmarkFrameResult($iterations, $cpuCycles, $cpuNanoseconds, $ppuNanoseconds);
         }
 

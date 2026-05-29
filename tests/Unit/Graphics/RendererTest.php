@@ -62,7 +62,6 @@ final class RendererTest extends TestCase
 
         $buffer = $renderer->render($renderingData);
 
-        $this::assertIsArray($buffer);
         $this::assertCount(256 * 224 * 4, $buffer);
     }
 
@@ -92,7 +91,6 @@ final class RendererTest extends TestCase
 
         $buffer = $renderer->render($renderingData);
 
-        $this::assertIsArray($buffer);
         $this::assertCount(256 * 224 * 4, $buffer);
     }
 
@@ -318,7 +316,7 @@ final class RendererTest extends TestCase
         $sprite = new Sprite(
             sprite: array_fill(0, 8, array_fill(0, 8, 0)),
             coordinates: new Vec2(50, 50),
-            attribute: 0x40, // Horizontal flip bit
+            attribute: 0x40, // Horizontal flip bit.
             id: 0,
         );
 
@@ -341,7 +339,7 @@ final class RendererTest extends TestCase
         $sprite = new Sprite(
             sprite: array_fill(0, 8, array_fill(0, 8, 0)),
             coordinates: new Vec2(50, 50),
-            attribute: 0x80, // Vertical flip bit
+            attribute: 0x80, // Vertical flip bit.
             id: 0,
         );
 
@@ -364,7 +362,7 @@ final class RendererTest extends TestCase
         $sprite = new Sprite(
             sprite: array_fill(0, 8, array_fill(0, 8, 0)),
             coordinates: new Vec2(50, 50),
-            attribute: 0x20, // Low priority bit
+            attribute: 0x20, // Low priority bit.
             id: 0,
         );
 

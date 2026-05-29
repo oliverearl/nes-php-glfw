@@ -11,29 +11,21 @@ final class DmaIntegrationTest extends IntegrationTestCase
     #[Test]
     public function it_transfers_sprite_data_from_ram_to_ppu(): void
     {
-        // Setup
         [$cpu, $cpuBus, $ram, $programRom, $ppu, $interrupts, $dma] = $this->createTestSystem();
 
-        // Write sprite data to RAM at page 0x02 (0x0200-0x02FF)
+        // Write sprite data to RAM at page 0x02 (0x0200-0x02FF).
         for ($i = 0; $i < 256; $i++) {
             $ram->write(0x0200 + $i, $i);
         }
 
-        // Trigger DMA by writing to 0x4014
+        // Trigger DMA by writing to 0x4014.
         $cpuBus->writeByCpu(0x4014, 0x02);
 
-        // Verify DMA is processing
         $this::assertTrue($dma->isDmaProcessing());
 
-        // Run DMA
         $dma->runDma();
 
-        // Verify DMA completed
         $this::assertFalse($dma->isDmaProcessing());
-
-        // Note: We can't easily verify the PPU sprite RAM contents without exposing internals
-        // But we can verify the DMA completed without errors
-        $this::assertTrue(true);
     }
 
     #[Test]
@@ -41,7 +33,7 @@ final class DmaIntegrationTest extends IntegrationTestCase
     {
         [$cpu, $cpuBus, $ram, $programRom, $ppu, $interrupts, $dma] = $this->createTestSystem();
 
-        // Test page 0x00
+        // Test page 0x00.
         for ($i = 0; $i < 256; $i++) {
             $ram->write($i, 0xAA);
         }
@@ -50,7 +42,7 @@ final class DmaIntegrationTest extends IntegrationTestCase
         $dma->runDma();
         $this::assertFalse($dma->isDmaProcessing());
 
-        // Test page 0x03
+        // Test page 0x03.
         for ($i = 0; $i < 256; $i++) {
             $ram->write(0x0300 + $i, 0xBB);
         }
@@ -65,13 +57,13 @@ final class DmaIntegrationTest extends IntegrationTestCase
     {
         [, $cpuBus, , , , , $dma] = $this->createTestSystem();
 
-        // Verify DMA is not processing initially
+        // Verify DMA is not processing initially.
         $this::assertFalse($dma->isDmaProcessing());
 
-        // CPU writes to DMA register through bus
+        // CPU writes to DMA register through bus.
         $cpuBus->writeByCpu(0x4014, 0x02);
 
-        // DMA should now be processing
+        // DMA should now be processing.
         $this::assertTrue($dma->isDmaProcessing());
     }
 
@@ -80,19 +72,19 @@ final class DmaIntegrationTest extends IntegrationTestCase
     {
         [, $cpuBus, , , , , $dma] = $this->createTestSystem(ramSize: 0x10000);
 
-        // First DMA
+        // First DMA.
         $cpuBus->writeByCpu(0x4014, 0x02);
         $this::assertTrue($dma->isDmaProcessing());
         $dma->runDma();
         $this::assertFalse($dma->isDmaProcessing());
 
-        // Second DMA
+        // Second DMA.
         $cpuBus->writeByCpu(0x4014, 0x03);
         $this::assertTrue($dma->isDmaProcessing());
         $dma->runDma();
         $this::assertFalse($dma->isDmaProcessing());
 
-        // Third DMA
+        // Third DMA.
         $cpuBus->writeByCpu(0x4014, 0x04);
         $this::assertTrue($dma->isDmaProcessing());
         $dma->runDma();
@@ -104,17 +96,17 @@ final class DmaIntegrationTest extends IntegrationTestCase
     {
         [, $cpuBus, $ram, , , , $dma] = $this->createTestSystem();
 
-        // Write typical sprite data (4 bytes per sprite, 64 sprites)
-        // Format: Y, Tile, Attributes, X
+        // Write typical sprite data (4 bytes per sprite, 64 sprites).
+        // Format: Y, Tile, Attributes, X.
         for ($sprite = 0; $sprite < 64; $sprite++) {
             $base = 0x0200 + ($sprite * 4);
-            $ram->write($base, $sprite * 4); // Y position
-            $ram->write($base + 1, $sprite); // Tile index
-            $ram->write($base + 2, 0x00); // Attributes
-            $ram->write($base + 3, $sprite * 4); // X position
+            $ram->write($base, $sprite * 4); // Y position.
+            $ram->write($base + 1, $sprite); // Tile index.
+            $ram->write($base + 2, 0x00); // Attributes.
+            $ram->write($base + 3, $sprite * 4); // X position.
         }
 
-        // Trigger DMA
+        // Trigger DMA.
         $cpuBus->writeByCpu(0x4014, 0x02);
         $dma->runDma();
 
@@ -126,12 +118,12 @@ final class DmaIntegrationTest extends IntegrationTestCase
     {
         [, $cpuBus, $ram, , , , $dma] = $this->createTestSystem();
 
-        // Write data to zero page
+        // Write data to zero page.
         for ($i = 0; $i < 256; $i++) {
             $ram->write($i, 0xFF - $i);
         }
 
-        // DMA from page 0x00
+        // DMA from page 0x00.
         $cpuBus->writeByCpu(0x4014, 0x00);
         $this::assertTrue($dma->isDmaProcessing());
 

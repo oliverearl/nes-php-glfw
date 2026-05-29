@@ -120,7 +120,7 @@ final class RenderingDataTest extends TestCase
     public function it_stores_multiple_background_tiles(): void
     {
         $tiles = [];
-        for ($i = 0; $i < 33 * 30; $i++) { // Full screen of tiles
+        for ($i = 0; $i < 33 * 30; $i++) { // Full screen of tiles.
             $tiles[] = new Tile(
                 array_fill(0, 8, array_fill(0, 8, 0)),
                 0,
@@ -142,7 +142,7 @@ final class RenderingDataTest extends TestCase
     public function it_stores_multiple_sprites(): void
     {
         $sprites = [];
-        for ($i = 0; $i < 64; $i++) { // Maximum OAM sprites
+        for ($i = 0; $i < 64; $i++) { // Maximum OAM sprites.
             $sprites[] = new Sprite(
                 array_fill(0, 8, array_fill(0, 8, 0)),
                 new Vec2($i * 4, $i * 4),
@@ -185,7 +185,7 @@ final class RenderingDataTest extends TestCase
     #[Test]
     public function it_represents_disabled_background_with_null(): void
     {
-        // When background rendering is disabled, it should be null
+        // When background rendering is disabled, it should be null.
         $renderingData = new RenderingData(
             palette: array_fill(0, 32, 0),
             background: null,
@@ -201,7 +201,7 @@ final class RenderingDataTest extends TestCase
     #[Test]
     public function it_represents_disabled_sprites_with_null(): void
     {
-        // When sprite rendering is disabled, it should be null
+        // When sprite rendering is disabled, it should be null.
         $renderingData = new RenderingData(
             palette: array_fill(0, 32, 0),
             background: [

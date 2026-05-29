@@ -110,7 +110,7 @@ final class InterruptsTest extends TestCase
     {
         $interrupts = new Interrupts();
 
-        // Multiple assertions shouldn't change state
+        // Multiple assertions shouldn't change state.
         $interrupts->assertNmi();
         $interrupts->assertNmi();
         $interrupts->assertNmi();
@@ -125,7 +125,7 @@ final class InterruptsTest extends TestCase
 
         $interrupts->assertNmi();
 
-        // Multiple deassertions shouldn't cause issues
+        // Multiple deassertions shouldn't cause issues.
         $interrupts->deassertNmi();
         $interrupts->deassertNmi();
 

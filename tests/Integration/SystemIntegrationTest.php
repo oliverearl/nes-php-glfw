@@ -48,8 +48,6 @@ final class SystemIntegrationTest extends IntegrationTestCase
 
             $this::assertGreaterThan(0, $cpuCycles);
         }
-
-        $this::assertTrue(true);
     }
 
     #[Test]
@@ -74,7 +72,6 @@ final class SystemIntegrationTest extends IntegrationTestCase
 
         $frameBuffer = $renderer->render($renderingData);
 
-        $this::assertIsArray($frameBuffer);
         $this::assertCount(256 * 224 * 4, $frameBuffer);
     }
 
@@ -98,7 +95,7 @@ final class SystemIntegrationTest extends IntegrationTestCase
             $ppu->run($cpuCycles * 3);
         }
 
-        $this::assertTrue(true);
+        $this::assertFalse($dma->isDmaProcessing());
     }
 
     #[Test]
@@ -112,14 +109,13 @@ final class SystemIntegrationTest extends IntegrationTestCase
 
         $status = $cpuBus->readByCpu(0x2002);
 
-        $this::assertIsInt($status);
+        $this::assertGreaterThanOrEqual(0, $status);
+        $this::assertLessThanOrEqual(255, $status);
 
         for ($i = 0; $i < 10; $i++) {
             $cpuCycles = $cpu->run();
             $ppu->run($cpuCycles * 3);
         }
-
-        $this::assertTrue(true);
     }
 
     #[Test]
@@ -170,9 +166,9 @@ final class SystemIntegrationTest extends IntegrationTestCase
 
         if ($renderingData !== false) {
             $frameBuffer = $renderer->render($renderingData);
-            $this::assertIsArray($frameBuffer);
+            $this::assertCount(256 * 224 * 4, $frameBuffer);
         }
 
-        $this::assertTrue(true);
+        $this::assertNotFalse($renderingData);
     }
 }

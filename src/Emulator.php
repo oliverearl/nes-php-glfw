@@ -31,17 +31,17 @@ class Emulator extends QuickstartApp
     use Profiler;
 
     /**
-     * NES display dimensions in pixels. (Width)
+     * NES display width in pixels.
      */
     public const int NES_MAX_X = 256;
 
     /**
-     * NES display dimensions in pixels. (Height)
+     * NES display height in pixels.
      */
     public const int NES_MAX_Y = 224;
 
     /**
-     * Temporary CLI flag for preferring real-time pacing over displaying every emulated frame.
+     * CLI flag for preferring real-time pacing over displaying every emulated frame.
      */
     public const string DROP_FRAMES_FLAG = '--drop-frames';
 
@@ -118,7 +118,7 @@ class Emulator extends QuickstartApp
     private bool $dropFramesToMaintainRealtime = false;
 
     /**
-     * Returns the VISU update catch-up limit implied by the temporary frame pacing flag.
+     * Returns the VISU update catch-up limit implied by the frame pacing flag.
      *
      * @param list<string> $args
      */
@@ -130,7 +130,7 @@ class Emulator extends QuickstartApp
     }
 
     /**
-     * Checks whether the temporary real-time frame pacing flag is present.
+     * Checks whether the real-time frame pacing flag is present.
      *
      * @param list<string> $args
      */
@@ -174,7 +174,7 @@ class Emulator extends QuickstartApp
 
         if (! $this->isEmulatorRunning) {
             $rawBuffer = $this->generateWaitingAnimation($this->frameIndex);
-        } elseif ($this->pendingRenderingData !== null) {
+        } elseif ($this->pendingRenderingData instanceof RenderingData) {
             $debugRenderStart = $this->debugStartRender();
             $this->cachedFrameBuffer = $this->renderer->render($this->pendingRenderingData);
             $this->pendingRenderingData = null;
@@ -190,9 +190,6 @@ class Emulator extends QuickstartApp
             $rawBuffer = $this->cachedFrameBuffer;
         }
 
-        // TODO: Make this a configuration value.
-        $preserveAspect = false;
-
         $renderTarget->framebuffer()->clear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
         $viewport = $this->camera->getViewport($renderTarget);
         $this->camera->transformVGSpace($viewport, $this->vg);
@@ -203,11 +200,6 @@ class Emulator extends QuickstartApp
 
         $scaleX = $viewport->width / self::NES_MAX_X;
         $scaleY = $viewport->height / self::NES_MAX_Y;
-
-        if ($preserveAspect) {
-            $scale = min($scaleX, $scaleY);
-            $scaleX = $scaleY = $scale;
-        }
 
         $offsetX = ($viewport->width - (self::NES_MAX_X * $scaleX)) / 2;
         $offsetY = ($viewport->height - (self::NES_MAX_Y * $scaleY)) / 2;
@@ -252,7 +244,7 @@ class Emulator extends QuickstartApp
             return;
         }
 
-        if (! $this->dropFramesToMaintainRealtime && $this->pendingRenderingData !== null) {
+        if (! $this->dropFramesToMaintainRealtime && $this->pendingRenderingData instanceof RenderingData) {
             $this->debugEndUpdate($debugUpdateStart);
             $this->debugLog();
             return;
@@ -371,10 +363,12 @@ class Emulator extends QuickstartApp
         // Filter out flags and find the ROM file argument.
         foreach ($args as $arg) {
             // Skip the script name and any flags.
-            if ($arg === $args[0] || str_starts_with($arg, '--')) {
+            if ($arg === $args[0]) {
                 continue;
             }
-
+            if (str_starts_with($arg, '--')) {
+                continue;
+            }
             // Found a potential ROM file.
             if (file_exists($arg)) {
                 $this->selectedRom = realpath($arg);

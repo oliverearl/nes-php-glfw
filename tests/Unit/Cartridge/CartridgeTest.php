@@ -97,7 +97,7 @@ final class CartridgeTest extends TestCase
     #[Test]
     public function it_preserves_rom_data(): void
     {
-        $programRom = [0x4C, 0x00, 0x80]; // JMP $8000
+        $programRom = [0x4C, 0x00, 0x80]; // JMP $8000.
         $characterRom = [0xFF, 0xAA, 0x55];
 
         $cartridge = new Cartridge(
@@ -113,7 +113,7 @@ final class CartridgeTest extends TestCase
     #[Test]
     public function it_handles_typical_nes_cartridge_sizes(): void
     {
-        // 16KB program ROM, 8KB character ROM (common NES cart)
+        // 16KB program ROM, 8KB character ROM (common NES cart).
         $cartridge = new Cartridge(
             isHorizontalMirror: true,
             programRom: array_fill(0, 16384, 0),
@@ -127,7 +127,7 @@ final class CartridgeTest extends TestCase
     #[Test]
     public function it_handles_large_cartridge(): void
     {
-        // 32KB program ROM, 16KB character ROM
+        // 32KB program ROM, 16KB character ROM.
         $cartridge = new Cartridge(
             isHorizontalMirror: false,
             programRom: array_fill(0, 32768, 0),

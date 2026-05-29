@@ -74,8 +74,9 @@ readonly class CpuBus
             } elseif ($address === 0x4016) {
                 $this->gamepad->write($data);
             }
-            // APU and other unmapped I/O registers - ignore writes
+            // Writes to APU and other unmapped I/O registers are ignored.
         }
-        // Ignore writes to other unmapped addresses
+
+        // Ignore writes to other unmapped addresses.
     }
 }

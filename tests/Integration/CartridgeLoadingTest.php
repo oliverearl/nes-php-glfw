@@ -84,7 +84,7 @@ final class CartridgeLoadingTest extends IntegrationTestCase
         $cartridge = $loader->load();
         ob_end_clean();
 
-        $this::assertIsBool($cartridge->isHorizontalMirror);
+        $this::assertTrue($cartridge->isHorizontalMirror);
     }
 
     #[Test]
@@ -99,7 +99,7 @@ final class CartridgeLoadingTest extends IntegrationTestCase
     #[Test]
     public function it_throws_exception_for_invalid_nes_file(): void
     {
-        // Create a temp file with invalid content
+        // Create a temp file with invalid content.
         $tempFile = sys_get_temp_dir() . '/invalid.nes';
         file_put_contents($tempFile, 'INVALID');
 
@@ -128,9 +128,9 @@ final class CartridgeLoadingTest extends IntegrationTestCase
         $programSize = $cartridge->getProgramRomSize();
         $characterSize = $cartridge->getCharacterRomSize();
 
-        // Both should be multiples of their page sizes
-        // Program ROM pages are 16KB (0x4000)
-        // Character ROM pages are 8KB (0x2000)
+        // Both should be multiples of their page sizes.
+        // Program ROM pages are 16KB (0x4000).
+        // Character ROM pages are 8KB (0x2000).
 
         if ($programSize > 0) {
             $this::assertSame(0, $programSize % 0x4000, 'Program ROM should be multiple of 16KB');

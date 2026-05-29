@@ -43,14 +43,14 @@ final class DmaTest extends TestCase
     {
         $ram = new Ram(0x800);
 
-        // Write test data to RAM starting at 0x0200
+        // Write test data to RAM starting at 0x0200.
         for ($i = 0; $i < 0x100; $i++) {
             $ram->write(0x0200 + $i, $i);
         }
 
         $ppu = $this->createMock(Ppu::class);
 
-        // Expect transferSprite to be called 256 times
+        // Expect transferSprite to be called 256 times.
         $ppu->expects($this->exactly(256))
             ->method('transferSprite')
             ->willReturnCallback(function (int $index, int $data): void {
@@ -59,7 +59,7 @@ final class DmaTest extends TestCase
 
         $dma = new Dma($ram, $ppu);
 
-        $dma->write(0x02); // Start DMA from 0x0200
+        $dma->write(0x02); // Start DMA from 0x0200.
         $dma->runDma();
     }
 
@@ -84,13 +84,13 @@ final class DmaTest extends TestCase
         $ram = new Ram(0x800);
         $ppu = $this->createMock(Ppu::class);
 
-        // Should not call transferSprite if not processing
+        // Should not call transferSprite if not processing.
         $ppu->expects($this->never())
             ->method('transferSprite');
 
         $dma = new Dma($ram, $ppu);
 
-        $dma->runDma(); // No write() called before
+        $dma->runDma(); // No write() called before.
     }
 
     #[Test]
@@ -98,7 +98,7 @@ final class DmaTest extends TestCase
     {
         $ram = new Ram(0x10000);
 
-        // Write test data to page 0x03
+        // Write test data to page 0x03.
         for ($i = 0; $i < 0x100; $i++) {
             $ram->write(0x0300 + $i, 0xAA);
         }
@@ -109,12 +109,12 @@ final class DmaTest extends TestCase
             ->method('transferSprite')
             ->with(
                 $this->anything(),
-                0xAA, // All data should be 0xAA
+                0xAA, // All data should be 0xAA.
             );
 
         $dma = new Dma($ram, $ppu);
 
-        $dma->write(0x03); // Page 0x03 -> address 0x0300
+        $dma->write(0x03); // Page 0x03 -> address 0x0300.
         $dma->runDma();
     }
 
@@ -134,7 +134,7 @@ final class DmaTest extends TestCase
 
         $dma = new Dma($ram, $ppu);
 
-        $dma->write(0x00); // Page 0x00 -> address 0x0000
+        $dma->write(0x00); // Page 0x00 -> address 0x0000.
         $dma->runDma();
     }
 
@@ -143,7 +143,7 @@ final class DmaTest extends TestCase
     {
         $ram = new Ram(0x10000);
 
-        // Write data to page 0xFF
+        // Write data to page 0xFF.
         for ($i = 0; $i < 0x100; $i++) {
             $ram->write(0xFF00 + $i, 0x55);
         }
@@ -159,7 +159,7 @@ final class DmaTest extends TestCase
 
         $dma = new Dma($ram, $ppu);
 
-        $dma->write(0xFF); // Page 0xFF -> address 0xFF00
+        $dma->write(0xFF); // Page 0xFF -> address 0xFF00.
         $dma->runDma();
     }
 
@@ -168,28 +168,28 @@ final class DmaTest extends TestCase
     {
         $ram = new Ram(0x10000);
 
-        // First transfer data
+        // First transfer data.
         for ($i = 0; $i < 0x100; $i++) {
             $ram->write(0x0200 + $i, 0x11);
         }
 
-        // Second transfer data
+        // Second transfer data.
         for ($i = 0; $i < 0x100; $i++) {
             $ram->write(0x0300 + $i, 0x22);
         }
 
         $ppu = $this->createMock(Ppu::class);
 
-        $ppu->expects($this->exactly(512)) // 256 * 2
+        $ppu->expects($this->exactly(512)) // 256 * 2.
             ->method('transferSprite');
 
         $dma = new Dma($ram, $ppu);
 
-        // First DMA
+        // First DMA.
         $dma->write(0x02);
         $dma->runDma();
 
-        // Second DMA
+        // Second DMA.
         $dma->write(0x03);
         $dma->runDma();
     }

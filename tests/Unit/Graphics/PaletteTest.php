@@ -22,7 +22,7 @@ final class PaletteTest extends TestCase
 
         $this::assertCount(32, $data);
 
-        // All values should be 0 initially
+        // All values should be 0 initially.
         foreach ($data as $value) {
             $this::assertSame(0, $value);
         }
@@ -48,12 +48,12 @@ final class PaletteTest extends TestCase
     {
         $palette = new Palette();
 
-        // Write to mirror address - should write to base
+        // Write to mirror address - should write to base.
         $palette->write($mirrorAddr, 0xAA);
 
         $data = $palette->read();
 
-        // Both mirror and base should return the same value (from base)
+        // Both mirror and base should return the same value (from base).
         $this::assertSame(0xAA, $data[$baseAddr]);
         $this::assertSame($data[$baseAddr], $data[$mirrorAddr]);
     }
@@ -68,29 +68,29 @@ final class PaletteTest extends TestCase
     {
         $palette = new Palette();
 
-        // Write to address 0x00
+        // Write to address 0x00.
         $palette->write(0x00, 0x11);
 
         $data = $palette->read();
 
-        // 0x10 is sprite mirror of 0x00
+        // 0x10 is sprite mirror of 0x00.
         $this::assertSame(0x11, $data[0x10]);
 
-        // 0x04, 0x08, 0x0C are background mirrors of 0x00
+        // 0x04, 0x08, 0x0C are background mirrors of 0x00.
         $this::assertSame(0x11, $data[0x04]);
         $this::assertSame(0x11, $data[0x08]);
         $this::assertSame(0x11, $data[0x0C]);
 
-        // 0x14, 0x18, 0x1C are sprite mirrors that point to 0x04, 0x08, 0x0C
-        // When read(), they get the value from those addresses
-        // Since 0x04, 0x08, 0x0C themselves read from 0x00, the chain works
-        // However, the read() method reads the RAM value at (mirror - 0x10)
-        // So 0x14 reads RAM[0x04], 0x18 reads RAM[0x08], 0x1C reads RAM[0x0C]
-        // These RAM locations are 0 unless explicitly written
-        // So we need to write to them or accept they're 0
-        $this::assertSame(0, $data[0x14]); // Reads RAM[0x04] which is 0
-        $this::assertSame(0, $data[0x18]); // Reads RAM[0x08] which is 0
-        $this::assertSame(0, $data[0x1C]); // Reads RAM[0x0C] which is 0
+        // 0x14, 0x18, 0x1C are sprite mirrors that point to 0x04, 0x08, 0x0C.
+        // When read(), they get the value from those addresses.
+        // Since 0x04, 0x08, 0x0C themselves read from 0x00, the chain works.
+        // However, the read() method reads the RAM value at (mirror - 0x10).
+        // So 0x14 reads RAM[0x04], 0x18 reads RAM[0x08], 0x1C reads RAM[0x0C].
+        // These RAM locations are 0 unless explicitly written.
+        // So we need to write to them or accept they're 0.
+        $this::assertSame(0, $data[0x14]); // Reads RAM[0x04] which is 0.
+        $this::assertSame(0, $data[0x18]); // Reads RAM[0x08] which is 0.
+        $this::assertSame(0, $data[0x1C]); // Reads RAM[0x0C] which is 0.
     }
 
     #[Test]
@@ -99,12 +99,12 @@ final class PaletteTest extends TestCase
     {
         $palette = new Palette();
 
-        // Write to address 0x00
+        // Write to address 0x00.
         $palette->write(0x00, 0x55);
 
         $data = $palette->read();
 
-        // Background mirrors should all point to 0x00
+        // Background mirrors should all point to 0x00.
         $this::assertSame(0x55, $data[$mirrorAddr]);
     }
 
@@ -120,12 +120,12 @@ final class PaletteTest extends TestCase
     {
         $palette = new Palette();
 
-        // Writing to sprite mirror addresses should write to base address
-        $palette->write(0x10, 0x11); // Mirror of 0x00
+        // Writing to sprite mirror addresses should write to base address.
+        $palette->write(0x10, 0x11); // Mirror of 0x00.
 
         $data = $palette->read();
 
-        // Should be written to base address 0x00
+        // Should be written to base address 0x00.
         $this::assertSame(0x11, $data[0x00]);
         $this::assertSame(0x11, $data[0x10]);
     }
@@ -135,7 +135,7 @@ final class PaletteTest extends TestCase
     {
         $palette = new Palette();
 
-        // Write unique values to all addresses
+        // Write unique values to all addresses.
         for ($i = 0; $i < 32; $i++) {
             $palette->write($i, $i);
         }
@@ -161,9 +161,9 @@ final class PaletteTest extends TestCase
     {
         $palette = new Palette();
 
-        // Addresses beyond 0x1F should wrap
-        $palette->write(0x20, 0xAA); // Should write to 0x00
-        $palette->write(0x3F, 0xBB); // Should write to 0x1F
+        // Addresses beyond 0x1F should wrap.
+        $palette->write(0x20, 0xAA); // Should write to 0x00.
+        $palette->write(0x3F, 0xBB); // Should write to 0x1F.
 
         $data = $palette->read();
 
@@ -176,7 +176,7 @@ final class PaletteTest extends TestCase
     {
         $palette = new Palette();
 
-        // Avoid background mirror addresses (0x04, 0x08, 0x0C) and sprite mirrors
+        // Avoid background mirror addresses (0x04, 0x08, 0x0C) and sprite mirrors.
         $testCases = [
             [0x01, 0x0F],
             [0x02, 0x20],

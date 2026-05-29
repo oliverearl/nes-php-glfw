@@ -59,7 +59,7 @@ final class SpriteTest extends TestCase
             id: 0,
         );
 
-        // Use delta for floating point comparison
+        // Use delta for floating point comparison.
         $this::assertEqualsWithDelta(123.5, $sprite->coordinates->x, 0.001);
         $this::assertEqualsWithDelta(67.8, $sprite->coordinates->y, 0.001);
     }
@@ -68,11 +68,11 @@ final class SpriteTest extends TestCase
     public function it_handles_attribute_flags(): void
     {
         $testCases = [
-            0x00, // No flags
-            0x20, // Priority
-            0x40, // Horizontal flip
-            0x80, // Vertical flip
-            0xE3, // All flags + palette
+            0x00, // No flags.
+            0x20, // Priority.
+            0x40, // Horizontal flip.
+            0x80, // Vertical flip.
+            0xE3, // All flags + palette.
         ];
 
         foreach ($testCases as $attribute) {
@@ -159,11 +159,11 @@ final class SpriteTest extends TestCase
     #[Test]
     public function it_extracts_palette_from_attribute(): void
     {
-        // Palette is in lower 2 bits of attribute
+        // Palette is in lower 2 bits of attribute.
         $sprite = new Sprite(
             sprite: array_fill(0, 8, array_fill(0, 8, 0)),
             coordinates: new Vec2(0, 0),
-            attribute: 0x03, // Palette 3
+            attribute: 0x03, // Palette 3.
             id: 0,
         );
 

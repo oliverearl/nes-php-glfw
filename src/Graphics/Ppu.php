@@ -69,7 +69,7 @@ class Ppu
     /**
      * The rendered background tiles for the current frame.
      *
-     * @var list<int>
+     * @var list<Tile>
      */
     private array $background = [];
 

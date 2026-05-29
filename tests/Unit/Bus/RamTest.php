@@ -17,7 +17,7 @@ final class RamTest extends TestCase
     {
         $ram = new Ram(2048);
 
-        // All bytes should be initialized to 0
+        // All bytes should be initialized to 0.
         for ($i = 0; $i < 2048; $i++) {
             $this::assertSame(0, $ram->read($i));
         }
@@ -28,7 +28,7 @@ final class RamTest extends TestCase
     {
         $ram = new Ram();
 
-        // Default size is 2048
+        // Default size is 2048.
         $this::assertSame(0, $ram->read(2047));
     }
 
@@ -63,15 +63,15 @@ final class RamTest extends TestCase
     {
         $ram = new Ram(512);
 
-        // Write some data
+        // Write some data.
         $ram->write(0, 0xFF);
         $ram->write(100, 0xAA);
         $ram->write(511, 0x55);
 
-        // Reset
+        // Reset.
         $ram->reset();
 
-        // All should be zero
+        // All should be zero.
         $this::assertSame(0, $ram->read(0));
         $this::assertSame(0, $ram->read(100));
         $this::assertSame(0, $ram->read(511));
@@ -88,7 +88,6 @@ final class RamTest extends TestCase
 
         $ramArray = $ram->getRam();
 
-        $this::assertIsArray($ramArray);
         $this::assertCount(16, $ramArray);
         $this::assertSame(0x10, $ramArray[0]);
         $this::assertSame(0x50, $ramArray[5]);
@@ -112,7 +111,7 @@ final class RamTest extends TestCase
     {
         $ram = new Ram(128);
 
-        // Test various 8-bit values
+        // Test various 8-bit values.
         $testValues = [0x00, 0x01, 0x7F, 0x80, 0xFF, 0xAA, 0x55];
 
         foreach ($testValues as $index => $value) {

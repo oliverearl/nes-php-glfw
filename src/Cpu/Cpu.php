@@ -329,8 +329,6 @@ class Cpu
 
                 return new PayloadWithAdditionalCycle($address & 0xFFFF, 0);
         }
-
-        throw new RuntimeException("Unsupported addressing mode: {$mode->name}");
     }
 
     /**
@@ -949,21 +947,21 @@ class Cpu
             '7C' => new OpcodeProps('NOPI', Addressing::Implied, self::CYCLES[0x7C]),
             'DC' => new OpcodeProps('NOPI', Addressing::Implied, self::CYCLES[0xDC]),
             'FC' => new OpcodeProps('NOPI', Addressing::Implied, self::CYCLES[0xFC]),
-            // LAX
+            // LAX.
             'A7' => new OpcodeProps('LAX', Addressing::ZeroPage, self::CYCLES[0xA7]),
             'B7' => new OpcodeProps('LAX', Addressing::ZeroPageY, self::CYCLES[0xB7]),
             'AF' => new OpcodeProps('LAX', Addressing::Absolute, self::CYCLES[0xAF]),
             'BF' => new OpcodeProps('LAX', Addressing::AbsoluteY, self::CYCLES[0xBF]),
             'A3' => new OpcodeProps('LAX', Addressing::PreIndexedIndirect, self::CYCLES[0xA3]),
             'B3' => new OpcodeProps('LAX', Addressing::PostIndexedIndirect, self::CYCLES[0xB3]),
-            // SAX
+            // SAX.
             '87' => new OpcodeProps('SAX', Addressing::ZeroPage, self::CYCLES[0x87]),
             '97' => new OpcodeProps('SAX', Addressing::ZeroPageY, self::CYCLES[0x97]),
             '8F' => new OpcodeProps('SAX', Addressing::Absolute, self::CYCLES[0x8F]),
             '83' => new OpcodeProps('SAX', Addressing::PreIndexedIndirect, self::CYCLES[0x83]),
-            // SBC
+            // SBC.
             'EB' => new OpcodeProps('SBC', Addressing::Immediate, self::CYCLES[0xEB]),
-            // DCP
+            // DCP.
             'C7' => new OpcodeProps('DCP', Addressing::ZeroPage, self::CYCLES[0xC7]),
             'D7' => new OpcodeProps('DCP', Addressing::ZeroPageX, self::CYCLES[0xD7]),
             'CF' => new OpcodeProps('DCP', Addressing::Absolute, self::CYCLES[0xCF]),
@@ -971,7 +969,7 @@ class Cpu
             'DB' => new OpcodeProps('DCP', Addressing::AbsoluteY, self::CYCLES[0xD8]),
             'C3' => new OpcodeProps('DCP', Addressing::PreIndexedIndirect, self::CYCLES[0xC3]),
             'D3' => new OpcodeProps('DCP', Addressing::PostIndexedIndirect, self::CYCLES[0xD3]),
-            // ISB
+            // ISB.
             'E7' => new OpcodeProps('ISB', Addressing::ZeroPage, self::CYCLES[0xE7]),
             'F7' => new OpcodeProps('ISB', Addressing::ZeroPageX, self::CYCLES[0xF7]),
             'EF' => new OpcodeProps('ISB', Addressing::Absolute, self::CYCLES[0xEF]),
@@ -979,7 +977,7 @@ class Cpu
             'FB' => new OpcodeProps('ISB', Addressing::AbsoluteY, self::CYCLES[0xF8]),
             'E3' => new OpcodeProps('ISB', Addressing::PreIndexedIndirect, self::CYCLES[0xE3]),
             'F3' => new OpcodeProps('ISB', Addressing::PostIndexedIndirect, self::CYCLES[0xF3]),
-            // SLO
+            // SLO.
             '07' => new OpcodeProps('SLO', Addressing::ZeroPage, self::CYCLES[0x07]),
             '17' => new OpcodeProps('SLO', Addressing::ZeroPageX, self::CYCLES[0x17]),
             '0F' => new OpcodeProps('SLO', Addressing::Absolute, self::CYCLES[0x0F]),
@@ -987,7 +985,7 @@ class Cpu
             '1B' => new OpcodeProps('SLO', Addressing::AbsoluteY, self::CYCLES[0x1B]),
             '03' => new OpcodeProps('SLO', Addressing::PreIndexedIndirect, self::CYCLES[0x03]),
             '13' => new OpcodeProps('SLO', Addressing::PostIndexedIndirect, self::CYCLES[0x13]),
-            // RLA
+            // RLA.
             '27' => new OpcodeProps('RLA', Addressing::ZeroPage, self::CYCLES[0x27]),
             '37' => new OpcodeProps('RLA', Addressing::ZeroPageX, self::CYCLES[0x37]),
             '2F' => new OpcodeProps('RLA', Addressing::Absolute, self::CYCLES[0x2F]),
@@ -995,7 +993,7 @@ class Cpu
             '3B' => new OpcodeProps('RLA', Addressing::AbsoluteY, self::CYCLES[0x3B]),
             '23' => new OpcodeProps('RLA', Addressing::PreIndexedIndirect, self::CYCLES[0x23]),
             '33' => new OpcodeProps('RLA', Addressing::PostIndexedIndirect, self::CYCLES[0x33]),
-            // SRE
+            // SRE.
             '47' => new OpcodeProps('SRE', Addressing::ZeroPage, self::CYCLES[0x47]),
             '57' => new OpcodeProps('SRE', Addressing::ZeroPageX, self::CYCLES[0x57]),
             '4F' => new OpcodeProps('SRE', Addressing::Absolute, self::CYCLES[0x4F]),
@@ -1003,7 +1001,7 @@ class Cpu
             '5B' => new OpcodeProps('SRE', Addressing::AbsoluteY, self::CYCLES[0x5B]),
             '43' => new OpcodeProps('SRE', Addressing::PreIndexedIndirect, self::CYCLES[0x43]),
             '53' => new OpcodeProps('SRE', Addressing::PostIndexedIndirect, self::CYCLES[0x53]),
-            // RRA
+            // RRA.
             '67' => new OpcodeProps('RRA', Addressing::ZeroPage, self::CYCLES[0x67]),
             '77' => new OpcodeProps('RRA', Addressing::ZeroPageX, self::CYCLES[0x77]),
             '6F' => new OpcodeProps('RRA', Addressing::Absolute, self::CYCLES[0x6F]),

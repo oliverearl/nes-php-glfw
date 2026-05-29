@@ -1,28 +1,25 @@
-includes:
-    - phpstan-baseline.neon
-
 parameters:
-    # Start with a lower level and gradually increase
+    # Start with a lower level and gradually increase.
     level: 5
 
     paths:
         - src
         - tests
 
-    # Exclude vendor and generated files
+    # Exclude vendor and generated files.
     excludePaths:
         - vendor
         - var/cache
 
-    # Report unknown classes, but don't fail on them yet
-    reportUnmatchedIgnoredErrors: false
+    # Fail when ignored error patterns stop matching current analysis output.
+    reportUnmatchedIgnoredErrors: true
 
-    # Ignore errors we can't fix (external libraries)
+    # Ignore errors we can't fix (external libraries).
     ignoreErrors:
-        # GL\Math\Vec2 is from external library - properties exist at runtime
+        # GL\Math\Vec2 is from external library - properties exist at runtime.
         - '#Access to an undefined property GL\\Math\\Vec2::\$[xy]\.#'
 
-        # VISU framework constants - defined at runtime
+        # VISU framework constants - defined at runtime.
         - '#Constant VISU_PATH_FRAMEWORK_RESOURCES_FONT not found\.#'
 
     treatPhpDocTypesAsCertain: true

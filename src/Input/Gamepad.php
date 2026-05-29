@@ -147,7 +147,7 @@ class Gamepad implements Controller
     {
         if (($data & 0x01) !== 0) {
             $this->isSet = true;
-        } elseif ($this->isSet && !($data & 0x01)) {
+        } elseif ($this->isSet) {
             $this->isSet = false;
             $this->index = 0;
             $this->keyRegisters = $this->keyBuffer;
@@ -158,8 +158,8 @@ class Gamepad implements Controller
      * Emulate reading one button state from the NES controller.
      *
      * The CPU reads from $4016 repeatedly:
-     *  - Each read returns the next bit from the latched register
-     *  - Bit order: A, B, SELECT, START, UP, DOWN, LEFT, RIGHT
+     *  - Each read returns the next bit from the latched register.
+     *  - Bit order: A, B, SELECT, START, UP, DOWN, LEFT, RIGHT.
      *  - After 8 reads, real hardware returns 1 for any further reads.
      */
     public function read(): bool

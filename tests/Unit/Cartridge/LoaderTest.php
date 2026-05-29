@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Tests\Unit\Cartridge;
 
 use App\Cartridge\Loader;
-use Override;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -20,22 +19,18 @@ final class LoaderTest extends TestCase
     private string $testRomPath;
 
     /** @inheritDoc */
-    #[Override]
     protected function setUp(): void
     {
         parent::setUp();
-
         $this->testRomPath = sys_get_temp_dir() . '/test_rom.nes';
     }
 
     /** @inheritDoc */
-    #[Override]
     protected function tearDown(): void
     {
         if (file_exists($this->testRomPath)) {
             unlink($this->testRomPath);
         }
-
         parent::tearDown();
     }
 
@@ -193,8 +188,8 @@ final class LoaderTest extends TestCase
         $loader = new Loader($this->testRomPath);
         $cartridge = $loader->load();
 
-        /** @phpstan-ignore-next-line Assert no exception was thrown. */
-        $this::assertNotNull($cartridge);
+        $this::assertSame(Loader::PROGRAM_ROM_SIZE, $cartridge->getProgramRomSize());
+        $this::assertSame(Loader::CHARACTER_ROM_SIZE, $cartridge->getCharacterRomSize());
     }
 
     #[Test]
@@ -262,19 +257,19 @@ final class LoaderTest extends TestCase
     ): void {
         // Create NES header.
         $header = [
-            // "NES" followed by MS-DOS EOF
+            // "NES" followed by MS-DOS EOF.
             0x4E, 0x45, 0x53, 0x1A,
-            // Number of 16KB PRG-ROM pages
+            // Number of 16KB PRG-ROM pages.
             $programRomPages,
-            // Number of 8KB CHR-ROM pages
+            // Number of 8KB CHR-ROM pages.
             $characterRomPages,
-            // Flags 6
+            // Flags 6.
             $isHorizontalMirror ? 0x00 : 0x01,
-            // Flags 7
+            // Flags 7.
             ($mapper << 4),
-            // Flags 8-11 (unused)
+            // Flags 8-11 (unused).
             0x00, 0x00, 0x00, 0x00,
-            // Padding
+            // Padding.
             0x00, 0x00, 0x00, 0x00,
         ];
 

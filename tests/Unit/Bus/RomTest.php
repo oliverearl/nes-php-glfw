@@ -57,10 +57,10 @@ final class RomTest extends TestCase
     #[Test]
     public function it_handles_large_rom(): void
     {
-        // Create a 32KB ROM (typical NES program ROM bank)
+        // Create a 32KB ROM (typical NES program ROM bank).
         $data = array_fill(0, 32768, 0);
-        $data[0] = 0x4C; // JMP instruction
-        $data[32767] = 0xFF; // Last byte
+        $data[0] = 0x4C; // JMP instruction.
+        $data[32767] = 0xFF; // Last byte.
 
         $rom = new Rom($data);
 
@@ -75,7 +75,7 @@ final class RomTest extends TestCase
         $data = [0x10, 0x20, 0x30];
         $rom = new Rom($data);
 
-        // Read multiple times to ensure data doesn't change
+        // Read multiple times to ensure data doesn't change.
         $this::assertSame(0x20, $rom->read(1));
         $this::assertSame(0x20, $rom->read(1));
         $this::assertSame(0x20, $rom->read(1));
