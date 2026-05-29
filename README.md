@@ -146,7 +146,7 @@ Example debug output:
 - Mapper support beyond NROM (Mapper 0)
 - Save states
 - Controller configuration
-- Performance optimisations
+- Additional performance optimisations
 
 ## Architecture
 
@@ -182,7 +182,7 @@ This project follows strict code quality standards:
 
 - **PHPStan** for static analysis
 - **Laravel Pint** for code formatting (PER)
-- **PHPUnit** for comprehensive testing (234+ tests, 266,000+ assertions)
+- **PHPUnit** for comprehensive testing (240+ tests, 233,000+ assertions)
 
 AI-assisted development guidelines are available for Claude, Copilot/Codex, JetBrains Junie, and Cursor.
 
