@@ -47,7 +47,7 @@ readonly class CpuBus implements Memory
             return (int) $this->gamepad->read();
         }
 
-        if ($address >= 0x6000 && $address < 0x8000 && $this->programRam !== null) {
+        if ($address >= 0x6000 && $address < 0x8000 && $this->programRam instanceof Ram) {
             return $this->programRam->read($address - 0x6000);
         }
 
@@ -84,7 +84,7 @@ readonly class CpuBus implements Memory
                 $this->gamepad->write($data);
             }
             // Writes to APU and other unmapped I/O registers are ignored.
-        } elseif ($address >= 0x6000 && $address < 0x8000 && $this->programRam !== null) {
+        } elseif ($address >= 0x6000 && $address < 0x8000 && $this->programRam instanceof Ram) {
             $this->programRam->write($address - 0x6000, $data & 0xFF);
         }
 

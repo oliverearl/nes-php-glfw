@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Graphics;
 
+use Iterator;
 use App\Bus\PpuBus;
 use App\Bus\Ram;
 use App\Cpu\Interrupts;
@@ -231,11 +232,12 @@ final class PpuTest extends TestCase
     /**
      * Supplies expected final values for horizontal and vertical CIRAM wiring.
      *
-     * @return array<string, array{bool, list<int>}>
+     * @return \Iterator<string, array{bool, list<int>}>
      */
-    public static function nametableMirroringModes(): array
+    public static function nametableMirroringModes(): Iterator
     {
-        return ['horizontal' => [true, [2, 2, 4, 4]], 'vertical' => [false, [3, 4, 3, 4]]];
+        yield 'horizontal' => [true, [2, 2, 4, 4]];
+        yield 'vertical' => [false, [3, 4, 3, 4]];
     }
 
     /**

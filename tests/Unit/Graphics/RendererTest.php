@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Graphics;
 
+use Iterator;
 use App\Graphics\Objects\RenderingData;
 use App\Graphics\Objects\Sprite;
 use App\Graphics\Objects\Tile;
@@ -559,11 +560,12 @@ final class RendererTest extends TestCase
     /**
      * Supplies expected colors when the selected first sprite is in front of or behind background.
      *
-     * @return array<string, array{int, list<int>}>
+     * @return \Iterator<string, array{int, list<int>}>
      */
-    public static function spritePriorityModes(): array
+    public static function spritePriorityModes(): Iterator
     {
-        return ['in front' => [0, [0x0F, 0xD7, 0xFF, 0xFF]], 'behind' => [0x20, [0xFF, 0x22, 0, 0xFF]]];
+        yield 'in front' => [0, [0x0F, 0xD7, 0xFF, 0xFF]];
+        yield 'behind' => [0x20, [0xFF, 0x22, 0, 0xFF]];
     }
 
     /**

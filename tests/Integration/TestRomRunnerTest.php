@@ -237,17 +237,26 @@ final class TestRomRunnerTest extends IntegrationTestCase
 
         if ($output !== null) {
             foreach (str_split($output . "\0") as $offset => $byte) {
-                $writes[0x6004 + $offset] = ord($byte);
+                $writes[0x6004 + $offset] = ord($byte[0]);
             }
         }
 
         foreach ($writes as $address => $byte) {
-            array_push($program, 0xA9, $byte, 0x8D, $address & 0xFF, $address >> 8);
+            $program[] = 0xA9;
+            $program[] = $byte;
+            $program[] = 0x8D;
+            $program[] = $address & 0xFF;
+            $program[] = $address >> 8;
         }
-
-        array_push($program, 0xA9, $code, 0x8D, 0x00, 0x60);
+        $program[] = 0xA9;
+        $program[] = $code;
+        $program[] = 0x8D;
+        $program[] = 0x00;
+        $program[] = 0x60;
         $loop = 0x8000 + count($program);
-        array_push($program, 0x4C, $loop & 0xFF, $loop >> 8);
+        $program[] = 0x4C;
+        $program[] = $loop & 0xFF;
+        $program[] = $loop >> 8;
 
         return $program;
     }

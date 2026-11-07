@@ -21,7 +21,9 @@ final class CpuProgramTraceTest extends IntegrationTestCase
             0xA2, 0x03, 0xCA, 0xD0, 0xFD, 0x20, 0x20, 0x80,
             0x8D, 0x01, 0x02, 0x4C, 0x13, 0x80];
         $program = array_pad($program, 0x20, 0xEA);
-        array_push($program, 0xA9, 0x00, 0x60);
+        $program[] = 0xA9;
+        $program[] = 0x00;
+        $program[] = 0x60;
         $path = HardwareTestRom::write($program);
 
         try {

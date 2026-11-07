@@ -56,9 +56,7 @@ class Dma
         }
 
         for ($i = 0; $i < 0x100; $i++) {
-            $data = $this->bus !== null
-                ? $this->bus->readByCpu($this->address + $i)
-                : $this->ram->read($this->address + $i);
+            $data = $this->bus?->readByCpu($this->address + $i) ?? $this->ram->read($this->address + $i);
             $this->ppu->transferSprite($i, $data);
         }
 

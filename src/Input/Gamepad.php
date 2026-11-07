@@ -109,7 +109,7 @@ class Gamepad implements Controller
         $this->keyBuffer = array_fill(0, 8, false);
         $this->keyRegisters = $this->keyBuffer;
 
-        if ($this->input === null) {
+        if (!$this->input instanceof InputContextMap) {
             return;
         }
 
@@ -127,7 +127,7 @@ class Gamepad implements Controller
      */
     public function fetch(): void
     {
-        if ($this->input === null) {
+        if (!$this->input instanceof InputContextMap) {
             return;
         }
 

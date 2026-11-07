@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Integration;
 
+use Iterator;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\DataProvider;
 
@@ -46,20 +47,18 @@ final class PpuBusIntegrationTest extends IntegrationTestCase
     /**
      * Supplies each logical table's final pattern after writes through all aliases.
      *
-     * @return array<string, array{bool, int, int}>
+     * @return \Iterator<string, array{bool, int, int}>
      */
-    public static function renderedNametableModes(): array
+    public static function renderedNametableModes(): Iterator
     {
-        return [
-            'horizontal table zero' => [true, 0, 1],
-            'horizontal table one' => [true, 1, 1],
-            'horizontal table two' => [true, 2, 3],
-            'horizontal table three' => [true, 3, 3],
-            'vertical table zero' => [false, 0, 2],
-            'vertical table one' => [false, 1, 3],
-            'vertical table two' => [false, 2, 2],
-            'vertical table three' => [false, 3, 3],
-        ];
+        yield 'horizontal table zero' => [true, 0, 1];
+        yield 'horizontal table one' => [true, 1, 1];
+        yield 'horizontal table two' => [true, 2, 3];
+        yield 'horizontal table three' => [true, 3, 3];
+        yield 'vertical table zero' => [false, 0, 2];
+        yield 'vertical table one' => [false, 1, 3];
+        yield 'vertical table two' => [false, 2, 2];
+        yield 'vertical table three' => [false, 3, 3];
     }
 
     #[Test]
