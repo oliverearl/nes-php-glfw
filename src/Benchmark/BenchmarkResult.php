@@ -82,6 +82,16 @@ class BenchmarkResult
     public readonly ?string $framebufferChecksum;
 
     /**
+     * Timing instrumentation used to produce the result.
+     */
+    public readonly string $timingMode;
+
+    /**
+     * SHA-256 of the ordered hexadecimal checksums of all measured rendered frames.
+     */
+    public readonly ?string $framebufferSequenceChecksum;
+
+    /**
      * Creates a benchmark result.
      */
     public function __construct(
@@ -100,6 +110,8 @@ class BenchmarkResult
         int $cpuCycles,
         int $peakMemoryBytes,
         ?string $framebufferChecksum,
+        string $timingMode = BenchmarkOptions::TIMING_DETAILED,
+        ?string $framebufferSequenceChecksum = null,
     ) {
         $this->romPath = $romPath;
         $this->romSha256 = $romSha256;
@@ -116,6 +128,8 @@ class BenchmarkResult
         $this->cpuCycles = $cpuCycles;
         $this->peakMemoryBytes = $peakMemoryBytes;
         $this->framebufferChecksum = $framebufferChecksum;
+        $this->timingMode = $timingMode;
+        $this->framebufferSequenceChecksum = $framebufferSequenceChecksum;
     }
 
     /**
@@ -133,16 +147,19 @@ class BenchmarkResult
             'measured_frames' => $this->measuredFrames,
             'rendered_frames' => $this->renderedFrames,
             'render_enabled' => $this->renderedFrames > 0,
+            'timing_mode' => $this->timingMode,
             'total_seconds' => $this->seconds($this->totalNanoseconds),
             'total_seconds_excluding_checksum' => $this->seconds($this->totalNanosecondsExcludingChecksum()),
+            'avg_total_ms_per_frame' => $this->millisecondsPerFrame($this->totalNanoseconds),
+            'avg_total_ms_per_frame_excluding_checksum' => $this->millisecondsPerFrame($this->totalNanosecondsExcludingChecksum()),
             'nes_frames_per_second' => $this->framesPerSecond(),
             'nes_frames_per_second_excluding_checksum' => $this->framesPerSecondExcludingChecksum(),
-            'cpu_seconds' => $this->seconds($this->cpuNanoseconds),
-            'ppu_seconds' => $this->seconds($this->ppuNanoseconds),
+            'cpu_seconds' => $this->timingMode === BenchmarkOptions::TIMING_DETAILED ? $this->seconds($this->cpuNanoseconds) : null,
+            'ppu_seconds' => $this->timingMode === BenchmarkOptions::TIMING_DETAILED ? $this->seconds($this->ppuNanoseconds) : null,
             'render_seconds' => $this->seconds($this->renderNanoseconds),
             'checksum_seconds' => $this->seconds($this->checksumNanoseconds),
-            'avg_cpu_ms_per_frame' => $this->millisecondsPerFrame($this->cpuNanoseconds),
-            'avg_ppu_ms_per_frame' => $this->millisecondsPerFrame($this->ppuNanoseconds),
+            'avg_cpu_ms_per_frame' => $this->timingMode === BenchmarkOptions::TIMING_DETAILED ? $this->millisecondsPerFrame($this->cpuNanoseconds) : null,
+            'avg_ppu_ms_per_frame' => $this->timingMode === BenchmarkOptions::TIMING_DETAILED ? $this->millisecondsPerFrame($this->ppuNanoseconds) : null,
             'avg_render_ms_per_frame' => $this->renderedFrames === 0 ? 0.0 : $this->seconds($this->renderNanoseconds) * 1000 / $this->renderedFrames,
             'avg_checksum_ms_per_rendered_frame' => $this->renderedFrames === 0 ? 0.0 : $this->seconds($this->checksumNanoseconds) * 1000 / $this->renderedFrames,
             'iterations' => $this->iterations,
@@ -151,6 +168,7 @@ class BenchmarkResult
             'avg_cpu_cycles_per_frame' => $this->cpuCycles / $this->measuredFrames,
             'peak_memory_bytes' => $this->peakMemoryBytes,
             'framebuffer_checksum' => $this->framebufferChecksum,
+            'framebuffer_sequence_checksum' => $this->framebufferSequenceChecksum,
         ];
     }
 

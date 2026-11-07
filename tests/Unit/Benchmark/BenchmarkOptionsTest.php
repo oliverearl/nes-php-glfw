@@ -25,6 +25,7 @@ final class BenchmarkOptionsTest extends TestCase
         $this::assertFalse($options->render);
         $this::assertFalse($options->json);
         $this::assertFalse($options->help);
+        $this::assertSame('detailed', $options->timingMode);
     }
 
     #[Test]
@@ -55,6 +56,34 @@ final class BenchmarkOptionsTest extends TestCase
 
         $this::assertTrue($options->help);
         $this::assertSame('', $options->romPath);
+    }
+
+    #[Test]
+    public function it_parses_throughput_timing_with_both_option_forms(): void
+    {
+        foreach ([['--timing=throughput'], ['--timing', 'throughput']] as $arguments) {
+            $options = BenchmarkOptions::fromArgv(['bin/benchmark.php', 'test.nes', ...$arguments]);
+
+            $this::assertSame('throughput', $options->timingMode);
+        }
+    }
+
+    #[Test]
+    public function it_rejects_unknown_timing_modes(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Timing mode must be detailed or throughput.');
+
+        BenchmarkOptions::fromArgv(['bin/benchmark.php', 'test.nes', '--timing=fast']);
+    }
+
+    #[Test]
+    public function it_requires_a_value_for_the_timing_option(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Option value is missing.');
+
+        BenchmarkOptions::fromArgv(['bin/benchmark.php', 'test.nes', '--timing']);
     }
 
     #[Test]

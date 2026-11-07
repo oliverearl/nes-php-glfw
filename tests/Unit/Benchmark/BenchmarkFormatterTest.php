@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Benchmark;
 
 use App\Benchmark\BenchmarkFormatter;
+use App\Benchmark\BenchmarkOptions;
 use App\Benchmark\BenchmarkResult;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
@@ -28,6 +29,9 @@ final class BenchmarkFormatterTest extends TestCase
         $this::assertSame('abc123', $data['framebuffer_checksum']);
         $this::assertSame(0.05, $data['checksum_seconds']);
         $this::assertSame(2.1052631578947367, $data['nes_frames_per_second_excluding_checksum']);
+        $this::assertSame('detailed', $data['timing_mode']);
+        $this::assertSame(500, $data['avg_total_ms_per_frame']);
+        $this::assertSame(475, $data['avg_total_ms_per_frame_excluding_checksum']);
     }
 
     #[Test]
@@ -49,12 +53,28 @@ final class BenchmarkFormatterTest extends TestCase
         $formatter = new BenchmarkFormatter();
 
         $this::assertStringContainsString('php bin/benchmark.php path/to/homebrew-or-test-rom.nes', $formatter->usage());
+        $this::assertStringContainsString('--timing=MODE', $formatter->usage());
+    }
+
+    #[Test]
+    public function it_reports_unmeasured_breakdowns_without_zero_timings(): void
+    {
+        $formatter = new BenchmarkFormatter();
+        $result = $this->benchmarkResult(BenchmarkOptions::TIMING_THROUGHPUT);
+        $data = $result->toArray();
+
+        $this::assertNull($data['cpu_seconds']);
+        $this::assertNull($data['ppu_seconds']);
+        $this::assertNull($data['avg_cpu_ms_per_frame']);
+        $this::assertNull($data['avg_ppu_ms_per_frame']);
+        $this::assertStringContainsString('Timing: throughput', $formatter->human($result));
+        $this::assertStringContainsString('CPU/PPU breakdown: not measured', $formatter->human($result));
     }
 
     /**
      * Creates a deterministic benchmark result for formatter tests.
      */
-    private function benchmarkResult(): BenchmarkResult
+    private function benchmarkResult(string $timingMode = BenchmarkOptions::TIMING_DETAILED): BenchmarkResult
     {
         return new BenchmarkResult(
             romPath: '/tmp/test.nes',
@@ -72,6 +92,7 @@ final class BenchmarkFormatterTest extends TestCase
             cpuCycles: 500,
             peakMemoryBytes: 123456,
             framebufferChecksum: 'abc123',
+            timingMode: $timingMode,
         );
     }
 }

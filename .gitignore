@@ -12,3 +12,14 @@
 .phpunit.result.cache
 .phpstan-memory-limit
 .DS_Store
+__pycache__/
+*.py[cod]
+
+# Local benchmark captures and generated diagnostics.
+/benchmarks/
+*.log
+/coverage/
+/coverage.xml
+
+# Local game ROMs.
+/*.nes

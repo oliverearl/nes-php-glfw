@@ -43,9 +43,10 @@ class BenchmarkRunner
         $cartridge = (new Loader($options->romPath, debugEnabled: false))->load();
         $system = $this->systems->create($cartridge);
         $renderer = $options->render ? new Renderer() : null;
+        $detailedTiming = $options->timingMode === BenchmarkOptions::TIMING_DETAILED;
 
         for ($i = 0; $i < $options->warmupFrames; $i++) {
-            $this->runFrame($system, $renderer, $options->maxIterationsPerFrame);
+            $this->runFrame($system, $renderer, $options->maxIterationsPerFrame, $detailedTiming);
         }
 
         $iterations = 0;
@@ -56,10 +57,11 @@ class BenchmarkRunner
         $checksumNanoseconds = 0;
         $renderedFrames = 0;
         $framebufferChecksum = null;
+        $framebufferChecksums = '';
         $start = hrtime(true);
 
         for ($i = 0; $i < $options->frames; $i++) {
-            $frame = $this->runFrame($system, $renderer, $options->maxIterationsPerFrame);
+            $frame = $this->runFrame($system, $renderer, $options->maxIterationsPerFrame, $detailedTiming);
             $iterations += $frame->iterations;
             $cpuCycles += $frame->cpuCycles;
             $cpuNanoseconds += $frame->cpuNanoseconds;
@@ -70,6 +72,7 @@ class BenchmarkRunner
             if ($frame->framebufferChecksum !== null) {
                 $renderedFrames++;
                 $framebufferChecksum = $frame->framebufferChecksum;
+                $framebufferChecksums .= $frame->framebufferChecksum;
             }
         }
 
@@ -91,6 +94,8 @@ class BenchmarkRunner
             cpuCycles: $cpuCycles,
             peakMemoryBytes: memory_get_peak_usage(true),
             framebufferChecksum: $framebufferChecksum,
+            timingMode: $options->timingMode,
+            framebufferSequenceChecksum: $renderedFrames === 0 ? null : hash('sha256', $framebufferChecksums),
         );
     }
 
@@ -99,7 +104,7 @@ class BenchmarkRunner
      *
      * @throws RuntimeException
      */
-    private function runFrame(NesSystem $system, ?Renderer $renderer, int $maxIterations): BenchmarkFrameResult
+    private function runFrame(NesSystem $system, ?Renderer $renderer, int $maxIterations, bool $detailedTiming): BenchmarkFrameResult
     {
         $iterations = 0;
         $cpuCycles = 0;
@@ -114,14 +119,20 @@ class BenchmarkRunner
                 $cycle = 514;
             }
 
-            $cpuStart = hrtime(true);
-            $cycle += $system->cpu->run();
-            $cpuNanoseconds += hrtime(true) - $cpuStart;
-            $cpuCycles += $cycle;
+            if ($detailedTiming) {
+                $cpuStart = hrtime(true);
+                $cycle += $system->cpu->run();
+                $cpuNanoseconds += hrtime(true) - $cpuStart;
 
-            $ppuStart = hrtime(true);
-            $renderingData = $system->ppu->run($cycle * 3);
-            $ppuNanoseconds += hrtime(true) - $ppuStart;
+                $ppuStart = hrtime(true);
+                $renderingData = $system->ppu->run($cycle * 3);
+                $ppuNanoseconds += hrtime(true) - $ppuStart;
+            } else {
+                $cycle += $system->cpu->run();
+                $renderingData = $system->ppu->run($cycle * 3);
+            }
+
+            $cpuCycles += $cycle;
 
             $iterations++;
 
