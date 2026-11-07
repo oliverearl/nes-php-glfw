@@ -152,7 +152,16 @@ composer test:coverage
 composer phpstan
 
 # Check code style
-composer pint
+composer pint:check
+
+# Preview automated refactoring suggestions
+composer rector
+
+# Apply refactorings, then format with Pint's PER preset
+composer rector:fix
+
+# Check formatting, static analysis, and refactoring suggestions without editing files
+composer quality:check
 ```
 
 ## Development
@@ -161,6 +170,7 @@ This project follows strict code quality standards:
 
 - **PHPStan** for static analysis
 - **Laravel Pint** for code formatting (PER)
+- **Rector** for PHP 8.5 upgrades, dead-code cleanup, type declarations, and PHPUnit improvements
 - **PHPUnit** for comprehensive testing (258 tests, 233,000+ assertions)
 
 Contributor guidance is available in [CONTRIBUTING.md](CONTRIBUTING.md). AI-assisted development guidelines are available in [AGENTS.md](AGENTS.md).
