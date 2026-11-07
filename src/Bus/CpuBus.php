@@ -20,6 +20,8 @@ readonly class CpuBus implements Memory
         private Ppu $ppu,
         private Controller $gamepad,
         private Dma $dma,
+        /** Optional cartridge RAM mapped at $6000 through $7FFF. */
+        private ?Ram $programRam = null,
     ) {}
 
     /**
@@ -41,6 +43,10 @@ readonly class CpuBus implements Memory
 
         if ($address === 0x4016) {
             return (int) $this->gamepad->read();
+        }
+
+        if ($address >= 0x6000 && $address < 0x8000 && $this->programRam !== null) {
+            return $this->programRam->read($address - 0x6000);
         }
 
         if ($address >= 0xC000) {
@@ -76,6 +82,8 @@ readonly class CpuBus implements Memory
                 $this->gamepad->write($data);
             }
             // Writes to APU and other unmapped I/O registers are ignored.
+        } elseif ($address >= 0x6000 && $address < 0x8000 && $this->programRam !== null) {
+            $this->programRam->write($address - 0x6000, $data & 0xFF);
         }
 
         // Ignore writes to other unmapped addresses.
