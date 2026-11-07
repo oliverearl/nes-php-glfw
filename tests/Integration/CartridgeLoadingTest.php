@@ -48,15 +48,7 @@ final class CartridgeLoadingTest extends IntegrationTestCase
         ob_end_clean();
 
         $this::assertNotEmpty($cartridge->programRom);
-
-        $hasNonZero = false;
-
-        foreach ($cartridge->programRom as $byte) {
-            if ($byte !== 0) {
-                $hasNonZero = true;
-                break;
-            }
-        }
+        $hasNonZero = array_any($cartridge->programRom, static fn(int $byte): bool => $byte !== 0);
 
         $this::assertTrue($hasNonZero, 'Program ROM should contain non-zero data');
     }

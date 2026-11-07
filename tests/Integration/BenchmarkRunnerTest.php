@@ -20,7 +20,7 @@ final class BenchmarkRunnerTest extends TestCase
         $romPath = SyntheticNromRom::writeToTemporaryFile();
 
         try {
-            $result = (new BenchmarkRunner())->run(new BenchmarkOptions($romPath, frames: 2, warmupFrames: 1));
+            $result = new BenchmarkRunner()->run(new BenchmarkOptions($romPath, frames: 2, warmupFrames: 1));
 
             $this::assertSame(2, $result->measuredFrames);
             $this::assertSame(1, $result->warmupFrames);
@@ -41,7 +41,7 @@ final class BenchmarkRunnerTest extends TestCase
         $romPath = SyntheticNromRom::writeToTemporaryFile();
 
         try {
-            $result = (new BenchmarkRunner())->run(new BenchmarkOptions($romPath, frames: 1, warmupFrames: 0, render: true));
+            $result = new BenchmarkRunner()->run(new BenchmarkOptions($romPath, frames: 1, warmupFrames: 0, render: true));
 
             $this::assertSame(1, $result->renderedFrames);
             $this::assertGreaterThanOrEqual(0, $result->renderNanoseconds);
@@ -88,7 +88,7 @@ final class BenchmarkRunnerTest extends TestCase
         $romPath = SyntheticNromRom::writeToTemporaryFile();
 
         try {
-            $result = (new BenchmarkRunner())->run(new BenchmarkOptions($romPath, frames: 2, warmupFrames: 0, timingMode: BenchmarkOptions::TIMING_THROUGHPUT));
+            $result = new BenchmarkRunner()->run(new BenchmarkOptions($romPath, frames: 2, warmupFrames: 0, timingMode: BenchmarkOptions::TIMING_THROUGHPUT));
 
             $this::assertSame(2, $result->measuredFrames);
             $this::assertSame(0, $result->renderedFrames);

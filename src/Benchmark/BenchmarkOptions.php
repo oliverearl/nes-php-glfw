@@ -54,16 +54,6 @@ class BenchmarkOptions
     public readonly int $maxIterationsPerFrame;
 
     /**
-     * Whether frame data should be converted through the software renderer.
-     */
-    public readonly bool $render;
-
-    /**
-     * Whether output should be emitted as JSON.
-     */
-    public readonly bool $json;
-
-    /**
      * Whether help text was requested.
      */
     public readonly bool $help;
@@ -81,8 +71,14 @@ class BenchmarkOptions
         int $frames = self::DEFAULT_FRAMES,
         int $warmupFrames = self::DEFAULT_WARMUP_FRAMES,
         int $maxIterationsPerFrame = self::DEFAULT_MAX_ITERATIONS_PER_FRAME,
-        bool $render = false,
-        bool $json = false,
+        /**
+         * Whether frame data should be converted through the software renderer.
+         */
+        public readonly bool $render = false,
+        /**
+         * Whether output should be emitted as JSON.
+         */
+        public readonly bool $json = false,
         bool $help = false,
         string $timingMode = self::TIMING_DETAILED,
     ) {
@@ -110,8 +106,6 @@ class BenchmarkOptions
         $this->frames = $frames;
         $this->warmupFrames = $warmupFrames;
         $this->maxIterationsPerFrame = $maxIterationsPerFrame;
-        $this->render = $render;
-        $this->json = $json;
         $this->help = $help;
         $this->timingMode = $timingMode;
     }

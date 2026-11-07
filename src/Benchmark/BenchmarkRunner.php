@@ -40,7 +40,7 @@ class BenchmarkRunner
             throw new RuntimeException("Unable to inspect ROM file: {$options->romPath}.");
         }
 
-        $cartridge = (new Loader($options->romPath, debugEnabled: false))->load();
+        $cartridge = new Loader($options->romPath, debugEnabled: false)->load();
         $system = $this->systems->create($cartridge);
         $renderer = $options->render ? new Renderer() : null;
         $detailedTiming = $options->timingMode === BenchmarkOptions::TIMING_DETAILED;

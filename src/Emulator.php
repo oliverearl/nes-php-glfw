@@ -322,7 +322,7 @@ class Emulator extends QuickstartApp
         $this->isEmulatorRunning = false;
 
         $this->gamepad = new Gamepad($this->inputContext);
-        $system = (new NesSystemFactory())->create($this->cartridge, $this->gamepad);
+        $system = new NesSystemFactory()->create($this->cartridge, $this->gamepad);
         $this->ppu = $system->ppu;
         $this->dma = $system->dma;
         $this->cpu = $system->cpu;

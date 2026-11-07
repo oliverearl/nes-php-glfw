@@ -73,7 +73,7 @@ final class BenchmarkRomTest extends TestCase
             $controller = $this->createMock(Controller::class);
             $controller->expects($this->atLeastOnce())->method('read')->willReturn(false);
             $controller->expects($this->atLeastOnce())->method('write');
-            $system = (new NesSystemFactory())->create((new Loader($paths[BenchmarkRom::GRAPHICS], false))->load(), $controller);
+            $system = new NesSystemFactory()->create(new Loader($paths[BenchmarkRom::GRAPHICS], false)->load(), $controller);
             $renderer = new Renderer();
             $frames = [];
             $dmaTransfers = 0;
@@ -91,7 +91,7 @@ final class BenchmarkRomTest extends TestCase
             $this::assertNotSame($frames[2], $frames[3]);
             $this::assertSame(0, $system->ram->read(1));
 
-            $cpuSystem = (new NesSystemFactory())->create((new Loader($paths[BenchmarkRom::CPU], false))->load());
+            $cpuSystem = new NesSystemFactory()->create(new Loader($paths[BenchmarkRom::CPU], false)->load());
             [$cpuData, $cpuDmaTransfers] = $this->advanceFrame($cpuSystem);
 
             $this::assertSame(0, $cpuDmaTransfers);
