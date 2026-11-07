@@ -31,6 +31,28 @@ final class GamepadTest extends TestCase
     }
 
     /**
+     * Clears live input, the latched report, strobe, and read index for a new machine.
+     */
+    #[Test]
+    public function it_resets_controller_state_between_cartridges(): void
+    {
+        $gamepad = new Gamepad();
+        $gamepad->setButtonState(0xFF);
+        $gamepad->write(1);
+        $gamepad->write(0);
+        $this::assertTrue($gamepad->read());
+        $gamepad->write(1);
+
+        $gamepad->reset();
+        $gamepad->write(0);
+
+        $this::assertSame(array_fill(0, 8, false), $this->readReport($gamepad));
+        $this::assertTrue($gamepad->read());
+        $gamepad->write(1);
+        $this::assertFalse($gamepad->read());
+    }
+
+    /**
      * Supplies the standard NES bit order and the existing keyboard defaults.
      *
      * @return iterable<string, array{int, int, list<bool>}>

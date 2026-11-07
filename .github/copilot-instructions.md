@@ -5,17 +5,27 @@ This document provides guidelines for AI-assisted development of this NES (Ninte
 ## Agent Document Source of Truth
 
 - `AGENTS.md` is the master agentic development document for this repository.
-- If this document disagrees with `AGENTS.md`, follow `AGENTS.md`.
-- Keep this document and all other agentic development documents in sync with `AGENTS.md`, including `.cursorrules`, `CLAUDE.md`, and `.junie/guidelines.md`.
+- If another agentic development document disagrees with `AGENTS.md`, follow `AGENTS.md`.
+- Keep all other agentic development documents in sync with `AGENTS.md`, including `.cursorrules`, `CLAUDE.md`, `.github/copilot-instructions.md`, and `.junie/guidelines.md`.
 - When changing agent guidance, update `AGENTS.md` first, then update the corresponding Cursor, Claude, Copilot, Junie, and contributor-facing documentation in the same change.
 
 ## Project Overview
 
-This is a cycle-accurate NES emulator implementation in PHP 8.5+ using:
+This is an NES emulator implementation targeting PHP 8.5+ using:
 - **Graphics**: PHP-GLFW (OpenGL) via the VISU framework
 - **Architecture**: 6502 CPU emulation, PPU (Picture Processing Unit), APU (Audio Processing Unit - planned)
 - **Testing**: PHPUnit with comprehensive unit and integration tests
-- **Quality**: PHPStan for static analysis, Laravel Pint for code formatting
+- **Quality**: PHPStan for static analysis, Laravel Pint for code formatting, Rector for reviewed PHP and PHPUnit refactoring
+
+### Current Implementation and Limits
+
+- Cartridge execution supports mapper 0 (NROM) with 16 or 32 KiB PRG ROM, 8 KiB CHR ROM or CHR RAM, horizontal or vertical mirroring, and optional 8 KiB PRG RAM.
+- `Loader` rejects unsupported mappers, NES 2.0/console headers, four-screen mirroring, unsupported PRG sizes, and truncated payloads. `NesSystemFactory` validates executable cartridge configurations, including CHR size.
+- CPU execution advances one instruction or interrupt entry per `run()` call and reports elapsed cycles. Individual bus-cycle ordering is not fully implemented or independently verified.
+- PPU timing advances by scanlines; rendering, sprite-zero hit, and interrupt timing are approximations. Do not describe the whole emulator as cycle-accurate.
+- The GUI and benchmark loops currently model DMA with a fixed 514 CPU-cycle stall. DMA is not a cycle-ordered or parity-dependent transfer model.
+- APU/audio, additional mappers, battery-backed save persistence, and PAL timing are not implemented.
+- Consult `README.md` for supported usage, `CHANGELOG.md` for release changes, and `CONTRIBUTING.md` for release checks.
 
 ## Code Style & Standards
 
@@ -89,7 +99,7 @@ $this::assertSame(0x01FD, $registers->sp);
 - Located in `src/Cpu/`
 - Implements 6502 instruction set (official and unofficial opcodes)
 - Handles interrupts (NMI, IRQ)
-- Cycle-accurate execution
+- Instruction execution with cycle counts, branch penalties, and page-crossing penalties
 - See `src/Cpu/Cpu.php` for reference
 
 **PPU (Picture Processing Unit):**
@@ -97,13 +107,13 @@ $this::assertSame(0x01FD, $registers->sp);
 - Handles rendering (background tiles, sprites)
 - Manages VRAM, sprite RAM, palettes
 - Runs at 3x CPU speed
-- Generates VBlank interrupts
+- Generates VBlank interrupts using the current scanline timing model
 - See `src/Graphics/Ppu.php` for reference
 
 **Memory Bus Architecture:**
 - `CpuBus`: CPU address space ($0000-$FFFF)
 - `PpuBus`: PPU address space ($0000-$3FFF)
-- RAM mirroring implemented correctly
+- Internal RAM and PPU-register mirroring
 - Memory-mapped I/O for PPU, gamepad, DMA
 
 **Key Classes:**
@@ -114,7 +124,11 @@ $this::assertSame(0x01FD, $registers->sp);
 - `Ram`, `Rom`: Memory components
 - `Cartridge`, `Loader`: ROM file handling
 - `Gamepad`: Input handling
-- `Renderer`: Converts PPU output to framebuffer
+- `Renderer`: Converts PPU output to a 256x224 RGBA framebuffer
+- `NesSystemFactory`, `NesSystem`: Shared system wiring for GUI, benchmarks, and test ROM execution
+- `Controller`, `Gamepad`, `NullController`: Controller contract, host input, and headless input
+- `CpuState`, `Cpu::snapshot()`: Immutable CPU state for assertions and tracing
+- `BenchmarkRunner`: Bounded headless execution and reproducible framebuffer checksums
 
 ### Value Objects
 
@@ -163,7 +177,7 @@ final class RamTest extends TestCase
     {
         $ram = new Ram(256);
         $ram->write(100, 0x42);
-        
+
         $this::assertSame(0x42, $ram->read(100));
     }
 }
@@ -180,7 +194,10 @@ final class RamTest extends TestCase
 - Located in `tests/Integration/`
 - Extend `IntegrationTestCase` for common utilities
 - Test complete system interactions
-- Use `requireTestRom()` for ROM file tests
+- Use `requireTestRom()` for optional local ROM files; unavailable ROMs skip those tests.
+- Prefer original synthetic ROM fixtures for required checks so the suite works without external downloads.
+- `Tests\Support\TestRomRunner` recognizes the signed `$6000` test protocol with an explicit running state and a CPU-cycle budget. Declare hardware prerequisites; unsupported timing, DMA, mapper, or APU tests must not be reported as passes.
+- Keep independent CPU vectors pinned with their provenance and upstream license; see `tests/Support/Cpu/SingleStepTests/README.md`. Their final-state and cycle-count checks do not certify individual bus-access ordering.
 
 **Example:**
 ```php
@@ -191,18 +208,18 @@ final class SystemIntegrationTest extends IntegrationTestCase
     {
         [$cpu, , , , $ppu] = $this->createTestSystem();
         $renderer = new Renderer();
-        
+
         $cpu->reset();
-        
+
         $renderingData = false;
         $iterations = 0;
-        
+
         while ($renderingData === false && $iterations < 50000) {
             $cpuCycles = $cpu->run();
             $renderingData = $ppu->run($cpuCycles * 3);
             $iterations++;
         }
-        
+
         $this::assertNotFalse($renderingData);
         $frameBuffer = $renderer->render($renderingData);
         $this::assertCount(256 * 224 * 4, $frameBuffer);
@@ -218,11 +235,13 @@ final class SystemIntegrationTest extends IntegrationTestCase
 - Edge cases: boundary values, zero values, maximum values
 - Error conditions must be tested with appropriate `expectException()`
 
-**Current Coverage:**
-- 258 tests with 233,000+ assertions
-- Unit tests for all components
-- Integration tests for system interactions
-- ROM loading and parsing tests
+**Coverage Areas:**
+- CPU instruction vectors, arithmetic boundaries, branches, interrupts, and state snapshots
+- Bus mirroring, controller serialization, cartridge loading, and RAM access
+- PPU registers, palettes, rendering, DMA, and system interactions
+- Headless benchmarks and bounded test ROM execution
+
+Use the current PHPUnit output for test and assertion counts. Optional ROM tests can be skipped; a passing suite does not certify compatibility with every game or timing test.
 
 ## NES-Specific Knowledge
 
@@ -232,8 +251,10 @@ final class SystemIntegrationTest extends IntegrationTestCase
 - $0000-$07FF: 2KB internal RAM
 - $0800-$1FFF: Mirrors of RAM
 - $2000-$2007: PPU registers (mirrored through $3FFF)
-- $4000-$4017: APU and I/O registers
-- $4020-$FFFF: Cartridge space (PRG-ROM, mapper registers)
+- $4000-$4017: APU and I/O register range; currently OAM DMA at $4014 and controller port one at $4016 are wired
+- $4020-$5FFF: Cartridge expansion range, currently unmapped
+- $6000-$7FFF: Optional cartridge PRG RAM
+- $8000-$FFFF: PRG ROM (16 KiB NROM is mirrored)
 
 **PPU Address Space ($0000-$3FFF):**
 - $0000-$0FFF: Pattern table 0
@@ -248,22 +269,22 @@ final class SystemIntegrationTest extends IntegrationTestCase
 
 ### Timing
 
-**Critical Timings:**
+**Current NTSC Timing Model:**
 - CPU: ~1.79 MHz (NTSC)
 - PPU: 3x CPU speed
 - Frame: 262 scanlines
 - Scanline: 341 PPU cycles
-- DMA: 514 CPU cycles (256 bytes + overhead)
+- DMA: Fixed 514 CPU-cycle stall in the current execution loops; transfer copies 256 bytes
 
 ### Data Sizes
 
 **Common Values:**
 - Byte: 8-bit (0x00-0xFF)
 - Word: 16-bit (0x0000-0xFFFF)
-- Sprite: 8x8 pixels
+- Sprite: Current rendering uses 8x8 pixels
 - Tile: 8x8 pixels
 - Nametable: 32x30 tiles
-- Screen: 256x240 pixels (256x224 visible)
+- NES picture: 256x240 pixels; current renderer outputs 256x224 pixels
 
 ## Common Tasks
 
@@ -272,9 +293,11 @@ final class SystemIntegrationTest extends IntegrationTestCase
 1. **Write tests first** (TDD approach)
 2. **Implement the feature** following code style
 3. **Add proper docblocks** to all new methods/properties
-4. **Run tests**: `vendor/bin/phpunit`
-5. **Run static analysis**: `vendor/bin/phpstan analyze`
-6. **Format code**: `vendor/bin/pint`
+4. **Run tests**: `composer test`
+5. **Run quality checks**: `composer quality:check` (Pint, PHPStan, and Rector dry run)
+6. **Format code**: `composer pint` and rerun relevant checks
+
+Use a PHP 8.5+ interpreter with the project's required extensions. Headless execution does not open a window, but the GLFW extension remains required by Composer. Install dependencies from `composer.lock`; do not replace it with an unrequested dependency update. Review Rector suggestions before applying them with `composer rector:fix`, which also runs Pint.
 
 ### Debugging CPU Issues
 
@@ -299,9 +322,9 @@ final class SystemIntegrationTest extends IntegrationTestCase
 public function it_handles_specific_case(): void
 {
     $component = new Component();
-    
+
     $result = $component->doSomething();
-    
+
     $this::assertSame($expected, $result);
 }
 ```
@@ -312,15 +335,12 @@ public function it_handles_specific_case(): void
 public function it_integrates_components(): void
 {
     [$cpu, $bus, $ram] = $this->createTestSystem();
-    
-    // Setup
+
     $ram->write(0x0200, 0x42);
-    
-    // Execute
+
     $cpu->reset();
     $cycles = $cpu->run();
-    
-    // Assert
+
     $this::assertGreaterThan(0, $cycles);
 }
 ```
@@ -329,9 +349,9 @@ public function it_integrates_components(): void
 
 Before submitting changes, ensure:
 
-- [ ] All tests pass (`vendor/bin/phpunit`)
-- [ ] PHPStan passes (`vendor/bin/phpstan analyze`)
-- [ ] Code is formatted (`vendor/bin/pint`)
+- [ ] All tests pass (`composer test`), with optional skipped tests reviewed
+- [ ] Quality checks pass (`composer quality:check`)
+- [ ] Code is formatted (`composer pint`)
 - [ ] All new methods have docblocks
 - [ ] All new properties have docblocks
 - [ ] Complex logic has explanatory comments
@@ -343,19 +363,25 @@ Before submitting changes, ensure:
 
 ```bash
 # Run all tests
-vendor/bin/phpunit
+composer test
 
 # Run specific test file
 vendor/bin/phpunit tests/Unit/Cpu/CpuTest.php
 
-# Run tests with coverage
-vendor/bin/phpunit --coverage-html coverage
+# Run tests with coverage (requires a coverage driver)
+composer test:coverage
 
 # Run static analysis
-vendor/bin/phpstan analyze
+composer phpstan
+
+# Check formatting, static analysis, and reviewed refactoring rules
+composer quality:check
+
+# Preview Rector changes
+composer rector
 
 # Format code
-vendor/bin/pint
+composer pint
 
 # Run headless benchmark
 composer benchmark -- path/to/homebrew-or-test-rom.nes
@@ -373,13 +399,13 @@ php bin/start.php path/to/rom.nes
 
 ## Notes
 
-- This emulator prioritizes accuracy over performance
+- This emulator prioritizes accuracy and correctness over raw speed
 - Cycle counting is critical for timing-sensitive games
 - Unofficial opcodes are supported for compatibility
 - The project uses PHP-GLFW for graphics via VISU framework
-- DMA transfers take 514 cycles (256 bytes + overhead)
+- DMA timing is currently approximated by a fixed 514 CPU-cycle stall
 - PPU rendering generates data every 262 scanlines (one frame)
 
 ---
 
-*Last updated: May 29, 2026*
+*Last updated: November 7, 2026*

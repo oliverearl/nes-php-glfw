@@ -106,8 +106,7 @@ class Gamepad implements Controller
      */
         private readonly ?InputContextMap $input = null,
     ) {
-        $this->keyBuffer = array_fill(0, 8, false);
-        $this->keyRegisters = $this->keyBuffer;
+        $this->reset();
 
         if (!$this->input instanceof InputContextMap) {
             return;
@@ -120,6 +119,17 @@ class Gamepad implements Controller
         }
 
         $this->input->registerAndActivate(self::INPUT_CONTEXT_DEFAULT_KEYBOARD, $actions);
+    }
+
+    /**
+     * Clears controller state for a new machine while retaining host keyboard bindings.
+     */
+    public function reset(): void
+    {
+        $this->keyBuffer = array_fill(0, 8, false);
+        $this->keyRegisters = $this->keyBuffer;
+        $this->isSet = false;
+        $this->index = 0;
     }
 
     /**

@@ -1,0 +1,39 @@
+name: Benchmark Tools
+
+on:
+  push:
+    branches: [ main, master, develop ]
+    tags: [ "[0-9]*", "v[0-9]*" ]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python:
+    name: Python tools (${{ matrix.python }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        python: [ '3.10', '3.14' ]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Test benchmark tools
+        run: python -m unittest discover -s tests/BenchmarkTools -v

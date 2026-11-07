@@ -6,8 +6,9 @@
 [![PHP Version](https://img.shields.io/badge/php-8.5-blue.svg)](https://www.php.net/)
 [![License](https://img.shields.io/github/license/oliverearl/nes-php-glfw)](LICENSE)
 
-A cycle-accurate Nintendo Entertainment System (NES) emulator written in PHP, implementing the 6502 CPU and PPU. It makes use of the PHP-GLFW
-extension for OpenGL graphics rendering via the VISU framework.
+A Nintendo Entertainment System (NES) emulator written in PHP, implementing the 6502 CPU and PPU with instruction cycle accounting. It uses
+the PHP-GLFW extension for OpenGL graphics rendering via the VISU framework. See [compatibility and accuracy limits](#compatibility-and-accuracy-limits)
+for the supported hardware and remaining timing work.
 
 ![Screenshot](.github/images/screenshot.png)
 
@@ -21,9 +22,10 @@ production-ready NES emulator.
 
 ## Requirements
 
-- **PHP 8.5** (required - no earlier versions supported)
-- **PHP-GLFW extension** (for graphics rendering via OpenGL)
-- **Composer** (for dependency management)
+- **PHP 8.5+** (within PHP 8.x, as declared in `composer.json`)
+- **PHP-GLFW extension** enabled in the CLI interpreter (required by Composer and the emulator)
+- **Composer 2** (for dependency management)
+- **A desktop display and OpenGL context** for the graphical application; headless tests and benchmarks do not open a window
 
 ### Critical Performance Note
 
@@ -48,15 +50,17 @@ git clone https://github.com/oliverearl/nes-php-glfw.git
 cd nes-php-glfw
 ```
 
-2. Install dependencies:
+2. Install and enable PHP-GLFW for the PHP CLI interpreter you will use. Follow the
+[PHP-GLFW installation guide](https://phpgl.net/getting-started/getting-started-with-php-and-opengl.html) for your platform.
+
+3. Install the locked dependencies:
 ```bash
 composer install
 ```
 
-3. Ensure PHP-GLFW extension is installed and enabled.
-
-For more information on getting this installed on your platform, refer to
-[their website](https://phpgl.net/getting-started/getting-started-with-php-and-opengl.html) for easy instructions.
+Run Composer and the emulator with the same PHP interpreter. Keep development dependencies installed when running tests, static analysis,
+or the generated benchmark fixtures. The repository includes the writable `var/cache/` and `var/storage/` directories; do not make them
+world-writable.
 
 ## Usage
 
@@ -95,8 +99,8 @@ php bin/start.php path/to/rom.nes --drop-frames
 ### Implemented
 
 - **6502 CPU Emulation**
-  - Official and unofficial opcodes
-  - Cycle-accurate execution
+  - Official instructions and supported stable unofficial opcodes
+  - Instruction cycle counts, branch/page-crossing penalties, and interrupt-entry cycles
   - Interrupt handling (NMI, IRQ)
 
 - **PPU (Picture Processing Unit)**
@@ -108,7 +112,8 @@ php bin/start.php path/to/rom.nes --drop-frames
 - **Memory Subsystem**
   - Accurate RAM mirroring
   - Memory-mapped I/O
-  - Direct Memory Access (DMA)
+  - Direct Memory Access (DMA) through the CPU address map
+  - NROM cartridge RAM, trainer loading, and separate CHR-ROM/CHR-RAM handling
 
 - **Input Handling**
   - Keyboard controls via VISU framework
@@ -119,13 +124,19 @@ php bin/start.php path/to/rom.nes --drop-frames
   - Authentic NES colour palette
   - 256x224 resolution output
 
-### Not Yet Implemented
+### Compatibility and Accuracy Limits
 
-- Audio Processing Unit (APU)
-- Mapper support beyond NROM (Mapper 0)
-- Save states
-- Controller configuration
-- Further performance tuning
+- Supported cartridges use legacy iNES headers and **NROM (mapper 0)**: 16 or 32 KiB PRG-ROM, 8 KiB CHR-ROM or CHR-RAM, horizontal or vertical
+  nametable mirroring, and up to 8 KiB PRG-RAM. Other mappers, NES 2.0 headers, four-screen mirroring, and unsupported memory sizes are rejected.
+- PRG-RAM is volatile; battery save files and save states are not implemented.
+- Audio/APU, PAL timing, a second controller, physical gamepad mappings, configurable controls, and a pause/menu interface are not implemented.
+- The CPU executes whole instructions. PPU rendering is based on scanlines/tile rows, with simplified sprite evaluation and sprite-zero hit.
+  Complete CPU bus-cycle ordering, PPU dot timing, and hardware-accurate DMA stalls remain future work. Current frontend/benchmark DMA accounting
+  uses a fixed 514 CPU cycles; [real OAM DMA](https://www.nesdev.org/wiki/DMA) takes 513 or 514 depending on alignment.
+- Unsupported/unstable opcodes and CPU jam behaviour are not certified; some fall back to NOP behaviour.
+
+Independent CPU vectors and regression tests improve confidence in the supported behaviour; they do not establish compatibility with the entire
+NES library.
 
 ## Architecture
 
@@ -136,17 +147,20 @@ The emulator is structured around the actual NES hardware architecture:
 - `src/Bus/` - Memory buses and addressing
 - `src/Cartridge/` - ROM loading and cartridge emulation
 - `src/Input/` - Controller input handling
+- `src/Emulation/` - Shared machine construction for graphical and headless callers
+- `src/Benchmark/` - Headless frame execution, timing, checksums, and reporting
 
 ## Testing
 
-The project includes comprehensive test coverage with PHPUnit:
+The project includes unit and integration tests with PHPUnit. PHP-GLFW must be enabled, but the suite does not require a display.
+HTML coverage additionally requires a compatible coverage driver such as Xdebug with `XDEBUG_MODE=coverage` or PCOV:
 
 ```bash
 # Run all tests
 composer test
 
-# Run with coverage
-composer test:coverage
+# Run with Xdebug coverage enabled
+XDEBUG_MODE=coverage composer test:coverage
 
 # Run static analysis
 composer phpstan
@@ -166,16 +180,27 @@ composer quality:check
 
 ## Development
 
+See [CHANGELOG.md](CHANGELOG.md) for v1.1.0 changes and the
+[maintainer release checklist](CONTRIBUTING.md#maintainer-release-checklist) for release validation.
+
 This project follows strict code quality standards:
 
 - **PHPStan** for static analysis
 - **Laravel Pint** for code formatting (PER)
 - **Rector** for PHP 8.5 upgrades, dead-code cleanup, type declarations, and PHPUnit improvements
-- **PHPUnit** for comprehensive testing (258 tests, 233,000+ assertions)
+- **PHPUnit** for unit/integration tests, independent CPU instruction vectors, and exhaustive binary ADC/SBC checks
 
 Contributor guidance is available in [CONTRIBUTING.md](CONTRIBUTING.md). AI-assisted development guidelines are available in [AGENTS.md](AGENTS.md).
 
-Optional [profiling and benchmarking tools](tools/README.md) are available for performance investigations.
+Optional [profiling and benchmarking tools](tools/README.md) are available for performance investigations. Their Python regression tests run separately:
+
+```bash
+python3 -m unittest discover -s tests/BenchmarkTools -v
+```
+
+The pinned independent CPU dataset and its validation limits are documented in
+[the SingleStepTests fixture guide](tests/Support/Cpu/SingleStepTests/README.md). ROM-based integration tests may skip fixtures that are absent;
+inspect the PHPUnit summary when validating a release.
 
 Please do not submit copyrighted commercial ROMs in issues, pull requests, or test fixtures. Use synthetic ROMs, homebrew ROMs, or public test ROMs
 with compatible redistribution terms if you must include ROM files.
@@ -193,7 +218,8 @@ with compatible redistribution terms if you must include ROM files.
 - CPU Address Space: $0000-$FFFF
   - $0000-$07FF: 2KB internal RAM (mirrored)
   - $2000-$2007: PPU registers (mirrored)
-  - $4000-$4017: APU and I/O registers
+  - $4000-$4017: APU and I/O registers (APU unimplemented)
+  - $6000-$7FFF: Cartridge PRG-RAM when present
   - $8000-$FFFF: Cartridge ROM space
 
 - PPU Address Space: $0000-$3FFF
@@ -209,7 +235,8 @@ with compatible redistribution terms if you must include ROM files.
 
 ## License
 
-This project is open source. See the [LICENSE](LICENSE) file for details.
+This project is distributed under the [MIT License](LICENSE). Third-party dependencies and fixtures retain their own licenses; see
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for attribution and fixture provenance.
 
 ## Acknowledgments
 

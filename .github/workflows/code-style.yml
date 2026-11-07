@@ -3,17 +3,28 @@ name: Code Style
 on:
   push:
     branches: [ main, master, develop ]
+    tags: [ "[0-9]*", "v[0-9]*" ]
   pull_request:
-    branches: [ main, master, develop ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   pint:
     name: Laravel Pint (PHP 8.5)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -21,15 +32,19 @@ jobs:
           php-version: '8.5'
           extensions: mbstring, xml, ctype, json
           tools: composer:v2
+          coverage: none
 
-      - name: Cache Composer packages
-        id: composer-cache
-        uses: actions/cache@v3
+      - name: Locate Composer download cache
+        id: composer-cache-dir
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Composer downloads
+        uses: actions/cache@v6
         with:
-          path: vendor
-          key: ${{ runner.os }}-php-8.5-${{ hashFiles('**/composer.lock') }}
+          path: ${{ steps.composer-cache-dir.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
           restore-keys: |
-            ${{ runner.os }}-php-8.5-
+            ${{ runner.os }}-composer-
 
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress --no-interaction --ignore-platform-req=ext-glfw
