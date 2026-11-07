@@ -197,8 +197,11 @@ final class PpuBusTest extends TestCase
 
         $ppuBus->writeByPpu(0x0800, 0xBB);
 
-        // Multiple reads should return same value.
-        $reads = [$ppuBus->readByPpu(0x0800), $ppuBus->readByPpu(0x0800), $ppuBus->readByPpu(0x0800)];
+        $reads = [
+            $ppuBus->readByPpu(0x0800),
+            $ppuBus->readByPpu(0x0800),
+            $ppuBus->readByPpu(0x0800),
+        ];
 
         $this::assertSame([0xBB, 0xBB, 0xBB], $reads);
     }

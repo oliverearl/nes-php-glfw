@@ -78,7 +78,13 @@ final class RomTest extends TestCase
         $before = $rom->read(1);
         $data[1] = 0xFF;
 
-        $this::assertSame([0x20, 0x20], [$before, $rom->read(1)]);
+        $reads = [
+            $before,
+            $rom->read(1),
+            $rom->read(1),
+        ];
+
+        $this::assertSame([0x20, 0x20, 0x20], $reads);
     }
 
     #[Test]
