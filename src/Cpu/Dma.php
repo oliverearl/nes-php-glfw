@@ -20,9 +20,22 @@ class Dma
     private bool $isProcessing = false;
 
     /**
+     * CPU memory mapping used by a wired system, including RAM mirrors and cartridge space.
+     */
+    private ?Memory $bus = null;
+
+    /**
      * Creates a new DMA controller instance.
      */
     public function __construct(private readonly Ram $ram, private readonly Ppu $ppu) {}
+
+    /**
+     * Connects CPU address decoding after the bus and DMA controller have been constructed.
+     */
+    public function connectBus(Memory $bus): void
+    {
+        $this->bus = $bus;
+    }
 
     /**
      * Checks if a DMA transfer is currently in progress.
@@ -43,7 +56,10 @@ class Dma
         }
 
         for ($i = 0; $i < 0x100; $i++) {
-            $this->ppu->transferSprite($i, $this->ram->read($this->address + $i));
+            $data = $this->bus !== null
+                ? $this->bus->readByCpu($this->address + $i)
+                : $this->ram->read($this->address + $i);
+            $this->ppu->transferSprite($i, $data);
         }
 
         $this->isProcessing = false;
@@ -54,7 +70,7 @@ class Dma
      */
     public function write(int $data): void
     {
-        $this->address = $data << 8;
+        $this->address = ($data & 0xFF) << 8;
         $this->isProcessing = true;
     }
 }

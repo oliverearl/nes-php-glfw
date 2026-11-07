@@ -22,7 +22,9 @@ readonly class CpuBus implements Memory
         private Dma $dma,
         /** Optional cartridge RAM mapped at $6000 through $7FFF. */
         private ?Ram $programRam = null,
-    ) {}
+    ) {
+        $this->dma->connectBus($this);
+    }
 
     /**
      * Reads a byte from the CPU address space.
