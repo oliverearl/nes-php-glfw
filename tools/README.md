@@ -29,6 +29,8 @@ Ensure Composer uses the intended PHP runtime. You can also invoke it explicitly
 "$BENCHMARK_PHP" bin/benchmark.php path/to/rom.nes --render --timing=throughput --json
 ```
 
+The benchmark defaults to 300 measured frames and 30 warm-up frames. `composer benchmark:help` lists all options.
+
 Detailed timing is the default and reports CPU/PPU breakdowns. Throughput timing omits instruction-level timestamps; its
 CPU/PPU fields are `null`. `--render` includes software framebuffer conversion. Checksum timing is reported separately.
 
@@ -69,8 +71,9 @@ editing configuration files. Keep runtime, machine, power settings, workloads, a
 tests or other demanding work during collection.
 
 Captures retain raw samples, timing spread, memory, runtime/INI metadata, source hashes, and output checksums.
-Comparison rejects incompatible environments, changed work counts, and changed rendered output. It flags a 5% increase
-in median frame time by default (`--threshold` changes this). Exit statuses are 0 for within budget, 1 for review, and 2
+Comparison rejects incompatible environments, changed work counts, and changed rendered output. Correctness repairs can intentionally change
+these identities: verify the change independently, record the expected difference, and capture a new baseline before comparing later optimisations.
+The comparison flags a 5% increase in median frame time by default (`--threshold` changes this). Exit statuses are 0 for within budget, 1 for review, and 2
 for invalid or incomparable captures. A warning needs investigation; overlapping timing ranges are reported, and small
 differences may need longer, alternating baseline/candidate runs.
 
@@ -110,4 +113,5 @@ baselines.
 python3 -m unittest discover -s tests/BenchmarkTools -v
 ```
 
-The normal PHPUnit suite covers the PHP benchmark and generated fixtures.
+The normal PHPUnit suite (`composer test`) covers the PHP benchmark and generated fixtures. The Python tests run separately and do not need
+a display or PHP-GLFW. GUI captures are manual diagnostics and require the graphical runtime.
