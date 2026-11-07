@@ -19,6 +19,7 @@ Options:
   --frames=N           Number of measured NES frames. Default: 300.
   --warmup=N           Number of warmup frames excluded from results. Default: 30.
   --max-iterations=N   Safety limit for CPU instructions per frame. Default: 30000.
+  --timing=MODE        detailed (default) or throughput (no instruction timing).
   --render             Include software framebuffer rendering in the benchmark.
   --json               Emit machine-readable JSON.
   --help, -h           Show this help text.
@@ -32,6 +33,15 @@ TEXT;
     public function human(BenchmarkResult $result): string
     {
         $data = $result->toArray();
+        $breakdown = $result->timingMode === BenchmarkOptions::TIMING_DETAILED
+            ? sprintf(
+                "CPU: %.4fs (%.3fms/frame)\nPPU: %.4fs (%.3fms/frame)",
+                $data['cpu_seconds'],
+                $data['avg_cpu_ms_per_frame'],
+                $data['ppu_seconds'],
+                $data['avg_ppu_ms_per_frame'],
+            )
+            : 'CPU/PPU breakdown: not measured';
 
         return sprintf(
             <<<'TEXT'
@@ -39,31 +49,33 @@ Headless NES benchmark
 ROM: %s
 SHA-256: %s
 Frames: %d measured, %d warmup
+Timing: %s
 FPS: %.2f
 FPS excl. checksum: %.2f
 Total: %.4fs (%.4fs excl. checksum)
-CPU: %.4fs (%.3fms/frame)
-PPU: %.4fs (%.3fms/frame)
+Average: %.3fms/frame (%.3fms/frame excl. checksum)
+%s
 Render: %.4fs (%.3fms/rendered frame, %d rendered frames)
 Checksum: %.4fs (%.3fms/rendered frame)
 Iterations/frame: %.0f
 CPU cycles/frame: %.0f
 Peak memory: %d bytes
 Framebuffer checksum: %s
+Framebuffer sequence checksum: %s
 
 TEXT,
             $data['rom_path'],
             $data['rom_sha256'],
             $data['measured_frames'],
             $data['warmup_frames'],
+            $data['timing_mode'],
             $data['nes_frames_per_second'],
             $data['nes_frames_per_second_excluding_checksum'],
             $data['total_seconds'],
             $data['total_seconds_excluding_checksum'],
-            $data['cpu_seconds'],
-            $data['avg_cpu_ms_per_frame'],
-            $data['ppu_seconds'],
-            $data['avg_ppu_ms_per_frame'],
+            $data['avg_total_ms_per_frame'],
+            $data['avg_total_ms_per_frame_excluding_checksum'],
+            $breakdown,
             $data['render_seconds'],
             $data['avg_render_ms_per_frame'],
             $data['rendered_frames'],
@@ -73,6 +85,7 @@ TEXT,
             $data['avg_cpu_cycles_per_frame'],
             $data['peak_memory_bytes'],
             $data['framebuffer_checksum'] ?? 'n/a',
+            $data['framebuffer_sequence_checksum'] ?? 'n/a',
         );
     }
 

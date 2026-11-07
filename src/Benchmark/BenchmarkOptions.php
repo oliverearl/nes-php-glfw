@@ -9,6 +9,16 @@ use InvalidArgumentException;
 class BenchmarkOptions
 {
     /**
+     * Timing mode that measures CPU and PPU execution separately.
+     */
+    public const string TIMING_DETAILED = 'detailed';
+
+    /**
+     * Timing mode that omits instruction-level timestamps.
+     */
+    public const string TIMING_THROUGHPUT = 'throughput';
+
+    /**
      * Default number of measured NES frames.
      */
     private const int DEFAULT_FRAMES = 300;
@@ -44,19 +54,14 @@ class BenchmarkOptions
     public readonly int $maxIterationsPerFrame;
 
     /**
-     * Whether frame data should be converted through the software renderer.
-     */
-    public readonly bool $render;
-
-    /**
-     * Whether output should be emitted as JSON.
-     */
-    public readonly bool $json;
-
-    /**
      * Whether help text was requested.
      */
     public readonly bool $help;
+
+    /**
+     * Timing instrumentation used for benchmark execution.
+     */
+    public readonly string $timingMode;
 
     /**
      * Creates benchmark options.
@@ -66,9 +71,16 @@ class BenchmarkOptions
         int $frames = self::DEFAULT_FRAMES,
         int $warmupFrames = self::DEFAULT_WARMUP_FRAMES,
         int $maxIterationsPerFrame = self::DEFAULT_MAX_ITERATIONS_PER_FRAME,
-        bool $render = false,
-        bool $json = false,
+        /**
+         * Whether frame data should be converted through the software renderer.
+         */
+        public readonly bool $render = false,
+        /**
+         * Whether output should be emitted as JSON.
+         */
+        public readonly bool $json = false,
         bool $help = false,
+        string $timingMode = self::TIMING_DETAILED,
     ) {
         if (! $help && $romPath === '') {
             throw new InvalidArgumentException('A ROM path is required.');
@@ -86,13 +98,16 @@ class BenchmarkOptions
             throw new InvalidArgumentException('Max iterations per frame must be greater than zero.');
         }
 
+        if (! in_array($timingMode, [self::TIMING_DETAILED, self::TIMING_THROUGHPUT], true)) {
+            throw new InvalidArgumentException('Timing mode must be detailed or throughput.');
+        }
+
         $this->romPath = $romPath;
         $this->frames = $frames;
         $this->warmupFrames = $warmupFrames;
         $this->maxIterationsPerFrame = $maxIterationsPerFrame;
-        $this->render = $render;
-        $this->json = $json;
         $this->help = $help;
+        $this->timingMode = $timingMode;
     }
 
     /**
@@ -109,6 +124,7 @@ class BenchmarkOptions
         $render = false;
         $json = false;
         $help = false;
+        $timingMode = self::TIMING_DETAILED;
 
         for ($i = 1, $iMax = count($argv); $i < $iMax; $i++) {
             $arg = $argv[$i];
@@ -125,6 +141,16 @@ class BenchmarkOptions
 
             if ($arg === '--json') {
                 $json = true;
+                continue;
+            }
+
+            if (str_starts_with($arg, '--timing=')) {
+                $timingMode = substr($arg, strlen('--timing='));
+                continue;
+            }
+
+            if ($arg === '--timing') {
+                $timingMode = self::nextValue($argv, ++$i);
                 continue;
             }
 
@@ -169,7 +195,7 @@ class BenchmarkOptions
             $romPath = $arg;
         }
 
-        return new self($romPath, $frames, $warmupFrames, $maxIterationsPerFrame, $render, $json, $help);
+        return new self($romPath, $frames, $warmupFrames, $maxIterationsPerFrame, $render, $json, $help, $timingMode);
     }
 
     /**

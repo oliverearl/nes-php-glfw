@@ -72,11 +72,6 @@ class Gamepad implements Controller
     ];
 
     /**
-     * The input context for reading keyboard/gamepad state.
-     */
-    private readonly InputContextMap $input;
-
-    /**
      * Live button state buffer updated each frame.
      *
      * @var list<bool>
@@ -88,7 +83,7 @@ class Gamepad implements Controller
      *
      * @var list<bool>
      */
-    private array $keyRegisters = [];
+    private array $keyRegisters;
 
     /**
      * Indicates whether the strobe line is currently high.
@@ -105,9 +100,11 @@ class Gamepad implements Controller
      *
      * @throws \VISU\OS\Exception\InputMappingException
      */
-    public function __construct(InputContextMap $input)
-    {
-        $this->input = $input;
+    public function __construct(/**
+     * The input context for reading keyboard/gamepad state.
+     */
+        private readonly InputContextMap $input,
+    ) {
         $this->keyBuffer = array_fill(0, 8, false);
         $this->keyRegisters = $this->keyBuffer;
 

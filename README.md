@@ -82,46 +82,6 @@ only the latest completed NES frame is rendered. This can make wall-clock pacing
 php bin/start.php path/to/rom.nes --drop-frames
 ```
 
-### Profiler
-
-Enable performance debugging to see detailed timing metrics by passing the `--profile` flag:
-
-```bash
-php bin/start.php path/to/rom.nes --profile
-```
-
-This will output performance statistics every second to `stderr`, showing:
-- Average time spent in update/draw cycles
-- CPU, PPU, and rendering breakdown
-- NES frames per second
-- Rendered frames per second
-- Iterations per update
-
-Example debug output:
-```
-[NES Debug] Updates: 28 (avg 35.61ms) | Draws: 3 (avg 0.95ms) | NES frames: 28 | Rendered frames: 3 | Iters/update: 9696
-[NES Debug] Breakdown: CPU 13.80ms | PPU 5.63ms | Render 14.02ms (per rendered frame avg)
-```
-
-### Headless Benchmark
-
-Run the emulator core without VISU/OpenGL to collect repeatable CPU, PPU, and optional software-renderer performance metrics:
-
-```bash
-composer benchmark -- path/to/homebrew-or-test-rom.nes --frames=300 --warmup=30
-```
-
-Use `--render` to include `Renderer::render()` framebuffer conversion time, and `--json` for machine-readable output:
-
-```bash
-composer benchmark -- path/to/homebrew-or-test-rom.nes --frames=300 --warmup=30 --render --json
-```
-
-When rendering is enabled, checksum timing is reported separately from renderer timing. The output also includes checksum-excluded FPS so framebuffer
-verification overhead does not obscure emulator throughput.
-
-The benchmark accepts any local NES ROM path.
-
 ### Controls
 
 - Arrow Keys: D-Pad
@@ -192,10 +152,16 @@ composer test:coverage
 composer phpstan
 
 # Check code style
-composer pint
+composer pint:check
 
-# Run headless benchmark
-composer benchmark -- path/to/homebrew-or-test-rom.nes
+# Preview automated refactoring suggestions
+composer rector
+
+# Apply refactorings, then format with Pint's PER preset
+composer rector:fix
+
+# Check formatting, static analysis, and refactoring suggestions without editing files
+composer quality:check
 ```
 
 ## Development
@@ -204,9 +170,12 @@ This project follows strict code quality standards:
 
 - **PHPStan** for static analysis
 - **Laravel Pint** for code formatting (PER)
+- **Rector** for PHP 8.5 upgrades, dead-code cleanup, type declarations, and PHPUnit improvements
 - **PHPUnit** for comprehensive testing (258 tests, 233,000+ assertions)
 
 Contributor guidance is available in [CONTRIBUTING.md](CONTRIBUTING.md). AI-assisted development guidelines are available in [AGENTS.md](AGENTS.md).
+
+Optional [profiling and benchmarking tools](tools/README.md) are available for performance investigations.
 
 Please do not submit copyrighted commercial ROMs in issues, pull requests, or test fixtures. Use synthetic ROMs, homebrew ROMs, or public test ROMs
 with compatible redistribution terms if you must include ROM files.

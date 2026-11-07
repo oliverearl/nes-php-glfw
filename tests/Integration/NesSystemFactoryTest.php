@@ -24,8 +24,8 @@ final class NesSystemFactoryTest extends TestCase
         $romPath = SyntheticNromRom::writeToTemporaryFile();
 
         try {
-            $cartridge = (new Loader($romPath, debugEnabled: false))->load();
-            $system = (new NesSystemFactory())->create($cartridge);
+            $cartridge = new Loader($romPath, debugEnabled: false)->load();
+            $system = new NesSystemFactory()->create($cartridge);
 
             $this::assertInstanceOf(Cpu::class, $system->cpu);
             $this::assertInstanceOf(Ppu::class, $system->ppu);

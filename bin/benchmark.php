@@ -18,7 +18,7 @@ try {
         exit(0);
     }
 
-    $result = (new BenchmarkRunner())->run($options);
+    $result = new BenchmarkRunner()->run($options);
 
     echo $options->json
         ? $formatter->json($result)

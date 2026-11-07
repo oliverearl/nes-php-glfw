@@ -34,13 +34,17 @@
         "test:coverage": "phpunit --coverage-html=coverage",
         "benchmark": "php bin/benchmark.php",
         "benchmark:help": "php bin/benchmark.php --help",
-        "pint": "php vendor/bin/pint",
+        "pint": "@php vendor/bin/pint",
+        "pint:check": "@php vendor/bin/pint --test",
         "phpstan": "php -d memory_limit=512M vendor/bin/phpstan analyse",
         "phpstan:baseline": "php -d memory_limit=512M vendor/bin/phpstan analyse --generate-baseline",
-        "rector": "rector process --dry-run",
-        "rector:fix": "rector process",
+        "rector": "@php vendor/bin/rector process --dry-run",
+        "rector:fix": [
+            "@php vendor/bin/rector process",
+            "@pint"
+        ],
         "quality:check": [
-            "@pint",
+            "@pint:check",
             "@phpstan",
             "@rector"
         ],

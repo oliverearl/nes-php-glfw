@@ -20,7 +20,7 @@ final class BenchmarkRunnerTest extends TestCase
         $romPath = SyntheticNromRom::writeToTemporaryFile();
 
         try {
-            $result = (new BenchmarkRunner())->run(new BenchmarkOptions($romPath, frames: 2, warmupFrames: 1));
+            $result = new BenchmarkRunner()->run(new BenchmarkOptions($romPath, frames: 2, warmupFrames: 1));
 
             $this::assertSame(2, $result->measuredFrames);
             $this::assertSame(1, $result->warmupFrames);
@@ -41,13 +41,61 @@ final class BenchmarkRunnerTest extends TestCase
         $romPath = SyntheticNromRom::writeToTemporaryFile();
 
         try {
-            $result = (new BenchmarkRunner())->run(new BenchmarkOptions($romPath, frames: 1, warmupFrames: 0, render: true));
+            $result = new BenchmarkRunner()->run(new BenchmarkOptions($romPath, frames: 1, warmupFrames: 0, render: true));
 
             $this::assertSame(1, $result->renderedFrames);
             $this::assertGreaterThanOrEqual(0, $result->renderNanoseconds);
             $this::assertGreaterThanOrEqual(0, $result->checksumNanoseconds);
             $this::assertGreaterThanOrEqual($result->framesPerSecond(), $result->framesPerSecondExcludingChecksum());
             $this::assertNotNull($result->framebufferChecksum);
+        } finally {
+            unlink($romPath);
+        }
+    }
+
+    #[Test]
+    public function it_preserves_execution_and_output_with_throughput_timing(): void
+    {
+        $romPath = SyntheticNromRom::writeToTemporaryFile();
+
+        try {
+            $runner = new BenchmarkRunner();
+            $detailed = $runner->run(new BenchmarkOptions($romPath, frames: 3, warmupFrames: 1, render: true));
+            $throughput = $runner->run(new BenchmarkOptions($romPath, frames: 3, warmupFrames: 1, render: true, timingMode: BenchmarkOptions::TIMING_THROUGHPUT));
+
+            $this::assertSame($detailed->iterations, $throughput->iterations);
+            $this::assertSame($detailed->cpuCycles, $throughput->cpuCycles);
+            $this::assertSame($detailed->framebufferChecksum, $throughput->framebufferChecksum);
+            $this::assertSame($detailed->framebufferSequenceChecksum, $throughput->framebufferSequenceChecksum);
+            $checksum = $throughput->framebufferChecksum;
+            $this::assertNotNull($checksum);
+            $this::assertSame(hash('sha256', str_repeat($checksum, 3)), $throughput->framebufferSequenceChecksum);
+            $this::assertSame(3, $throughput->renderedFrames);
+            $this::assertGreaterThan(0, $throughput->totalNanoseconds);
+            $this::assertSame(0, $throughput->cpuNanoseconds);
+            $this::assertSame(0, $throughput->ppuNanoseconds);
+            $this::assertSame('throughput', $throughput->toArray()['timing_mode']);
+            $this::assertNull($throughput->toArray()['cpu_seconds']);
+            $this::assertNull($throughput->toArray()['ppu_seconds']);
+        } finally {
+            unlink($romPath);
+        }
+    }
+
+    #[Test]
+    public function it_runs_throughput_timing_without_rendering(): void
+    {
+        $romPath = SyntheticNromRom::writeToTemporaryFile();
+
+        try {
+            $result = new BenchmarkRunner()->run(new BenchmarkOptions($romPath, frames: 2, warmupFrames: 0, timingMode: BenchmarkOptions::TIMING_THROUGHPUT));
+
+            $this::assertSame(2, $result->measuredFrames);
+            $this::assertSame(0, $result->renderedFrames);
+            $this::assertNull($result->framebufferSequenceChecksum);
+            $this::assertSame(0, $result->checksumNanoseconds);
+            $this::assertNull($result->toArray()['avg_cpu_ms_per_frame']);
+            $this::assertNull($result->toArray()['avg_ppu_ms_per_frame']);
         } finally {
             unlink($romPath);
         }
