@@ -44,6 +44,14 @@ class Palette
     }
 
     /**
+     * Reads one six-bit palette entry using only the hardware address aliases.
+     */
+    public function readByte(int $address): int
+    {
+        return $this->paletteRam->read($this->getPaletteAddress($address)) & 0x3F;
+    }
+
+    /**
      * Writes a value to the palette at the specified address.
      */
     public function write(int $addr, int $data): void

@@ -4,10 +4,63 @@ declare(strict_types=1);
 
 namespace Tests\Integration;
 
+use Iterator;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 final class PpuBusIntegrationTest extends IntegrationTestCase
 {
+    /**
+     * Checks rendering and PPUDATA access select the same physical nametable.
+     */
+    #[Test]
+    #[DataProvider('renderedNametableModes')]
+    public function it_renders_the_same_mirrored_nametable_that_the_data_port_reads(bool $horizontal, int $table, int $expectedPattern): void
+    {
+        [$ppu, $ppuBus] = $this->createPpuSystem(horizontalMirror: $horizontal);
+        $ppuBus->writeByPpu(0x10, 0x80);
+        $ppuBus->writeByPpu(0x28, 0x80);
+        $ppuBus->writeByPpu(0x30, 0x80);
+        $ppuBus->writeByPpu(0x38, 0x80);
+
+        foreach ([0x2020, 0x2420, 0x2820, 0x2C20] as $index => $address) {
+            $ppu->write(6, $address >> 8);
+            $ppu->write(6, $address & 0xFF);
+            $ppu->write(7, $index);
+        }
+
+        $ppu->write(0, $table);
+        $ppu->write(1, 0x08);
+        $frame = $ppu->run(341 * 262);
+
+        $this::assertNotFalse($frame);
+        $this::assertNotNull($frame->background);
+        $this::assertSame($expectedPattern, $frame->background[0]->pattern[0][0]);
+
+        $address = 0x2020 + $table * 0x400;
+        $ppu->write(6, $address >> 8);
+        $ppu->write(6, $address & 0xFF);
+        $ppu->read(7);
+        $this::assertSame($expectedPattern, $ppu->read(7));
+    }
+
+    /**
+     * Supplies each logical table's final pattern after writes through all aliases.
+     *
+     * @return \Iterator<string, array{bool, int, int}>
+     */
+    public static function renderedNametableModes(): Iterator
+    {
+        yield 'horizontal table zero' => [true, 0, 1];
+        yield 'horizontal table one' => [true, 1, 1];
+        yield 'horizontal table two' => [true, 2, 3];
+        yield 'horizontal table three' => [true, 3, 3];
+        yield 'vertical table zero' => [false, 0, 2];
+        yield 'vertical table one' => [false, 1, 3];
+        yield 'vertical table two' => [false, 2, 2];
+        yield 'vertical table three' => [false, 3, 3];
+    }
+
     #[Test]
     public function it_reads_pattern_table_through_bus(): void
     {

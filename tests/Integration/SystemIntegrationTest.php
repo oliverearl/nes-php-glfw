@@ -35,18 +35,32 @@ final class SystemIntegrationTest extends IntegrationTestCase
         $this::assertInstanceOf(CpuBus::class, $cpuBus);
     }
 
+    /**
+     * Preserves residual PPU clocks while the CPU executes a fixed-duration loop.
+     */
     #[Test]
     public function it_runs_cpu_and_ppu_in_sync(): void
     {
-        [$cpu, $cpuBus, $ram, $programRom, $ppu] = $this->createTestSystem();
-
+        [$cpu, , , , $ppu] = $this->createTestSystem(setupResetVector: true);
         $cpu->reset();
+        $elapsed = 0;
 
-        for ($i = 0; $i < 10; $i++) {
-            $cpuCycles = $cpu->run();
-            $ppu->run($cpuCycles * 3);
+        for ($frame = 1; $frame <= 3; $frame++) {
+            $complete = false;
 
-            $this::assertGreaterThan(0, $cpuCycles);
+            for ($instruction = 0; $instruction < 10000; $instruction++) {
+                $cycles = $cpu->run();
+                $elapsed += $cycles;
+
+                if ($ppu->run($cycles * 3) !== false) {
+                    $complete = true;
+                    break;
+                }
+            }
+
+            $this::assertTrue($complete);
+            $this::assertSame(intdiv($frame * 341 * 262 + 8, 9) * 3, $elapsed);
+            $this::assertSame(0x8000, $cpu->snapshot()->pc);
         }
     }
 
@@ -98,23 +112,38 @@ final class SystemIntegrationTest extends IntegrationTestCase
         $this::assertFalse($dma->isDmaProcessing());
     }
 
+    /**
+     * Executes CPU stores and loads through PPU registers, including OAM address wrap.
+     */
     #[Test]
     public function it_reads_and_writes_ppu_registers_during_execution(): void
     {
-        [$cpu, $cpuBus, , , $ppu] = $this->createTestSystem();
+        $program = [0xA9, 0xFE, 0x8D, 0x03, 0x20,
+            0xA9, 0xA5, 0x8D, 0x04, 0x20,
+            0xA9, 0x5A, 0x8D, 0x04, 0x20,
+            0xA9, 0x11, 0x8D, 0x04, 0x20,
+            0xA9, 0xFF, 0x8D, 0x03, 0x20,
+            0xAD, 0x04, 0x20, 0x8D, 0x00, 0x02];
+        $rom = array_fill(0, 0x8000, 0xEA);
+        foreach ($program as $offset => $byte) {
+            $rom[$offset] = $byte;
+        }
+        $rom[0x7FFC] = 0;
+        $rom[0x7FFD] = 0x80;
+        [$cpu, $bus, $ram] = $this->createTestSystemWithRom($rom);
+        $cpu->reset();
+        $cycles = [];
 
-        $cpuBus->writeByCpu(0x2000, 0x80);
-        $cpuBus->writeByCpu(0x2005, 0x10);
-        $cpuBus->writeByCpu(0x2005, 0x20);
+        for ($instruction = 0; $instruction < 12; $instruction++) {
+            $cycles[] = $cpu->run();
+        }
 
-        $status = $cpuBus->readByCpu(0x2002);
+        $this::assertSame([2, 4, 2, 4, 2, 4, 2, 4, 2, 4, 4, 4], $cycles);
+        $this::assertSame(0x5A, $ram->read(0x0200));
 
-        $this::assertGreaterThanOrEqual(0, $status);
-        $this::assertLessThanOrEqual(255, $status);
-
-        for ($i = 0; $i < 10; $i++) {
-            $cpuCycles = $cpu->run();
-            $ppu->run($cpuCycles * 3);
+        foreach ([0xFE => 0xA5, 0xFF => 0x5A, 0 => 0x11] as $address => $expected) {
+            $bus->writeByCpu(0x2003, $address);
+            $this::assertSame($expected, $bus->readByCpu(0x2004));
         }
     }
 

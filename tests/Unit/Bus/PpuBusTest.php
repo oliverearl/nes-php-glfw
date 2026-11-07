@@ -13,6 +13,27 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(PpuBus::class)]
 final class PpuBusTest extends TestCase
 {
+    /**
+     * Checks cartridge CHR-ROM retains its contents when the PPU attempts a write.
+     */
+    #[Test]
+    public function it_ignores_writes_to_read_only_character_memory(): void
+    {
+        $characterRom = new Ram(0x2000);
+        $characterRom->write(0, 0x11);
+        $characterRom->write(0x1000, 0x22);
+        $characterRom->write(0x1FFF, 0x33);
+        $ppuBus = new PpuBus($characterRom, readOnly: true);
+
+        foreach ([0, 0x1000, 0x1FFF] as $address) {
+            $ppuBus->writeByPpu($address, 0xFF);
+        }
+
+        $this::assertSame(0x11, $ppuBus->readByPpu(0));
+        $this::assertSame(0x22, $ppuBus->readByPpu(0x1000));
+        $this::assertSame(0x33, $ppuBus->readByPpu(0x1FFF));
+    }
+
     #[Test]
     public function it_reads_from_character_ram(): void
     {

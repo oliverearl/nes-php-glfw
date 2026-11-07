@@ -14,6 +14,42 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Palette::class)]
 final class PaletteTest extends TestCase
 {
+    /**
+     * Checks CPU palette reads preserve independently writable background entries.
+     */
+    #[Test]
+    public function it_reads_individual_palette_bytes_with_hardware_aliases(): void
+    {
+        $palette = new Palette();
+        $palette->write(0, 0x11);
+        $palette->write(4, 0x23);
+        $palette->write(8, 0x35);
+        $palette->write(0x0C, 0x3A);
+
+        foreach ([0, 0x10, 0x20] as $address) {
+            $this::assertSame(0x11, $palette->readByte($address));
+        }
+
+        foreach ([4, 0x14, 0x24] as $address) {
+            $this::assertSame(0x23, $palette->readByte($address));
+        }
+
+        $this::assertSame(0x35, $palette->readByte(0x18));
+        $this::assertSame(0x3A, $palette->readByte(0x1C));
+    }
+
+    /**
+     * Checks the palette data port only supplies six color bits.
+     */
+    #[Test]
+    public function it_reads_only_six_palette_data_bits(): void
+    {
+        $palette = new Palette();
+        $palette->write(1, 0xFF);
+
+        $this::assertSame(0x3F, $palette->readByte(1));
+    }
+
     #[Test]
     public function it_initializes_with_zeros(): void
     {

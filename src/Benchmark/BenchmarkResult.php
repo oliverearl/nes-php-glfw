@@ -55,7 +55,7 @@ class BenchmarkResult
          */
         public readonly int $checksumNanoseconds,
         /**
-         * Total CPU instructions executed during measured frames.
+         * Total CPU execution steps, including interrupt entries, during measured frames.
          */
         public readonly int $iterations,
         /**

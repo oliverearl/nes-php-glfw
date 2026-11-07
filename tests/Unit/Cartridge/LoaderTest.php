@@ -6,6 +6,7 @@ namespace Tests\Unit\Cartridge;
 
 use App\Cartridge\Loader;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
@@ -219,6 +220,69 @@ final class LoaderTest extends TestCase
 
             unlink($this->testRomPath);
         }
+    }
+
+    /**
+     * Rejects malformed headers, truncated payloads, and unsupported boards.
+     */
+    #[Test]
+    #[DataProvider('invalidHeaders')]
+    public function it_rejects_malformed_or_unsupported_cartridges(string $contents, string $message): void
+    {
+        file_put_contents($this->testRomPath, $contents);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage($message);
+
+        new Loader($this->testRomPath, debugEnabled: false)->load();
+    }
+
+    /**
+     * Supplies malformed files and boards that the current machine cannot map.
+     *
+     * @return iterable<string, array{string, string}>
+     */
+    public static function invalidHeaders(): iterable
+    {
+        $header = "NES\x1A\x01\x01" . str_repeat("\x00", 10);
+        $payload = str_repeat("\x00", 0x6000);
+
+        yield 'short header' => ['NES', 'Invalid NES file format'];
+        yield 'wrong fourth magic byte' => ["NES\x00" . substr($header, 4) . $payload, 'Invalid NES file format'];
+        yield 'missing PRG and CHR' => [$header, 'Truncated NES payload'];
+        yield 'partial CHR' => [$header . substr($payload, 0, -1), 'Truncated NES payload'];
+
+        $mapper = $header;
+        $mapper[6] = "\x10";
+        yield 'mapper one' => [$mapper . $payload, 'Unsupported mapper: 1'];
+
+        $nes2 = $header;
+        $nes2[7] = "\x08";
+        yield 'NES 2.0' => [$nes2 . $payload, 'Unsupported NES header'];
+
+        $fourScreen = $header;
+        $fourScreen[6] = "\x08";
+        yield 'four screen' => [$fourScreen . $payload, 'Unsupported four-screen'];
+    }
+
+    /**
+     * Keeps trainer bytes out of ROM while retaining their load destination metadata.
+     */
+    #[Test]
+    public function it_skips_the_trainer_and_retains_program_ram_metadata(): void
+    {
+        $header = "NES\x1A\x01\x01\x04\x00\x01" . str_repeat("\x00", 7);
+        file_put_contents($this->testRomPath, $header . str_repeat("\xAB", 512)
+            . str_repeat("\x42", 0x4000) . str_repeat("\x33", 0x2000));
+
+        $cartridge = new Loader($this->testRomPath, debugEnabled: false)->load();
+
+        $this::assertSame(0, $cartridge->mapper);
+        $this::assertSame(0x2000, $cartridge->programRamSize);
+        $this::assertSame(array_fill(0, 512, 0xAB), $cartridge->trainer);
+        $this::assertSame(0x42, $cartridge->programRom[0]);
+        $this::assertSame(0x42, $cartridge->programRom[0x3FFF]);
+        $this::assertSame(0x33, $cartridge->characterRom[0]);
     }
 
     #[Test]

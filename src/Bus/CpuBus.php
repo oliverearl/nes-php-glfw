@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace App\Bus;
 
 use App\Cpu\Dma;
+use App\Cpu\Memory;
 use App\Graphics\Ppu;
 use App\Input\Controller;
 
-readonly class CpuBus
+readonly class CpuBus implements Memory
 {
     /**
      * Creates a new CPU bus instance with all required components.
@@ -19,7 +20,11 @@ readonly class CpuBus
         private Ppu $ppu,
         private Controller $gamepad,
         private Dma $dma,
-    ) {}
+        /** Optional cartridge RAM mapped at $6000 through $7FFF. */
+        private ?Ram $programRam = null,
+    ) {
+        $this->dma->connectBus($this);
+    }
 
     /**
      * Reads a byte from the CPU address space.
@@ -40,6 +45,10 @@ readonly class CpuBus
 
         if ($address === 0x4016) {
             return (int) $this->gamepad->read();
+        }
+
+        if ($address >= 0x6000 && $address < 0x8000 && $this->programRam instanceof Ram) {
+            return $this->programRam->read($address - 0x6000);
         }
 
         if ($address >= 0xC000) {
@@ -75,6 +84,8 @@ readonly class CpuBus
                 $this->gamepad->write($data);
             }
             // Writes to APU and other unmapped I/O registers are ignored.
+        } elseif ($address >= 0x6000 && $address < 0x8000 && $this->programRam instanceof Ram) {
+            $this->programRam->write($address - 0x6000, $data & 0xFF);
         }
 
         // Ignore writes to other unmapped addresses.

@@ -12,6 +12,38 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Interrupts::class)]
 final class InterruptsTest extends TestCase
 {
+    /**
+     * Combines independent device levels until the final source is released.
+     */
+    #[Test]
+    public function it_keeps_irq_asserted_until_every_device_has_acknowledged_its_source(): void
+    {
+        $interrupts = new Interrupts();
+        $interrupts->assertIrq('apu-frame');
+        $interrupts->assertIrq('dmc');
+        $interrupts->deassertIrq('apu-frame');
+
+        $this::assertTrue($interrupts->isIrqAsserted());
+        $interrupts->deassertIrq('dmc');
+        $this::assertFalse($interrupts->isIrqAsserted());
+    }
+
+    /**
+     * Keeps named device interrupts active when the external source is released.
+     */
+    #[Test]
+    public function it_does_not_clear_named_sources_when_external_irq_is_released(): void
+    {
+        $interrupts = new Interrupts();
+        $interrupts->assertIrq('mapper');
+        $interrupts->assertIrq();
+        $interrupts->deassertIrq();
+
+        $this::assertTrue($interrupts->isIrqAsserted());
+        $interrupts->deassertIrq('mapper');
+        $this::assertFalse($interrupts->isIrqAsserted());
+    }
+
     #[Test]
     public function it_initializes_with_no_interrupts(): void
     {

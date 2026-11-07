@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Cpu;
 
-use App\Bus\CpuBus;
 use App\Cpu\Enums\Addressing;
 use App\Cpu\Objects\OpcodeProps;
 use App\Cpu\Objects\PayloadWithAdditionalCycle;
 use App\Cpu\Objects\Registers;
+use App\Cpu\Objects\Status;
 use RuntimeException;
 
 class Cpu
@@ -20,20 +20,20 @@ class Cpu
      */
     private const array CYCLES = [
         7, 6, 2, 8, 3, 3, 5, 5, 3, 2, 2, 2, 4, 4, 6, 6,
-        2, 5, 2, 8, 4, 4, 6, 6, 2, 4, 2, 7, 4, 4, 6, 7,
+        2, 5, 2, 8, 4, 4, 6, 6, 2, 4, 2, 7, 4, 4, 7, 7,
         6, 6, 2, 8, 3, 3, 5, 5, 4, 2, 2, 2, 4, 4, 6, 6,
-        2, 5, 2, 8, 4, 4, 6, 6, 2, 4, 2, 7, 4, 4, 6, 7,
+        2, 5, 2, 8, 4, 4, 6, 6, 2, 4, 2, 7, 4, 4, 7, 7,
         6, 6, 2, 8, 3, 3, 5, 5, 3, 2, 2, 2, 3, 4, 6, 6,
-        2, 5, 2, 8, 4, 4, 6, 6, 2, 4, 2, 7, 4, 4, 6, 7,
+        2, 5, 2, 8, 4, 4, 6, 6, 2, 4, 2, 7, 4, 4, 7, 7,
         6, 6, 2, 8, 3, 3, 5, 5, 4, 2, 2, 2, 5, 4, 6, 6,
-        2, 5, 2, 8, 4, 4, 6, 6, 2, 4, 2, 7, 4, 4, 6, 7,
+        2, 5, 2, 8, 4, 4, 6, 6, 2, 4, 2, 7, 4, 4, 7, 7,
         2, 6, 2, 6, 3, 3, 3, 3, 2, 2, 2, 2, 4, 4, 4, 4,
-        2, 6, 2, 6, 4, 4, 4, 4, 2, 4, 2, 5, 5, 4, 5, 5,
+        2, 6, 2, 6, 4, 4, 4, 4, 2, 5, 2, 5, 5, 5, 5, 5,
         2, 6, 2, 6, 3, 3, 3, 3, 2, 2, 2, 2, 4, 4, 4, 4,
         2, 5, 2, 5, 4, 4, 4, 4, 2, 4, 2, 4, 4, 4, 4, 4,
         2, 6, 2, 8, 3, 3, 5, 5, 2, 2, 2, 2, 4, 4, 6, 6,
         2, 5, 2, 8, 4, 4, 6, 6, 2, 4, 2, 7, 4, 4, 7, 7,
-        2, 6, 3, 8, 3, 3, 5, 5, 2, 2, 2, 2, 4, 4, 6, 6,
+        2, 6, 2, 8, 3, 3, 5, 5, 2, 2, 2, 2, 4, 4, 6, 6,
         2, 5, 2, 8, 4, 4, 6, 6, 2, 4, 2, 7, 4, 4, 7, 7,
     ];
 
@@ -58,6 +58,11 @@ class Cpu
     private bool $hasBranched = false;
 
     /**
+     * Pre-instruction I flag used by the IRQ poll after CLI, SEI, or PLP.
+     */
+    private ?bool $irqMaskForNextPoll = null;
+
+    /**
      * Map of opcodes to their properties.
      *
      * @var array<int, OpcodeProps>
@@ -67,7 +72,7 @@ class Cpu
     /**
      * Creates a new CPU instance and initializes the opcode table.
      */
-    public function __construct(private readonly CpuBus $bus, private readonly Interrupts $interrupts)
+    public function __construct(private readonly Memory $bus, private readonly Interrupts $interrupts)
     {
         $this->registers = Registers::getDefault();
 
@@ -81,18 +86,25 @@ class Cpu
     }
 
     /**
-     * Executes a single CPU instruction and returns the number of cycles consumed.
+     * Executes one instruction or pending interrupt entry and returns elapsed cycles.
      *
      * @throws \RuntimeException
      */
     public function run(): int
     {
+        $interruptDisabled = $this->irqMaskForNextPoll ?? $this->registers->p->interrupt;
+        $this->irqMaskForNextPoll = null;
+
         if ($this->interrupts->isNmiAsserted()) {
             $this->processNmi();
+
+            return 7;
         }
 
-        if ($this->interrupts->isIrqAsserted()) {
+        if ($this->interrupts->isIrqAsserted() && ! $interruptDisabled) {
             $this->processIrq();
+
+            return 7;
         }
 
         $opcode = $this->fetch($this->registers->pc);
@@ -108,8 +120,15 @@ class Cpu
         $ocp = $this->opcodeList[$opcode];
         $data = $this->getPayloadWithAdditionalCycle($ocp->mode);
         $this->execInstruction($ocp->baseName, $data->payload, $ocp->mode);
+        $this->registers->pc &= 0xFFFF;
 
-        return $ocp->cycle + $data->additionalCycle + ($this->hasBranched ? 1 : 0);
+        if ($ocp->mode === Addressing::Relative) {
+            return $ocp->cycle + ($this->hasBranched ? 1 + $data->additionalCycle : 0);
+        }
+
+        $hasReadPenalty = in_array($ocp->baseName, ['LDA', 'LDX', 'LDY', 'LAX', 'ADC', 'SBC', 'AND', 'ORA', 'EOR', 'CMP', 'NOP'], true);
+
+        return $ocp->cycle + ($hasReadPenalty ? $data->additionalCycle : 0);
     }
 
     /**
@@ -117,8 +136,55 @@ class Cpu
      */
     public function reset(): void
     {
+        $this->irqMaskForNextPoll = null;
         $this->registers = Registers::getDefault();
         $this->registers->pc = $this->read(0xFFFC, self::READ_WORD);
+    }
+
+    /**
+     * Returns a detached register snapshot for diagnostics and validation.
+     */
+    public function snapshot(): CpuState
+    {
+        $p = $this->registers->p;
+        $status = 0x20 | ((int) $p->negative << 7) | ((int) $p->overflow << 6)
+            | ((int) $p->decimalMode << 3) | ((int) $p->interrupt << 2)
+            | ((int) $p->zero << 1) | (int) $p->carry;
+
+        return new CpuState(
+            $this->registers->a,
+            $this->registers->x,
+            $this->registers->y,
+            $status,
+            $this->registers->sp & 0xFF,
+            $this->registers->pc,
+        );
+    }
+
+    /**
+     * Restores a register snapshot for controlled execution and diagnostics.
+     */
+    public function restoreState(CpuState $state): void
+    {
+        $this->registers = new Registers(
+            $state->a & 0xFF,
+            $state->x & 0xFF,
+            $state->y & 0xFF,
+            new Status(
+                (bool) ($state->p & 0x80),
+                (bool) ($state->p & 0x40),
+                true,
+                false,
+                (bool) ($state->p & 0x08),
+                (bool) ($state->p & 0x04),
+                (bool) ($state->p & 0x02),
+                (bool) ($state->p & 0x01),
+            ),
+            $state->sp & 0xFF,
+            $state->pc & 0xFFFF,
+        );
+        $this->hasBranched = false;
+        $this->irqMaskForNextPoll = null;
     }
 
     /**
@@ -126,7 +192,7 @@ class Cpu
      */
     private function fetch(int $address, int $size = self::READ_BYTE): int
     {
-        $this->registers->pc += ($size === self::READ_BYTE) ? 1 : 2;
+        $this->registers->pc = ($this->registers->pc + $size) & 0xFFFF;
 
         return $this->read($address, $size);
     }
@@ -139,7 +205,7 @@ class Cpu
         $address &= 0xFFFF;
 
         return $size === self::READ_WORD
-            ? ($this->bus->readByCpu($address) | $this->bus->readByCpu($address + 1) << 8)
+            ? ($this->bus->readByCpu($address) | $this->bus->readByCpu(($address + 1) & 0xFFFF) << 8)
             : $this->bus->readByCpu($address);
     }
 
@@ -148,7 +214,18 @@ class Cpu
      */
     private function write(int $address, int $data): void
     {
-        $this->bus->writeByCpu($address, $data);
+        $this->bus->writeByCpu($address & 0xFFFF, $data & 0xFF);
+    }
+
+    /**
+     * Reads an NMOS modify operand and performs the original-value dummy write.
+     */
+    private function readForModify(int $address): int
+    {
+        $data = $this->read($address);
+        $this->write($address, $data);
+
+        return $data;
     }
 
     /**
@@ -157,7 +234,7 @@ class Cpu
     private function push(int $data): void
     {
         $this->write(0x100 | ($this->registers->sp & 0xFF), $data);
-        $this->registers->sp--;
+        $this->registers->sp = ($this->registers->sp - 1) & 0xFF;
     }
 
     /**
@@ -165,7 +242,7 @@ class Cpu
      */
     private function pop(): int
     {
-        $this->registers->sp++;
+        $this->registers->sp = ($this->registers->sp + 1) & 0xFF;
 
         return $this->read(0x100 | ($this->registers->sp & 0xFF));
     }
@@ -182,12 +259,12 @@ class Cpu
     /**
      * Pushes the processor status flags onto the stack.
      */
-    private function pushStatus(): void
+    private function pushStatus(bool $break = false): void
     {
         $status = (+$this->registers->p->negative) << 7
             | (+$this->registers->p->overflow) << 6
-            | (+$this->registers->p->reserved) << 5
-            | (+$this->registers->p->breakMode) << 4
+            | 0x20
+            | ((int) $break) << 4
             | (+$this->registers->p->decimalMode) << 3
             | (+$this->registers->p->interrupt) << 2
             | (+$this->registers->p->zero) << 1
@@ -205,8 +282,8 @@ class Cpu
 
         $this->registers->p->negative = (bool) ($status & 0x80);
         $this->registers->p->overflow = (bool) ($status & 0x40);
-        $this->registers->p->reserved = (bool) ($status & 0x20);
-        $this->registers->p->breakMode = (bool) ($status & 0x10);
+        $this->registers->p->reserved = true;
+        $this->registers->p->breakMode = false;
         $this->registers->p->decimalMode = (bool) ($status & 0x08);
         $this->registers->p->interrupt = (bool) ($status & 0x04);
         $this->registers->p->zero = (bool) ($status & 0x02);
@@ -241,11 +318,6 @@ class Cpu
      */
     private function processIrq(): void
     {
-        if ($this->registers->p->interrupt) {
-            return;
-        }
-
-        $this->interrupts->deassertIrq();
         $this->registers->p->breakMode = false;
         $this->push(($this->registers->pc >> 8) & 0xFF);
         $this->push($this->registers->pc & 0xFF);
@@ -311,7 +383,7 @@ class Cpu
 
                 return new PayloadWithAdditionalCycle(
                     payload: $address & 0xFFFF,
-                    additionalCycle: ($address & 0xFF00) !== ($baseAddress & 0xFF00) ? 1 : 0,
+                    additionalCycle: 0,
                 );
             case Addressing::PostIndexedIndirect:
                 $payload = $this->fetch($this->registers->pc);
@@ -384,7 +456,7 @@ class Cpu
                 $this->registers->p->zero = !$this->registers->a;
                 break;
             case 'TXS':
-                $this->registers->sp = $this->registers->x + 0x0100;
+                $this->registers->sp = $this->registers->x;
                 break;
             case 'TYA':
                 $this->registers->a = $this->registers->y;
@@ -417,7 +489,7 @@ class Cpu
                     $this->registers->p->zero = !$this->registers->a;
                     $this->registers->p->negative = (bool) ($this->registers->a & 0x80);
                 } else {
-                    $data = $this->read($payload);
+                    $data = $this->readForModify($payload);
                     $this->registers->p->carry = (bool) ($data & 0x80);
                     $shifted = ($data << 1) & 0xFF;
                     $this->write($payload, $shifted);
@@ -453,7 +525,7 @@ class Cpu
                 $this->registers->p->zero = !($compared & 0xff);
                 break;
             case 'DEC':
-                $data = ($this->read($payload) - 1) & 0xFF;
+                $data = ($this->readForModify($payload) - 1) & 0xFF;
                 $this->registers->p->negative = (bool) ($data & 0x80);
                 $this->registers->p->zero = !$data;
                 $this->write($payload, $data);
@@ -476,7 +548,7 @@ class Cpu
                 $this->registers->a = $operated & 0xFF;
                 break;
             case 'INC':
-                $data = ($this->read($payload) + 1) & 0xFF;
+                $data = ($this->readForModify($payload) + 1) & 0xFF;
                 $this->registers->p->negative = (bool) ($data & 0x80);
                 $this->registers->p->zero = !$data;
                 $this->write($payload, $data);
@@ -498,7 +570,7 @@ class Cpu
                     $this->registers->a = $acc >> 1;
                     $this->registers->p->zero = !$this->registers->a;
                 } else {
-                    $data = $this->read($payload);
+                    $data = $this->readForModify($payload);
                     $this->registers->p->carry = (bool) ($data & 0x01);
                     $this->registers->p->zero = !($data >> 1);
                     $this->write($payload, $data >> 1);
@@ -520,7 +592,7 @@ class Cpu
                     $this->registers->p->zero = !$this->registers->a;
                     $this->registers->p->negative = (bool) ($this->registers->a & 0x80);
                 } else {
-                    $data = $this->read($payload);
+                    $data = $this->readForModify($payload);
                     $writeData = ($data << 1 | ($this->registers->p->carry ? 0x01 : 0x00)) & 0xFF;
                     $this->write($payload, $writeData);
                     $this->registers->p->carry = (bool) ($data & 0x80);
@@ -536,7 +608,7 @@ class Cpu
                     $this->registers->p->zero = !$this->registers->a;
                     $this->registers->p->negative = (bool) ($this->registers->a & 0x80);
                 } else {
-                    $data = $this->read($payload);
+                    $data = $this->readForModify($payload);
                     $writeData = $data >> 1 | ($this->registers->p->carry ? 0x80 : 0x00);
                     $this->write($payload, $writeData);
                     $this->registers->p->carry = (bool) ($data & 0x01);
@@ -559,8 +631,7 @@ class Cpu
                 $this->push($this->registers->a);
                 break;
             case 'PHP':
-                $this->registers->p->breakMode = true;
-                $this->pushStatus();
+                $this->pushStatus(true);
                 break;
             case 'PLA':
                 $this->registers->a = $this->pop();
@@ -568,6 +639,7 @@ class Cpu
                 $this->registers->p->zero = !$this->registers->a;
                 break;
             case 'PLP':
+                $this->irqMaskForNextPoll = $this->registers->p->interrupt;
                 $this->popStatus();
                 $this->registers->p->reserved = true;
                 break;
@@ -636,6 +708,7 @@ class Cpu
                 $this->registers->p->carry = false;
                 break;
             case 'CLI':
+                $this->irqMaskForNextPoll = $this->registers->p->interrupt;
                 $this->registers->p->interrupt = false;
                 break;
             case 'CLV':
@@ -645,26 +718,24 @@ class Cpu
                 $this->registers->p->carry = true;
                 break;
             case 'SEI':
+                $this->irqMaskForNextPoll = $this->registers->p->interrupt;
                 $this->registers->p->interrupt = true;
                 break;
             case 'SED':
                 $this->registers->p->decimalMode = true;
                 break;
             case 'BRK':
-                $interrupt = $this->registers->p->interrupt;
-                $this->registers->pc++;
+                $this->registers->pc = ($this->registers->pc + 1) & 0xFFFF;
                 $this->push(($this->registers->pc >> 8) & 0xFF);
                 $this->push($this->registers->pc & 0xFF);
-                $this->registers->p->breakMode = true;
-                $this->pushStatus();
+                $this->pushStatus(true);
                 $this->registers->p->interrupt = true;
-                // Ignore interrupt when already set.
-                if (!$interrupt) {
-                    $this->registers->pc = $this->read(0xFFFE, self::READ_WORD);
-                }
-                $this->registers->pc--;
+                $this->registers->pc = $this->read(0xFFFE, self::READ_WORD);
                 break;
             case 'NOP':
+                if ($mode !== Addressing::Implied && $mode !== Addressing::Immediate) {
+                    $this->read($payload);
+                }
                 break;
             case 'NOPD':
                 $this->registers->pc++;
@@ -682,15 +753,16 @@ class Cpu
                 $this->write($payload, $operated);
                 break;
             case 'DCP':
-                $operated = ($this->read($payload) - 1) & 0xFF;
+                $operated = ($this->readForModify($payload) - 1) & 0xFF;
+                $this->registers->p->carry = $this->registers->a >= $operated;
                 $this->registers->p->negative = (bool) ((($this->registers->a - $operated) & 0x1FF) & 0x80);
                 $this->registers->p->zero = !(($this->registers->a - $operated) & 0x1FF);
                 $this->write($payload, $operated);
                 break;
             case 'ISB':
-                $data = ($this->read($payload) + 1) & 0xFF;
+                $data = ($this->readForModify($payload) + 1) & 0xFF;
                 $operated = (~$data & 0xFF) + $this->registers->a + $this->registers->p->carry;
-                $overflow = (!((($this->registers->a ^ $data) & 0x80) !== 0)
+                $overflow = (((($this->registers->a ^ $data) & 0x80) !== 0)
                     && ((($this->registers->a ^ $operated) & 0x80)) !== 0);
                 $this->registers->p->overflow = $overflow;
                 $this->registers->p->carry = $operated > 0xFF;
@@ -700,7 +772,7 @@ class Cpu
                 $this->write($payload, $data);
                 break;
             case 'SLO':
-                $data = $this->read($payload);
+                $data = $this->readForModify($payload);
                 $this->registers->p->carry = (bool) ($data & 0x80);
                 $data = ($data << 1) & 0xFF;
                 $this->registers->a |= $data;
@@ -709,7 +781,7 @@ class Cpu
                 $this->write($payload, $data);
                 break;
             case 'RLA':
-                $data = ($this->read($payload) << 1) + $this->registers->p->carry;
+                $data = ($this->readForModify($payload) << 1) + $this->registers->p->carry;
                 $this->registers->p->carry = (bool) ($data & 0x100);
                 $this->registers->a = ($data & $this->registers->a) & 0xFF;
                 $this->registers->p->negative = (bool) ($this->registers->a & 0x80);
@@ -717,7 +789,7 @@ class Cpu
                 $this->write($payload, $data);
                 break;
             case 'SRE':
-                $data = $this->read($payload);
+                $data = $this->readForModify($payload);
                 $this->registers->p->carry = (bool) ($data & 0x01);
                 $data >>= 1;
                 $this->registers->a ^= $data;
@@ -726,7 +798,7 @@ class Cpu
                 $this->write($payload, $data);
                 break;
             case 'RRA':
-                $data = $this->read($payload);
+                $data = $this->readForModify($payload);
                 $carry = (bool) ($data & 0x01);
                 $data = ($data >> 1) | ($this->registers->p->carry ? 0x80 : 0x00);
                 $operated = $data + $this->registers->a + $carry;
@@ -925,28 +997,28 @@ class Cpu
             'D2' => new OpcodeProps('NOP', Addressing::Implied, self::CYCLES[0xD2]),
             'F2' => new OpcodeProps('NOP', Addressing::Implied, self::CYCLES[0xF2]),
 
-            '80' => new OpcodeProps('NOPD', Addressing::Implied, self::CYCLES[0x80]),
-            '82' => new OpcodeProps('NOPD', Addressing::Implied, self::CYCLES[0x82]),
-            '89' => new OpcodeProps('NOPD', Addressing::Implied, self::CYCLES[0x89]),
-            'C2' => new OpcodeProps('NOPD', Addressing::Implied, self::CYCLES[0xC2]),
-            'E2' => new OpcodeProps('NOPD', Addressing::Implied, self::CYCLES[0xE2]),
-            '04' => new OpcodeProps('NOPD', Addressing::Implied, self::CYCLES[0x04]),
-            '44' => new OpcodeProps('NOPD', Addressing::Implied, self::CYCLES[0x44]),
-            '64' => new OpcodeProps('NOPD', Addressing::Implied, self::CYCLES[0x64]),
-            '14' => new OpcodeProps('NOPD', Addressing::Implied, self::CYCLES[0x14]),
-            '34' => new OpcodeProps('NOPD', Addressing::Implied, self::CYCLES[0x34]),
-            '54' => new OpcodeProps('NOPD', Addressing::Implied, self::CYCLES[0x54]),
-            '74' => new OpcodeProps('NOPD', Addressing::Implied, self::CYCLES[0x74]),
-            'D4' => new OpcodeProps('NOPD', Addressing::Implied, self::CYCLES[0xD4]),
-            'F4' => new OpcodeProps('NOPD', Addressing::Implied, self::CYCLES[0xF4]),
+            '80' => new OpcodeProps('NOP', Addressing::Immediate, self::CYCLES[0x80]),
+            '82' => new OpcodeProps('NOP', Addressing::Immediate, self::CYCLES[0x82]),
+            '89' => new OpcodeProps('NOP', Addressing::Immediate, self::CYCLES[0x89]),
+            'C2' => new OpcodeProps('NOP', Addressing::Immediate, self::CYCLES[0xC2]),
+            'E2' => new OpcodeProps('NOP', Addressing::Immediate, self::CYCLES[0xE2]),
+            '04' => new OpcodeProps('NOP', Addressing::ZeroPage, self::CYCLES[0x04]),
+            '44' => new OpcodeProps('NOP', Addressing::ZeroPage, self::CYCLES[0x44]),
+            '64' => new OpcodeProps('NOP', Addressing::ZeroPage, self::CYCLES[0x64]),
+            '14' => new OpcodeProps('NOP', Addressing::ZeroPageX, self::CYCLES[0x14]),
+            '34' => new OpcodeProps('NOP', Addressing::ZeroPageX, self::CYCLES[0x34]),
+            '54' => new OpcodeProps('NOP', Addressing::ZeroPageX, self::CYCLES[0x54]),
+            '74' => new OpcodeProps('NOP', Addressing::ZeroPageX, self::CYCLES[0x74]),
+            'D4' => new OpcodeProps('NOP', Addressing::ZeroPageX, self::CYCLES[0xD4]),
+            'F4' => new OpcodeProps('NOP', Addressing::ZeroPageX, self::CYCLES[0xF4]),
 
-            '0C' => new OpcodeProps('NOPI', Addressing::Implied, self::CYCLES[0x0C]),
-            '1C' => new OpcodeProps('NOPI', Addressing::Implied, self::CYCLES[0x1C]),
-            '3C' => new OpcodeProps('NOPI', Addressing::Implied, self::CYCLES[0x3C]),
-            '5C' => new OpcodeProps('NOPI', Addressing::Implied, self::CYCLES[0x5C]),
-            '7C' => new OpcodeProps('NOPI', Addressing::Implied, self::CYCLES[0x7C]),
-            'DC' => new OpcodeProps('NOPI', Addressing::Implied, self::CYCLES[0xDC]),
-            'FC' => new OpcodeProps('NOPI', Addressing::Implied, self::CYCLES[0xFC]),
+            '0C' => new OpcodeProps('NOP', Addressing::Absolute, self::CYCLES[0x0C]),
+            '1C' => new OpcodeProps('NOP', Addressing::AbsoluteX, self::CYCLES[0x1C]),
+            '3C' => new OpcodeProps('NOP', Addressing::AbsoluteX, self::CYCLES[0x3C]),
+            '5C' => new OpcodeProps('NOP', Addressing::AbsoluteX, self::CYCLES[0x5C]),
+            '7C' => new OpcodeProps('NOP', Addressing::AbsoluteX, self::CYCLES[0x7C]),
+            'DC' => new OpcodeProps('NOP', Addressing::AbsoluteX, self::CYCLES[0xDC]),
+            'FC' => new OpcodeProps('NOP', Addressing::AbsoluteX, self::CYCLES[0xFC]),
             // LAX.
             'A7' => new OpcodeProps('LAX', Addressing::ZeroPage, self::CYCLES[0xA7]),
             'B7' => new OpcodeProps('LAX', Addressing::ZeroPageY, self::CYCLES[0xB7]),
@@ -966,7 +1038,7 @@ class Cpu
             'D7' => new OpcodeProps('DCP', Addressing::ZeroPageX, self::CYCLES[0xD7]),
             'CF' => new OpcodeProps('DCP', Addressing::Absolute, self::CYCLES[0xCF]),
             'DF' => new OpcodeProps('DCP', Addressing::AbsoluteX, self::CYCLES[0xDF]),
-            'DB' => new OpcodeProps('DCP', Addressing::AbsoluteY, self::CYCLES[0xD8]),
+            'DB' => new OpcodeProps('DCP', Addressing::AbsoluteY, self::CYCLES[0xDB]),
             'C3' => new OpcodeProps('DCP', Addressing::PreIndexedIndirect, self::CYCLES[0xC3]),
             'D3' => new OpcodeProps('DCP', Addressing::PostIndexedIndirect, self::CYCLES[0xD3]),
             // ISB.
@@ -974,7 +1046,7 @@ class Cpu
             'F7' => new OpcodeProps('ISB', Addressing::ZeroPageX, self::CYCLES[0xF7]),
             'EF' => new OpcodeProps('ISB', Addressing::Absolute, self::CYCLES[0xEF]),
             'FF' => new OpcodeProps('ISB', Addressing::AbsoluteX, self::CYCLES[0xFF]),
-            'FB' => new OpcodeProps('ISB', Addressing::AbsoluteY, self::CYCLES[0xF8]),
+            'FB' => new OpcodeProps('ISB', Addressing::AbsoluteY, self::CYCLES[0xFB]),
             'E3' => new OpcodeProps('ISB', Addressing::PreIndexedIndirect, self::CYCLES[0xE3]),
             'F3' => new OpcodeProps('ISB', Addressing::PostIndexedIndirect, self::CYCLES[0xF3]),
             // SLO.

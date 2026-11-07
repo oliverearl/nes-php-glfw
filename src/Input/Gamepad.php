@@ -96,17 +96,22 @@ class Gamepad implements Controller
     private int $index = 0;
 
     /**
-     * Creates a new gamepad instance and binds default keyboard controls.
+     * Creates a controller and binds keyboard controls when a host context is supplied.
      *
      * @throws \VISU\OS\Exception\InputMappingException
      */
-    public function __construct(/**
-     * The input context for reading keyboard/gamepad state.
+    public function __construct(
+        /**
+     * Optional host input context; headless callers supply live state directly.
      */
-        private readonly InputContextMap $input,
+        private readonly ?InputContextMap $input = null,
     ) {
         $this->keyBuffer = array_fill(0, 8, false);
         $this->keyRegisters = $this->keyBuffer;
+
+        if (!$this->input instanceof InputContextMap) {
+            return;
+        }
 
         $actions = new InputActionMap();
 
@@ -122,6 +127,10 @@ class Gamepad implements Controller
      */
     public function fetch(): void
     {
+        if (!$this->input instanceof InputContextMap) {
+            return;
+        }
+
         $this->keyBuffer = [
             $this->input->actions->isButtonDown(self::BUTTON_A),
             $this->input->actions->isButtonDown(self::BUTTON_B),
@@ -132,6 +141,21 @@ class Gamepad implements Controller
             $this->input->actions->isButtonDown(self::BUTTON_LEFT),
             $this->input->actions->isButtonDown(self::BUTTON_RIGHT),
         ];
+    }
+
+    /**
+     * Supplies live input without changing the report already latched by the NES.
+     *
+     * Bits zero through seven represent A, B, Select, Start, Up, Down, Left, Right.
+     * Upper bits are ignored, and a set bit represents a pressed button.
+     */
+    public function setButtonState(int $buttons): void
+    {
+        $buttons &= 0xFF;
+
+        for ($button = 0; $button < 8; $button++) {
+            $this->keyBuffer[$button] = ($buttons & (1 << $button)) !== 0;
+        }
     }
 
     /**

@@ -75,8 +75,11 @@ final class RomTest extends TestCase
         $data = [0x10, 0x20, 0x30];
         $rom = new Rom($data);
 
+        $before = $rom->read(1);
+        $data[1] = 0xFF;
+
         $reads = [
-            $rom->read(1),
+            $before,
             $rom->read(1),
             $rom->read(1),
         ];

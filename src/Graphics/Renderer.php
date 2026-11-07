@@ -72,11 +72,9 @@ class Renderer
     private array $frameBuffer;
 
     /**
-     * Cached background tiles for sprite priority checking.
-     *
-     * @var list<Tile>
+     * One byte per visible background pixel, marking its pattern as opaque or transparent.
      */
-    private array $background = [];
+    private string $backgroundOpacity = '';
 
     /**
      * The palette values used to build the current RGBA cache.
@@ -110,6 +108,7 @@ class Renderer
     {
         $background = $data->background;
         $hasBackground = $background !== null && $background !== [];
+        $this->backgroundOpacity = str_repeat("\0", self::SCREEN_WIDTH * self::SCREEN_HEIGHT);
 
         if (! $this->hasCompleteBackgroundCoverage($background)) {
             $this->clearFrameBuffer();
@@ -119,8 +118,6 @@ class Renderer
 
         if ($hasBackground) {
             $this->renderBackground($background);
-        } else {
-            $this->background = [];
         }
 
         if ($data->sprites !== null && $data->sprites !== []) {
@@ -188,8 +185,8 @@ class Renderer
      */
     private function renderBackground(array $background): void
     {
-        $this->background = $background;
         $frameBuffer = &$this->frameBuffer;
+        $backgroundOpacity = &$this->backgroundOpacity;
         $paletteRgba = $this->paletteRgba;
         $tileColumn = 0;
         $tileTop = 0;
@@ -211,7 +208,9 @@ class Renderer
 
                 $patternRow = $tile->pattern[$i];
                 for ($j = $sourceStartX; $j < $sourceEndX; $j++) {
-                    $colorOffset = $paletteBase + ($patternRow[$j] << 2);
+                    $patternValue = $patternRow[$j];
+                    $colorOffset = $patternValue === 0 ? 0 : $paletteBase + ($patternValue << 2);
+                    $backgroundOpacity[$frameIndex >> 2] = $patternValue === 0 ? "\0" : "\1";
 
                     $frameBuffer[$frameIndex] = $paletteRgba[$colorOffset];
                     $frameBuffer[$frameIndex + 1] = $paletteRgba[$colorOffset + 1];
@@ -239,6 +238,7 @@ class Renderer
     {
         $frameBuffer = &$this->frameBuffer;
         $paletteRgba = $this->paletteRgba;
+        $spritePixels = str_repeat("\0", self::SCREEN_WIDTH * self::SCREEN_HEIGHT);
 
         foreach ($sprites as $sprite) {
             $isVerticalReverse = ($sprite->attribute & 0x80) !== 0;
@@ -274,6 +274,15 @@ class Renderer
                         continue;
                     }
 
+                    $pixelIndex = ($y << 8) + $x;
+
+                    if ($spritePixels[$pixelIndex] !== "\0") {
+                        continue;
+                    }
+
+                    // The first opaque OAM sprite owns the pixel even when hidden behind background.
+                    $spritePixels[$pixelIndex] = "\1";
+
                     if ($isLowPriority && $this->isBackgroundPixelOpaque($x, $y)) {
                         continue;
                     }
@@ -295,12 +304,6 @@ class Renderer
      */
     private function isBackgroundPixelOpaque(int $x, int $y): bool
     {
-        $backgroundIndex = ($y >> 3) * 33 + ($x >> 3);
-
-        if (!isset($this->background[$backgroundIndex])) {
-            return false;
-        }
-
-        return ($this->background[$backgroundIndex]->pattern[$y & 0x07][$x & 0x07] & 0x03) !== 0;
+        return $this->backgroundOpacity[($y << 8) + $x] !== "\0";
     }
 }

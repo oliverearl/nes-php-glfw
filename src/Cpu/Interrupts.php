@@ -12,9 +12,11 @@ class Interrupts
     private bool $nmi = false;
 
     /**
-     * The IRQ (Interrupt Request) flag.
+     * Device-owned IRQ levels combined into the CPU interrupt request line.
+     *
+     * @var array<string, true>
      */
-    private bool $irq = false;
+    private array $irqSources = [];
 
     /**
      * Checks if the NMI is currently asserted.
@@ -45,22 +47,22 @@ class Interrupts
      */
     public function isIrqAsserted(): bool
     {
-        return $this->irq;
+        return $this->irqSources !== [];
     }
 
     /**
-     * Asserts the IRQ interrupt.
+     * Asserts one device's IRQ level without affecting other sources.
      */
-    public function assertIrq(): void
+    public function assertIrq(string $source = 'external'): void
     {
-        $this->irq = true;
+        $this->irqSources[$source] = true;
     }
 
     /**
-     * Deasserts the IRQ interrupt.
+     * Acknowledges one device's IRQ level without clearing other sources.
      */
-    public function deassertIrq(): void
+    public function deassertIrq(string $source = 'external'): void
     {
-        $this->irq = false;
+        unset($this->irqSources[$source]);
     }
 }
