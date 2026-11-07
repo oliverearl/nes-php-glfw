@@ -122,18 +122,27 @@ final class CpuBusIntegrationTest extends IntegrationTestCase
         $this::assertSame(0, $cpuBus->readByCpu(0x4017));
     }
 
+    /**
+     * Keeps currently unimplemented APU writes isolated from RAM and ROM.
+     */
     #[Test]
-    public function it_handles_apu_register_writes_without_error(): void
+    public function it_ignores_unimplemented_apu_writes_without_mutating_memory(): void
     {
-        $this->expectNotToPerformAssertions();
+        [, $cpuBus, $ram] = $this->createTestSystem();
+        $ram->write(0x0200, 0x42);
 
-        [$cpu, $cpuBus] = $this->createTestSystem();
-
-        // APU writes should be silently ignored without crashing.
         $cpuBus->writeByCpu(0x4000, 0xFF);
         $cpuBus->writeByCpu(0x4001, 0xAA);
+
+        $this::assertSame(0x42, $ram->read(0x0200));
+        $this::assertSame(0xEA, $cpuBus->readByCpu(0x8000));
+        $this::assertSame(0, $cpuBus->readByCpu(0x4000));
+        $this::assertSame(0, $cpuBus->readByCpu(0x4001));
     }
 
+    /**
+     * Executes a ROM program and checks exact instruction timing, state, and RAM effects.
+     */
     #[Test]
     public function it_executes_simple_instruction_sequence(): void
     {
@@ -149,52 +158,106 @@ final class CpuBusIntegrationTest extends IntegrationTestCase
         foreach ($program as $i => $byte) {
             $modifiedRom[$i] = $byte;
         }
+        $modifiedRom[0x7FFC] = 0x00;
+        $modifiedRom[0x7FFD] = 0x80;
 
-        [$cpu] = $this->createTestSystemWithRom($modifiedRom);
+        [$cpu, , $ram] = $this->createTestSystemWithRom($modifiedRom);
 
-        // Reset CPU (sets PC to reset vector).
         $cpu->reset();
+        $resetState = $cpu->snapshot();
 
-        // Execute LDA instruction.
-        $cycles1 = $cpu->run();
+        $loadCycles = $cpu->run();
+        $loadedState = $cpu->snapshot();
+        $beforeStore = $ram->read(0x0200);
 
-        // Execute STA instruction.
-        $cycles2 = $cpu->run();
+        $storeCycles = $cpu->run();
+        $storedState = $cpu->snapshot();
+        $afterStore = $ram->read(0x0200);
 
-        /*
-         * Just verify cycles were consumed.
-         * Verifying the memory write would require examining CPU internals or running more instructions.
-         */
-        $this::assertGreaterThan(0, $cycles1);
-        $this::assertGreaterThan(0, $cycles2);
+        $nopCycles = $cpu->run();
+        $nopState = $cpu->snapshot();
+
+        $this::assertSame([2, 4, 2], [$loadCycles, $storeCycles, $nopCycles]);
+        $this::assertSame(0x8000, $resetState->pc);
+        $this::assertSame(0x42, $loadedState->a);
+        $this::assertSame(0x8002, $loadedState->pc);
+        $this::assertSame(0x00, $beforeStore);
+        $this::assertSame(0x42, $afterStore);
+        $this::assertSame(0x8005, $storedState->pc);
+        $this::assertSame(0x8006, $nopState->pc);
+        $this::assertSame(0x42, $ram->read(0x0200));
     }
 
+    /**
+     * Loads and stores mirrored RAM through actual CPU instructions.
+     */
+    #[Test]
+    public function it_executes_loads_and_stores_through_ram_mirrors(): void
+    {
+        $rom = array_fill(0, 0x8000, 0xEA);
+
+        // LDA $0900 reads $0100; STA $0A00 writes $0200.
+        foreach ([0xAD, 0x00, 0x09, 0x8D, 0x00, 0x0A] as $offset => $byte) {
+            $rom[$offset] = $byte;
+        }
+        $rom[0x7FFC] = 0x00;
+        $rom[0x7FFD] = 0x80;
+
+        [$cpu, $bus, $ram] = $this->createTestSystemWithRom($rom);
+        $ram->write(0x0100, 0xA5);
+        $cpu->reset();
+
+        $loadCycles = $cpu->run();
+        $loadedState = $cpu->snapshot();
+        $storeCycles = $cpu->run();
+        $storedState = $cpu->snapshot();
+
+        $this::assertSame([4, 4], [$loadCycles, $storeCycles]);
+        $this::assertSame(0xA5, $loadedState->a);
+        $this::assertSame(0x8003, $loadedState->pc);
+        $this::assertSame(0xA5, $ram->read(0x0200));
+        $this::assertSame(0xA5, $bus->readByCpu(0x0A00));
+        $this::assertSame(0x8006, $storedState->pc);
+    }
+
+    /**
+     * Writes and reads sprite RAM through the CPU-visible PPU registers.
+     */
     #[Test]
     public function it_accesses_ppu_registers_through_bus(): void
     {
-        [$cpu, $cpuBus, , , $ppu] = $this->createTestSystem();
+        [, $bus] = $this->createTestSystem();
+        $bus->writeByCpu(0x2003, 0x20);
+        $bus->writeByCpu(0x2004, 0xA5);
+        $bus->writeByCpu(0x2004, 0x5A);
 
-        // Write to PPU control register (0x2000).
-        $cpuBus->writeByCpu(0x2000, 0x80);
+        $bus->writeByCpu(0x2003, 0x20);
+        $first = $bus->readByCpu(0x2004);
+        $repeated = $bus->readByCpu(0x2004);
 
-        // PPU status register read (0x2002) should work.
-        $status = $cpuBus->readByCpu(0x2002);
+        $bus->writeByCpu(0x2003, 0x21);
 
-        $this::assertGreaterThanOrEqual(0, $status);
-        $this::assertLessThanOrEqual(255, $status);
+        $this::assertSame([0xA5, 0xA5], [$first, $repeated]);
+        $this::assertSame(0x5A, $bus->readByCpu(0x2004));
     }
 
+    /**
+     * Decodes mirrored OAMADDR and OAMDATA accesses to the same PPU state.
+     */
     #[Test]
     public function it_handles_ppu_register_mirroring(): void
     {
-        [, $cpuBus, , , $ppu, $interrupts] = $this->createTestSystem();
+        [, $bus] = $this->createTestSystem();
+        $bus->writeByCpu(0x3FFB, 0xF0);
+        $bus->writeByCpu(0x3FFC, 0x5A);
 
-        $cpuBus->writeByCpu(0x2008, 0x80);
+        $bus->writeByCpu(0x2003, 0xF0);
+        $this::assertSame(0x5A, $bus->readByCpu(0x200C));
 
-        for ($i = 0; $i < 242 && ! $interrupts->isNmiAsserted(); $i++) {
-            $ppu->run(341);
-        }
-
-        $this::assertTrue($interrupts->isNmiAsserted());
+        $bus->writeByCpu(0x200B, 0xF1);
+        $bus->writeByCpu(0x200C, 0xA5);
+        $bus->writeByCpu(0x3FFB, 0xF1);
+        $this::assertSame(0xA5, $bus->readByCpu(0x2004));
+        $this::assertSame(0xA5, $bus->readByCpu(0x3FFC));
     }
 }

@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace App\Bus;
 
 use App\Cpu\Dma;
+use App\Cpu\Memory;
 use App\Graphics\Ppu;
 use App\Input\Controller;
 
-readonly class CpuBus
+readonly class CpuBus implements Memory
 {
     /**
      * Creates a new CPU bus instance with all required components.
