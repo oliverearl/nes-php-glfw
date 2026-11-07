@@ -37,9 +37,14 @@ class Ppu
     private int $scanline = 0;
 
     /**
-     * Indicates whether the next VRAM address write is the lower byte.
+     * The shared second-write latch for PPUSCROLL and PPUADDR.
      */
-    private bool $isLowerVramAddress = false;
+    private bool $isSecondWrite = false;
+
+    /**
+     * Temporary VRAM address shared by control, scroll, and address writes.
+     */
+    private int $temporaryVramAddress = 0;
 
     /**
      * The current address in sprite RAM.
@@ -91,11 +96,6 @@ class Ppu
     private readonly Palette $palette;
 
     /**
-     * Indicates whether the next scroll write is horizontal.
-     */
-    private bool $isHorizontalScroll = true;
-
-    /**
      * The horizontal scroll position.
      */
     private int $scrollX = 0;
@@ -119,17 +119,18 @@ class Ppu
     public function __construct(private readonly PpuBus $bus, private readonly Interrupts $interrupts, private readonly bool $isHorizontalMirror)
     {
         $this->registers = array_fill(0, 8, 0);
-        $this->vram = new Ram(0x2000);
+        $this->vram = new Ram(0x0800);
         $this->spriteRam = new Ram(0x100);
         $this->palette = new Palette();
     }
 
     /**
-     * Runs the PPU for the specified number of cycles and returns rendering data when a frame is complete.
+     * Advances all supplied clocks and returns the latest frame completed during the call.
      */
     public function run(int $cycle): false|RenderingData
     {
         $this->cycle += $cycle;
+        $renderingData = false;
 
         if ($this->scanline === 0 && ! $this->isFramePrepared) {
             $this->prepareFrame();
@@ -163,15 +164,18 @@ class Ppu
                 $this->clearVblank();
                 $this->clearSpriteHit();
                 $this->scanline = 0;
-                $this->cycle = 0;
                 $this->isFramePrepared = false;
                 $this->interrupts->deassertNmi();
 
-                return new RenderingData($this->getPalette(), $this->isBackgroundEnabled() ? $this->background : null, $this->isSpriteEnabled() ? $this->sprites : null, );
+                $renderingData = new RenderingData($this->getPalette(), $this->isBackgroundEnabled() ? $this->background : null, $this->isSpriteEnabled() ? $this->sprites : null, );
+
+                if ($this->cycle > 0) {
+                    $this->prepareFrame();
+                }
             }
         }
 
-        return false;
+        return $renderingData;
     }
 
     /**
@@ -180,7 +184,7 @@ class Ppu
     public function read(int $address): int
     {
         if ($address === 0x0002) {
-            $this->isHorizontalScroll = true;
+            $this->isSecondWrite = false;
             $data = $this->registers[0x02];
             $this->clearVblank();
 
@@ -203,6 +207,14 @@ class Ppu
      */
     public function write(int $address, int $data): void
     {
+        if ($address === 0x0002) {
+            return;
+        }
+
+        if ($address === 0x0000) {
+            $this->temporaryVramAddress = ($this->temporaryVramAddress & ~0x0C00) | (($data & 0x03) << 10);
+        }
+
         if ($address === 0x0003) {
             $this->writeSpriteRamAddress($data);
         }
@@ -284,30 +296,30 @@ class Ppu
      */
     private function readVram(): int
     {
-        $buf = $this->vramReadBuffer;
+        $address = $this->vramAddress & 0x3FFF;
 
-        if ($this->vramAddress >= 0x2000) {
-            $address = $this->calculateVramAddress();
-            $this->vramAddress += $this->vramOffset();
-
-            if ($address >= 0x3F00) {
-                return $this->vram->read($address);
-            }
-
-            $this->vramReadBuffer = $this->vram->read($address);
+        if ($address >= 0x3F00) {
+            $data = $this->palette->readByte($address);
+            $data &= ($this->registers[0x01] & 0x01) !== 0 ? 0x30 : 0x3F;
+            $this->vramReadBuffer = $this->readMemory($address - 0x1000);
         } else {
-            $this->vramReadBuffer = $this->readCharacterRam($this->vramAddress);
-            $this->vramAddress += $this->vramOffset();
+            $data = $this->vramReadBuffer;
+            $this->vramReadBuffer = $this->readMemory($address);
         }
-        return $buf;
+
+        $this->vramAddress = ($this->vramAddress + $this->vramOffset()) & 0x7FFF;
+
+        return $data;
     }
 
     /**
-     * Calculates the actual VRAM address accounting for mirroring.
+     * Reads pattern or nametable memory using the same nametable mapping as rendering.
      */
-    private function calculateVramAddress(): int
+    private function readMemory(int $address): int
     {
-        return ($this->vramAddress >= 0x3000 && $this->vramAddress < 0x3f00) ? $this->vramAddress - 0x3000 : $this->vramAddress - 0x2000;
+        return $address < 0x2000
+            ? $this->readCharacterRam($address)
+            : $this->vram->read($this->mirrorDownSpriteAddress($address - 0x2000));
     }
 
     /**
@@ -492,15 +504,11 @@ class Ppu
      */
     private function mirrorDownSpriteAddress(int $address): int
     {
-        if (!$this->isHorizontalMirror) {
-            return $address;
-        }
+        $address &= 0x0FFF;
 
-        if (($address >= 0x0400 && $address < 0x0800) || $address >= 0x0C00) {
-            return $address - 0x400;
-        }
-
-        return $address;
+        return $this->isHorizontalMirror
+            ? (($address & 0x0800) >> 1) | ($address & 0x03FF)
+            : $address & 0x07FF;
     }
 
     /**
@@ -569,7 +577,7 @@ class Ppu
     private function writeSpriteRamData(int $data): void
     {
         $this->spriteRam->write($this->spriteRamAddress, $data);
-        ++$this->spriteRamAddress;
+        $this->spriteRamAddress = ($this->spriteRamAddress + 1) & 0xFF;
     }
 
     /**
@@ -577,13 +585,15 @@ class Ppu
      */
     private function writeScrollData(int $data): void
     {
-        if ($this->isHorizontalScroll) {
-            $this->isHorizontalScroll = false;
+        if (! $this->isSecondWrite) {
             $this->scrollX = $data & 0xFF;
+            $this->temporaryVramAddress = ($this->temporaryVramAddress & ~0x001F) | (($data & 0xF8) >> 3);
         } else {
             $this->scrollY = $data & 0xFF;
-            $this->isHorizontalScroll = true;
+            $this->temporaryVramAddress = ($this->temporaryVramAddress & ~0x73E0) | (($data & 0x07) << 12) | (($data & 0xF8) << 2);
         }
+
+        $this->isSecondWrite = ! $this->isSecondWrite;
     }
 
     /**
@@ -591,13 +601,14 @@ class Ppu
      */
     private function writeVramAddress(int $data): void
     {
-        if ($this->isLowerVramAddress) {
-            $this->vramAddress += $data;
-            $this->isLowerVramAddress = false;
+        if ($this->isSecondWrite) {
+            $this->temporaryVramAddress = ($this->temporaryVramAddress & 0x7F00) | ($data & 0xFF);
+            $this->vramAddress = $this->temporaryVramAddress;
         } else {
-            $this->vramAddress = $data << 8;
-            $this->isLowerVramAddress = true;
+            $this->temporaryVramAddress = ($this->temporaryVramAddress & 0x00FF) | (($data & 0x3F) << 8);
         }
+
+        $this->isSecondWrite = ! $this->isSecondWrite;
     }
 
     /**
@@ -605,17 +616,19 @@ class Ppu
      */
     private function writeVramData(int $data): void
     {
-        if ($this->vramAddress >= 0x2000) {
-            if ($this->vramAddress >= 0x3f00 && $this->vramAddress < 0x4000) {
-                $this->palette->write($this->vramAddress - 0x3f00, $data);
+        $address = $this->vramAddress & 0x3FFF;
+
+        if ($address >= 0x2000) {
+            if ($address >= 0x3F00) {
+                $this->palette->write($address, $data & 0x3F);
             } else {
-                $this->writeVram($this->calculateVramAddress(), $data);
+                $this->writeVram($address - 0x2000, $data);
             }
         } else {
-            $this->writeCharacterRam($this->vramAddress, $data);
+            $this->writeCharacterRam($address, $data);
         }
 
-        $this->vramAddress += $this->vramOffset();
+        $this->vramAddress = ($this->vramAddress + $this->vramOffset()) & 0x7FFF;
     }
 
     /**
@@ -623,7 +636,7 @@ class Ppu
      */
     private function writeVram(int $address, int $data): void
     {
-        $this->vram->write($address, $data);
+        $this->vram->write($this->mirrorDownSpriteAddress($address), $data);
     }
 
     /**
@@ -632,5 +645,8 @@ class Ppu
     private function writeCharacterRam(int $address, int $data): void
     {
         $this->bus->writeByPpu($address, $data);
+        $spriteId = ($address & 0x0FFF) >> 4;
+        $offset = $address & 0x1000;
+        unset($this->spriteCache[($spriteId << 16) | $offset]);
     }
 }
