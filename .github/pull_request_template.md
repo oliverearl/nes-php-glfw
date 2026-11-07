@@ -5,9 +5,8 @@
 ## Verification
 
 - [ ] `composer test`
-- [ ] `composer phpstan`
-- [ ] `composer pint`
-- [ ] `composer rector`
+- [ ] `composer quality:check` (Pint check, PHPStan, Rector dry-run).
+- [ ] `python3 -m unittest discover -s tests/BenchmarkTools -v` (Python tool changes).
 - [ ] Not run, because:
 
 ## Emulator Impact
